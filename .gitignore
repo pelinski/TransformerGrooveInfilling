@@ -2,3 +2,5 @@
 .vscode/
 __pycache__/
 .DS_Store
+processed_dataset/
+onsets_and_intensity/misc/
