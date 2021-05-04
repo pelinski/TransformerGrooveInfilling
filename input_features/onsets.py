@@ -241,3 +241,30 @@ def map_onsets_to_grid(grid, onset_strength, onset_detect, hop_length, n_fft,sr)
                 
     
     return onsets_grid, strength_grid
+
+
+def get_input_features(audio_file_path, sr=44100, 
+						_fft= 1024, f_win_size = 1024, f_hop_size = 512, f_bins_per_octave =16,
+						f_octaves = 9, f_fmin = 40, mean_filter_size = 22, c_freq=  )
+	x, sr = read_audio(audio_file_path, mono=True, sr=sr)
+	x /= np.max(np.abs(x))
+
+
+	od_fun, logf_stft, f_cq = onset_detection_fn(x,
+                                             f_win_size,
+                                             f_hop_size,
+                                             f_bins_per_octave,
+                                             f_octaves,
+                                             f_fmin,
+                                             sr,
+                                             mean_filter_size)
+
+	mb_onset_strength = od_fun
+
+	c_freq = [55, 90, 138, 175, 350, 6000,8500,12500]                      # Perfe center frequencies
+	mb_onset_strength = reduce_frequency_bands_in_spectrogram(c_freq, f_cq, mb_onset_strength)
+	mb_onset_detect = get_onset_detect(mb_onset_strength)
+	grid = get_grid_timestamps(n_bars = 2, time_signature_numerator = 4, 
+                                      time_signature_denominator = 4, beat_division_factors = [4],qpm = 120)
+
+	onsets_grid, strength_grid = map_onsets_to_grid(grid, mb_onset_strength, mb_onset_detect, n_fft=n_fft, hop_length = f_hop_size,sr=sr)
