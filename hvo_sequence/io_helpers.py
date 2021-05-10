@@ -68,8 +68,7 @@ def note_sequence_to_hvo_sequence(ns, drum_mapping, beat_division_factors=[4], m
     hvo_seq.hvo = np.zeros((len(grid_lines), 3*len(drum_mapping.keys())))
 
     for ns_note in ns.notes:
-        place_note_in_hvo(ns_note=ns_note, hvo=hvo_seq.hvo, grid=grid_lines, drum_mapping=drum_mapping)
-
+        hvo_seq.hvo = place_note_in_hvo(ns_note=ns_note, hvo=hvo_seq.hvo, grid=grid_lines, drum_mapping=drum_mapping)
     return hvo_seq
 
 
@@ -85,6 +84,7 @@ def place_note_in_hvo(ns_note, hvo, grid, drum_mapping):
     """
 
     grid_index, utiming = get_grid_position_and_utiming_in_hvo(ns_note.start_time, grid)
+
     _, _, pitch_group_ix = find_pitch_and_tag(ns_note.pitch, drum_mapping)
 
     n_drum_voices = len(drum_mapping.keys())  # Get the number of reduced drum classes

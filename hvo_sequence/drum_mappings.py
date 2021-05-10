@@ -63,6 +63,37 @@ ROLAND_REDUCED_MAPPING = {
     "RIDE":  [51, 53, 59]
 }
 
+
+# GrooveToolbox 5 Part Kit Mappings
+Groove_Toolbox_5Part_keymap = {
+    "kick": [36, 35],
+    "snare": [38, 37, 40],
+    "closed": [42, 22, 44, 51, 53, 59],     # Closed cymbals (hihat and ride)
+    "open": [46, 26, 49, 52, 55, 57],       # Open cymbals (open hihat, crash)
+    "Toms": [43, 58, 47, 45, 50, 48, 41]    # Toms (low mid and high)
+}
+
+# GrooveToolbox 3 Part Kit Mappings
+Groove_Toolbox_3Part_keymap = {
+    "low": [36, 35],                                        # Kick
+    "mid": [38, 37, 40, 43, 58, 47, 45, 50, 48, 41],        # Snare and Tom
+    "hi": [42, 22, 44, 51, 53, 59, 46, 26, 49, 52, 55, 57]  # Hats/Crashes/Rides
+}
+
+# GrooveToolbox General MIDI Mappings
+Groove_Toolbox_GM_keymap = {
+    "kick": [35, 36],
+    "snare": [37, 38, 40],
+    "closed hihat": [42, 44],
+    "open hihat": [46],
+    "ride": [51, 53, 59],
+    "crash": [49, 57],
+    "extra cymbal": [52, 55],
+    "low tom": [41, 43, 45],
+    "mid tom": [47, 48],
+    "high tom": [50]
+}
+
 # https://bernhard.hensler.net/roland-td-11-setup-midi-mapping/
 # REF: https://rolandus.zendesk.com/hc/en-us/articles/360005173411-TD-17-Default-Factory-MIDI-Note-Map
 ROLAND_TD_17_Full_map = {
