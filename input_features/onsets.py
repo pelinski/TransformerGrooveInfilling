@@ -247,23 +247,21 @@ def map_onsets_to_grid(grid, onset_strength, onset_detect, hop_length, n_fft, sr
 
 
 def input_features_extractor(audio_file_path=None, **kwargs):
-
     # default values
     sr = kwargs.get('sr', 44100)
     n_fft = kwargs.get('n_fft', 1024)
-    win_length = kwargs.get('win_length',1024)
-    hop_length = kwargs.get('hop_length',512)
-    n_bins_per_octave = kwargs.get('n_bins_per_octave',16)
-    n_octaves = kwargs.get('n_octaves',9)
-    f_min = kwargs.get('f_min',40)
-    mean_filter_size = kwargs.get('mean_filter_size',22)
-    c_freq = kwargs.get('c_freq',[55, 90, 138, 175, 350, 6000, 8500, 12500])
-    n_bars = kwargs.get('n_bars',2)
+    win_length = kwargs.get('win_length', 1024)
+    hop_length = kwargs.get('hop_length', 512)
+    n_bins_per_octave = kwargs.get('n_bins_per_octave', 16)
+    n_octaves = kwargs.get('n_octaves', 9)
+    f_min = kwargs.get('f_min', 40)
+    mean_filter_size = kwargs.get('mean_filter_size', 22)
+    c_freq = kwargs.get('c_freq', [55, 90, 138, 175, 350, 6000, 8500, 12500])
+    n_bars = kwargs.get('n_bars', 2)
     time_signature_numerator = kwargs.get('time_signature_numerator', 4)
     time_signature_denominator = kwargs.get('time_signature_denominator', 4)
     beat_division_factors = kwargs.get('beat_division_factors', [4])
-    qpm = kwargs.get('qpm',120)
-
+    qpm = kwargs.get('qpm', 120)
 
     x, sr = read_audio(audio_file_path, mono=True, sr=sr)
     x /= np.max(np.abs(x))
@@ -289,5 +287,5 @@ def input_features_extractor(audio_file_path=None, **kwargs):
     onsets_grid, strength_grid = map_onsets_to_grid(grid, mb_onset_strength, mb_onset_detect, n_fft=n_fft,
                                                     hop_length=hop_length, sr=sr)
 
-    input_features = torch.cat((torch.Tensor(onsets_grid), torch.Tensor(strength_grid)),axis = 1)
+    input_features = torch.cat((torch.Tensor(onsets_grid), torch.Tensor(strength_grid)), axis=1)
     return input_features
