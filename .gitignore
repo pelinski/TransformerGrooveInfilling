@@ -3,5 +3,6 @@
 __pycache__/
 .DS_Store
 processed_dataset/
+synthesized_audio/
 misc/
 .idea/
