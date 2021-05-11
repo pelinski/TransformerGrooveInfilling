@@ -241,11 +241,11 @@ class HVO_Sequence(object):
 
             # reset voice
             if _reset_hits:
-                self.hvo[:, h_idx] = np.zeros(n_frames)
+                self.__hvo[:, h_idx] = np.zeros(n_frames)
             if _reset_velocity:
-                self.hvo[:, v_idx] = np.zeros(n_frames)
+                self.__hvo[:, v_idx] = np.zeros(n_frames)
             if _reset_offsets:
-                self.hvo[:, o_idx] = np.zeros(n_frames)
+                self.__hvo[:, o_idx] = np.zeros(n_frames)
 
     def flatten_voices(self, get_velocities=True, reduce_dim=False, voice_idx=0):
 
