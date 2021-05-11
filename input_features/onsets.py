@@ -11,7 +11,6 @@ import scipy.signal
 import resampy
 import soundfile as psf
 import warnings
-import torch
 
 
 def read_audio(filepath, sr=None, mono=True, peak_norm=False):
@@ -45,7 +44,7 @@ def read_audio(filepath, sr=None, mono=True, peak_norm=False):
 
 def cq_matrix(n_bins_per_octave, n_bins, f_min, n_fft, sr):
     """
-    ConstantQ Transform matrix with triangular log-spaced filterbank.
+    Constant Q Transform matrix with triangular log-spaced filterbank.
     @param n_bins_per_octave: int
     @param n_bins: int
     @param f_min: float
@@ -73,6 +72,18 @@ def cq_matrix(n_bins_per_octave, n_bins, f_min, n_fft, sr):
 def onset_detection_fn(x, n_fft, win_length, hop_length, n_bins_per_octave, n_octaves, f_min, sr, mean_filter_size):
     """
     Filter bank for onset pattern calculation
+    @param x: array
+    @param n_fft: int
+    @param win_length: int
+    @param hop_length: int
+    @param n_bins_per_octave: int
+    @param n_octaves: int
+    @param f_min: float
+    @param sr: float. sample rate
+    @param mean_filter_size: int. dt in the differential calculation
+    @return od_fun: multi-band onset strength spectrogram
+    @return logf_stft: array with logarithmically scaled stft
+    @return f_cq: array with center frequencies of the constant-q transform
     """
     # calculate frequency constant-q transform
     f_win = scipy.signal.hann(win_length)
@@ -267,7 +278,7 @@ def input_features_extractor(audio_file_path=None, **kwargs):
     x, sr = read_audio(audio_file_path, mono=True, sr=sr)
     x /= np.max(np.abs(x))
 
-    mb_onset_strength, logf_stft, f_cq = onset_detection_fn(x,
+    mb_onset_strength, _, f_cq = onset_detection_fn(x,
                                                             n_fft,
                                                             win_length,
                                                             hop_length,
