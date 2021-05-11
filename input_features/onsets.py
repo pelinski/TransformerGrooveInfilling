@@ -225,11 +225,11 @@ def map_onsets_to_grid(grid, onset_strength, onset_detect, hop_length, n_fft, sr
 
     n_bands = onset_strength.shape[1]
     n_timeframes = onset_detect.shape[0]
-    n_timesteps = len(grid)
+    n_timesteps = len(grid) - 1 # last grid line is first line of next bar
 
     # init intensity and onsets grid
-    strength_grid = np.zeros([n_timesteps + 1, n_bands])
-    onsets_grid = np.zeros([n_timesteps + 1, n_bands])
+    strength_grid = np.zeros([n_timesteps, n_bands])
+    onsets_grid = np.zeros([n_timesteps, n_bands])
 
     # time array
     time = librosa.frames_to_time(np.arange(n_timeframes), sr=sr,
@@ -240,6 +240,7 @@ def map_onsets_to_grid(grid, onset_strength, onset_detect, hop_length, n_fft, sr
         for timeframe_idx in range(n_timeframes):
             if onset_detect[timeframe_idx, band]:  # if there is an onset detected, get grid index and utiming
                 grid_idx, utiming = get_grid_position_and_utiming_in_hvo(time[timeframe_idx], grid)
+                if grid_idx == n_timesteps : continue # in case that a hit is assigned to last grid line
                 strength_grid[grid_idx, band] = onset_strength[timeframe_idx, band]
                 onsets_grid[grid_idx, band] = utiming
 
@@ -287,5 +288,6 @@ def input_features_extractor(audio_file_path=None, **kwargs):
     onsets_grid, strength_grid = map_onsets_to_grid(grid, mb_onset_strength, mb_onset_detect, n_fft=n_fft,
                                                     hop_length=hop_length, sr=sr)
 
-    input_features = torch.cat((torch.Tensor(onsets_grid), torch.Tensor(strength_grid)), axis=1)
+    input_features = np.concatenate((onsets_grid,strength_grid), axis=1)
+
     return input_features
