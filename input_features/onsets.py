@@ -255,7 +255,7 @@ def map_onsets_to_grid(grid, onset_strength, onset_detect, hop_length, n_fft, sr
                 strength_grid[grid_idx, band] = onset_strength[timeframe_idx, band]
                 onsets_grid[grid_idx, band] = utiming
 
-    return onsets_grid, strength_grid
+    return strength_grid, onsets_grid
 
 
 def input_features_extractor(audio_file_path=None, **kwargs):
@@ -296,9 +296,9 @@ def input_features_extractor(audio_file_path=None, **kwargs):
                                time_signature_denominator=time_signature_denominator,
                                beat_division_factors=beat_division_factors,
                                qpm=qpm)
-    onsets_grid, strength_grid = map_onsets_to_grid(grid, mb_onset_strength, mb_onset_detect, n_fft=n_fft,
+    strength_grid, onsets_grid = map_onsets_to_grid(grid, mb_onset_strength, mb_onset_detect, n_fft=n_fft,
                                                     hop_length=hop_length, sr=sr)
 
-    input_features = np.concatenate((onsets_grid,strength_grid), axis=1)
+    input_features = np.concatenate((strength_grid,onsets_grid), axis=1)
 
     return input_features
