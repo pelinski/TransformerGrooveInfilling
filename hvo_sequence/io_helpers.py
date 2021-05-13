@@ -8,6 +8,19 @@ from hvo_sequence.utils import find_nearest, find_pitch_and_tag
 from hvo_sequence.hvo_seq import HVO_Sequence
 
 
+def empty_like(other_hvo_sequence):
+    """
+    Creates an HVO_Sequence instance with the same fields as other_hvo_sequence. However, the hvo array for the
+    returned sequence will be None (i.e. empty)
+
+    :param other_hvo_sequence:      a HVO_Sequence instance
+    :return:                        a HVO_Sequence instance same as other_hvo_sequence except the hvo field
+    """
+
+    new_hvo_seq = HVO_Sequence()
+
+
+
 def note_sequence_to_hvo_sequence(ns, drum_mapping, beat_division_factors=[4], max_n_bars=None):
     """
             # Note_Sequence importer. Converts the note sequence to hvo format

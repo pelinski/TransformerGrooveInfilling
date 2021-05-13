@@ -396,19 +396,6 @@ def get_monophonic_syncopation(part, metrical_profile, steps_in_measure=16):
     :param steps_in_measure:
     :return:
     """
-    """    part = part.reshape(-1, 1) if part.ndim == 1 else part  # reshape to (n_steps, 1)
-    
-        # first make_sure_length_is_multiple of 16, if not append zero arrays
-        if part.shape[0] % steps_in_measure != 0:
-            pad_size = steps_in_measure - part.shape[0]
-            part = np.pad(part, (0, pad_size), mode="constant")
-    
-        # match length to multiple 2 bars (if shorter repeat last bar)
-        if part.shape[0] % (2 * steps_in_measure) != 0:
-            part = np.append(part, part[-steps_in_measure:, :], axis=0)
-    
-        two_bar_segments = np.split(part, part.shape[0] // (steps_in_measure * 2))
-    """
     two_bar_segments = _get_2bar_segments(part, steps_in_measure)
     syncs_per_two_bar_segments = np.array([])
     for segment in two_bar_segments:

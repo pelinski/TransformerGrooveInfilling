@@ -172,6 +172,17 @@ class Tempo(object):
         return not self.__eq__(other)
 
 
+class Metadata(object):
+    def __init__(self):
+        pass
+
+    def add_field(self, field_name, value=None):
+        exec("self.{} = {}".format(field_name, None if value is None else value))
+
+    def __repr__(self):
+        return str(self.__dict__)
+
+
 def is_power_of_two(n):
     """
     Checks if a value is a power of two
