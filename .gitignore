@@ -6,3 +6,10 @@ processed_dataset/
 synthesized_audio/
 misc/
 .idea/
+
+# only keep the good soundfonts
+test_soundfonts/soundfonts/
+test_soundfonts/sounds/
+
+# test experiments
+expreiments/
