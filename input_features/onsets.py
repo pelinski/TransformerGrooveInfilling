@@ -12,36 +12,6 @@ import resampy
 import soundfile as psf
 import warnings
 
-
-def read_audio(filepath, sr=None, mono=True, peak_norm=False):
-    """
-    Read audio
-    @param filepath: str
-    @param sr: int
-    @param mono: boolean
-    @param peak_norm: boolean
-    @returns y: list
-    """
-    try:
-        y, _sr = psf.read(filepath)
-        y = y.T
-    except RuntimeError:
-        y, _sr = librosa.load(filepath, mono=False, sr=None)
-
-    if sr is not None and sr != _sr:
-        y = resampy.resample(y, _sr, sr, filter='kaiser_fast')
-    else:
-        sr = _sr
-
-    if mono:
-        y = librosa.to_mono(y)
-
-    if peak_norm:
-        y /= np.max(np.abs(y))
-
-    return y, sr
-
-
 def cq_matrix(n_bins_per_octave, n_bins, f_min, n_fft, sr):
     """
     Constant Q Transform matrix with triangular log-spaced filterbank.
@@ -258,7 +228,7 @@ def map_onsets_to_grid(grid, onset_strength, onset_detect, hop_length, n_fft, sr
     return strength_grid, onsets_grid
 
 
-def input_features_extractor(audio_file_path=None, **kwargs):
+def input_features_extractor(y, qpm, **kwargs):
     # default values
     sr = kwargs.get('sr', 44100)
     n_fft = kwargs.get('n_fft', 1024)
@@ -273,29 +243,16 @@ def input_features_extractor(audio_file_path=None, **kwargs):
     time_signature_numerator = kwargs.get('time_signature_numerator', 4)
     time_signature_denominator = kwargs.get('time_signature_denominator', 4)
     beat_division_factors = kwargs.get('beat_division_factors', [4])
-    qpm = kwargs.get('qpm', 120)
 
-    x, sr = read_audio(audio_file_path, mono=True, sr=sr)
-    x /= np.max(np.abs(x))
+    y /= np.max(np.abs(y))
 
-    mb_onset_strength, _, f_cq = onset_detection_fn(x,
-                                                            n_fft,
-                                                            win_length,
-                                                            hop_length,
-                                                            n_bins_per_octave,
-                                                            n_octaves,
-                                                            f_min,
-                                                            sr,
-                                                            mean_filter_size)
+    mb_onset_strength, _, f_cq = onset_detection_fn(y, n_fft, win_length, hop_length, 
+                                                    n_bins_per_octave, n_octaves, f_min, sr, mean_filter_size)
 
     mb_onset_strength = reduce_frequency_bands_in_spectrogram(c_freq, f_cq, mb_onset_strength)
     mb_onset_detect = get_onset_detect(mb_onset_strength)
 
-    grid = get_grid_timestamps(n_bars=n_bars,
-                               time_signature_numerator=time_signature_numerator,
-                               time_signature_denominator=time_signature_denominator,
-                               beat_division_factors=beat_division_factors,
-                               qpm=qpm)
+    grid = get_grid_timestamps(n_bars, time_signature_numerator, time_signature_denominator, beat_division_factors, qpm)
     strength_grid, onsets_grid = map_onsets_to_grid(grid, mb_onset_strength, mb_onset_detect, n_fft=n_fft,
                                                     hop_length=hop_length, sr=sr)
 
