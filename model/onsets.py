@@ -8,8 +8,6 @@ from hvo_sequence.io_helpers import get_grid_position_and_utiming_in_hvo
 import numpy as np
 import librosa
 import scipy.signal
-import resampy
-import soundfile as psf
 import warnings
 
 def cq_matrix(n_bins_per_octave, n_bins, f_min, n_fft, sr):

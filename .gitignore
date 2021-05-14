@@ -3,13 +3,13 @@
 __pycache__/
 .DS_Store
 processed_dataset/
-synthesized_audio/
+dev/synthesized_audio/
 misc/
 .idea/
 
 # only keep the good soundfonts
-test_soundfonts/soundfonts/
-test_soundfonts/sounds/
+soundfonts/all_soundfonts/
+soundfonts/sounds/
 
 # test experiments
 exp_dataset/
