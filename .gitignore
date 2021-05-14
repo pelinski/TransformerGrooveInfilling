@@ -12,4 +12,4 @@ soundfonts/all_soundfonts/
 soundfonts/sounds/
 
 # test experiments
-exp_dataset/
+results/
