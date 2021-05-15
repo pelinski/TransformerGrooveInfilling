@@ -63,6 +63,7 @@ if __name__ == "__main__":
         "f_min": 40,
         "mean_filter_size": 22
     }
+    """
     print("\n\n GMD LOADER")
     gmd = GrooveMidiDataset(filters=filters,mso_parameters=mso_parameters)
     _in,_,_ = gmd.__getitem__(1)
@@ -71,24 +72,43 @@ if __name__ == "__main__":
     mso = hvo_in_reset.mso(sf_path=gmd.get_soundfont(1))
     print(_in == mso)
 
-
+    """
 
     #subset creator
     from Subset_Creators.subsetters import GrooveMidiSubsetter
 
-    fil = {
+    filters = {
+        "beat_type" : ["beat"],
         "master_id": ["drummer1/eval_session/10"]
     }
     pickle_source_path = '../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.3.0/Processed_On_13_05_2021_at_12_56_hrs'
-    subset = 'GrooveMIDI_processed_test'
+    subset_name = 'GrooveMIDI_processed_test'
     metadata_csv_filename = 'metadata.csv'
     hvo_pickle_filename = 'hvo_sequence_data.obj'
 
-    gmd_by_style = GrooveMidiSubsetter(
+    import pandas as pd
+    import os
+    metadata = pd.read_csv(os.path.join(pickle_source_path, subset_name, metadata_csv_filename))
+
+
+    gmd_subsetter = GrooveMidiSubsetter(
         pickle_source_path=pickle_source_path,
-        subset=subset,
+        subset=subset_name,
         hvo_pickle_filename=hvo_pickle_filename,
-        list_of_filter_dicts_for_subsets=[fil],
+        list_of_filter_dicts_for_subsets=[filters],
     )
-    tags_by_style, subsets_by_style = gmd_by_style.create_subsets()
-    print(subsets_by_style)
+    _, subset_list = gmd_subsetter.create_subsets()
+    print(subset_list)
+
+    subset = subset_list[0]
+
+    subset_info = { "pickle_source_path": pickle_source_path,
+        "subset": subset_name,
+        "metadata_csv_filename": metadata_csv_filename,
+        "hvo_pickle_filename": hvo_pickle_filename,
+        "filters": filters}
+
+    gmd = GrooveMidiDataset(subset=subset, subset_info=subset_info, mso_parameters=mso_parameters)
+
+    print(gmd)
+

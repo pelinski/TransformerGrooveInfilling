@@ -33,12 +33,8 @@ mso_parameters = {
 
 class GrooveMidiDataset(Dataset):
     def __init__(self,
-                 pickle_source_path='../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.3.0'
-                                    '/Processed_On_13_05_2021_at_12_56_hrs',
-                 subset='GrooveMIDI_processed_test',
-                 metadata_csv_filename='metadata.csv',
-                 hvo_pickle_filename='hvo_sequence_data.obj',
-                 filters=filters,
+                 subset,
+                 subset_info, # in order to store them in parameters json
                  mso_parameters=mso_parameters,
                  sf_path="../soundfonts/filtered_soundfonts/",
                  max_len=32,
@@ -51,15 +47,9 @@ class GrooveMidiDataset(Dataset):
         assert (n_voices_to_remove <= len(
             voice_idx)), "number of voices to remove can not be greater than length of voice_idx"
 
-        metadata = pd.read_csv(os.path.join(pickle_source_path, subset, metadata_csv_filename))
+        metadata = pd.read_csv(os.path.join(subset_info["pickle_source_path"], subset_info["subset"],
+                                            subset_info["metadata_csv_filename"]))
 
-        gmd_subset = GrooveMidiSubsetter(
-            pickle_source_path=pickle_source_path,
-            subset=subset,
-            hvo_pickle_filename=hvo_pickle_filename,
-            list_of_filter_dicts_for_subsets=[filters],
-        )
-        _, subset_list = gmd_subset.create_subsets()
 
         # init lists to store hvo sequences and processed io
         self.hvo_sequences = []
@@ -74,7 +64,7 @@ class GrooveMidiDataset(Dataset):
         # list of soundfonts
         sfs = [os.path.join(sf_path) + sf for sf in os.listdir(sf_path)]
 
-        for hvo_idx, hvo_seq in enumerate(subset_list[0]):  # only one subset because only one set of filters
+        for hvo_idx, hvo_seq in enumerate(subset):  # only one subset because only one set of filters
             if len(hvo_seq.time_signatures) == 1:  # ignore if time_signature change happens
 
                 all_zeros = not np.any(hvo_seq.hvo.flatten())
@@ -139,16 +129,10 @@ class GrooveMidiDataset(Dataset):
         parameters = {
             "dataset_name": dataset_name,
             "timestamp": dt_string,
-            "dataset_info": {
-                "source_path": pickle_source_path,
-                "subset": subset,
-                "metadata_csv_filename": metadata_csv_filename,
-                "hvo_pickle_filename": hvo_pickle_filename,
-                "sf_path": sf_path,
-                "filters": filters,
-                "max_len": max_len,
-                "max_items": max_items
-            },
+            "subset_info" : {**subset_info,
+                              "sf_path": sf_path,
+                                "max_len": max_len,
+                                "max_items": max_items},
             "mso_parameters": mso_parameters,
             "voice_idx": voice_idx,
             "n_voices_to_remove": n_voices_to_remove,
