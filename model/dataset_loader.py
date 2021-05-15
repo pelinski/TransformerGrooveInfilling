@@ -59,6 +59,10 @@ class GrooveMidiDataset(Dataset):
 
         # list of soundfonts
         sfs = [os.path.join(sf_path) + sf for sf in os.listdir(sf_path)]
+        # voice_combinations
+        voice_idx_comb = list(itertools.combinations(voice_idx, n_voices_to_remove))
+        # combinations of sf and voices
+        sf_v_comb = list(itertools.product(sfs, voice_idx_comb))
 
         for hvo_idx, hvo_seq in enumerate(subset):  # only one subset because only one set of filters
             if len(hvo_seq.time_signatures) == 1:  # ignore if time_signature change happens
@@ -84,10 +88,6 @@ class GrooveMidiDataset(Dataset):
                     # append hvo_seq
                     self.hvo_sequences.append(hvo_seq)
 
-                    # voice_combinations
-                    voice_idx_comb = list(itertools.combinations(voice_idx, n_voices_to_remove))
-                    # combinations of sf and voices
-                    sf_v_comb = list(itertools.product(sfs, voice_idx_comb))
                     # if there's more combinations than max_aug_items, choose randomly
                     if len(sf_v_comb) > max_aug_items:
                         sf_v_comb = random.choices(sf_v_comb, k=max_aug_items)
