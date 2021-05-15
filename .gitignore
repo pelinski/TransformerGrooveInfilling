@@ -12,4 +12,5 @@ soundfonts/all_soundfonts/
 soundfonts/sounds/
 
 # test experiments
-results/
+result/
+model/test.html
