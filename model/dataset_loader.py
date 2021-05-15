@@ -52,7 +52,6 @@ class GrooveMidiDataset(Dataset):
 
         metadata = pd.read_csv(os.path.join(pickle_source_path, subset, metadata_csv_filename))
 
-        # TODO: load dataset w subsetter
         gmd_subset = GrooveMidiSubsetter(
             pickle_source_path=pickle_source_path,
             subset=subset,
@@ -78,7 +77,7 @@ class GrooveMidiDataset(Dataset):
             if len(hvo_seq.time_signatures) == 1:  # ignore if time_signature change happens
                 all_zeros = not np.any(hvo_seq.hvo.flatten())
                 if not all_zeros:  # ignore silent patterns
-                    
+
                     # add metadata to hvo_seq scores
                     hvo_seq.drummer = metadata.loc[hvo_idx].at["drummer"]
                     hvo_seq.session = metadata.loc[hvo_idx].at["session"]
