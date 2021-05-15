@@ -30,10 +30,11 @@ mso_parameters = {
     "mean_filter_size": 22
 }
 
+
 class GrooveMidiDataset(Dataset):
     def __init__(self,
                  pickle_source_path='../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.3.0'
-                              '/Processed_On_13_05_2021_at_12_56_hrs',
+                                    '/Processed_On_13_05_2021_at_12_56_hrs',
                  subset='GrooveMIDI_processed_test',
                  metadata_csv_filename='metadata.csv',
                  hvo_pickle_filename='hvo_sequence_data.obj',
@@ -73,8 +74,9 @@ class GrooveMidiDataset(Dataset):
         # list of soundfonts
         sfs = [os.path.join(sf_path) + sf for sf in os.listdir(sf_path)]
 
-        for hvo_idx, hvo_seq in enumerate(subset_list[0]):   # only one subset because only one set of filters
+        for hvo_idx, hvo_seq in enumerate(subset_list[0]):  # only one subset because only one set of filters
             if len(hvo_seq.time_signatures) == 1:  # ignore if time_signature change happens
+
                 all_zeros = not np.any(hvo_seq.hvo.flatten())
                 if not all_zeros:  # ignore silent patterns
 
