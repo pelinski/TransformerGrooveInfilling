@@ -37,7 +37,7 @@ class GrooveMidiDataset(Dataset):
                  max_len=32,
                  voice_idx=[0],
                  n_voices_to_remove=1,
-                 max_items=10,
+                 max_aug_items=10,      # max number of combinations to obtain from one item
                  dataset_name=None
                  ):
 
@@ -88,9 +88,9 @@ class GrooveMidiDataset(Dataset):
                     voice_idx_comb = list(itertools.combinations(voice_idx, n_voices_to_remove))
                     # combinations of sf and voices
                     sf_v_comb = list(itertools.product(sfs, voice_idx_comb))
-                    # if there's more combinations than max_items, choose randomly
-                    if len(sf_v_comb) > max_items / len(subset):
-                        sf_v_comb = random.choices(sf_v_comb, k=max_items)
+                    # if there's more combinations than max_aug_items, choose randomly
+                    if len(sf_v_comb) > max_aug_items:
+                        sf_v_comb = random.choices(sf_v_comb, k=max_aug_items)
 
                     # for every sf and voice combination
                     for sf, v_idx in sf_v_comb:
@@ -128,7 +128,7 @@ class GrooveMidiDataset(Dataset):
             "subset_info" : {**subset_info,
                               "sf_path": sf_path,
                                 "max_len": max_len,
-                                "max_items": max_items},
+                                "max_aug_items": max_aug_items},
             "mso_parameters": mso_parameters,
             "voice_idx": voice_idx,
             "n_voices_to_remove": n_voices_to_remove,
