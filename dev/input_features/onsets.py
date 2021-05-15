@@ -1,7 +1,7 @@
 import sys
 import os
 
-sys.path.append('../../hvo_sequence/')
+sys.path.append('../../../hvo_sequence/')
 
 from hvo_sequence.hvo_seq import HVO_Sequence
 from hvo_sequence.io_helpers import get_grid_position_and_utiming_in_hvo
