@@ -6,25 +6,18 @@ import pickle
 import sys
 
 sys.path.append('../')
+sys.path.append('../../preprocessed_dataset/')
 
 import numpy as np
 import json
 from datetime import datetime
 import itertools
 import random
+from Subset_Creators.subsetters import GrooveMidiSubsetter
 
 # default parameters
 filters = {
-    "drummer": None,
-    "session": None,
-    "loop_id": None,
-    "master_id": None,
-    "style_primary": None,
-    "bpm": None,
-    "beat_type": None,
-    "time_signature": None,
-    "full_midi_filename": None,
-    "full_audio_filename": None
+    "bpm": ["beat"],
 }
 mso_parameters = {
     "sr": 44100,
@@ -37,16 +30,10 @@ mso_parameters = {
     "mean_filter_size": 22
 }
 
-
-def check_if_passes_filters(obj, filters):
-    for key in filters:
-        if filters[key] is not None and obj.to_dict()[key] != filters[key]:
-            return False
-    return True
-
 class GrooveMidiDataset(Dataset):
     def __init__(self,
-                 source_path='../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.3.0/Processed_On_13_05_2021_at_12_56_hrs',
+                 pickle_source_path='../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.3.0'
+                              '/Processed_On_13_05_2021_at_12_56_hrs',
                  subset='GrooveMIDI_processed_test',
                  metadata_csv_filename='metadata.csv',
                  hvo_pickle_filename='hvo_sequence_data.obj',
@@ -63,10 +50,15 @@ class GrooveMidiDataset(Dataset):
         assert (n_voices_to_remove <= len(
             voice_idx)), "number of voices to remove can not be greater than length of voice_idx"
 
-        # load dataset
-        train_file = open(os.path.join(source_path, subset, hvo_pickle_filename), 'rb')
-        train_set = pickle.load(train_file)
-        metadata = pd.read_csv(os.path.join(source_path, subset, metadata_csv_filename))
+        metadata = pd.read_csv(os.path.join(pickle_source_path, subset, metadata_csv_filename))
+
+        gmd_subset = GrooveMidiSubsetter(
+            pickle_source_path=pickle_source_path,
+            subset=subset,
+            hvo_pickle_filename=hvo_pickle_filename,
+            list_of_filter_dicts_for_subsets=[filters],
+        )
+        _, subset_list = gmd_subset.create_subsets()
 
         # init lists to store hvo sequences and processed io
         self.hvo_sequences = []
@@ -81,56 +73,55 @@ class GrooveMidiDataset(Dataset):
         # list of soundfonts
         sfs = [os.path.join(sf_path) + sf for sf in os.listdir(sf_path)]
 
-        for hvo_idx, hvo_seq in enumerate(train_set):
+        for hvo_idx, hvo_seq in enumerate(subset_list[0]):   # only one subset because only one set of filters
             if len(hvo_seq.time_signatures) == 1:  # ignore if time_signature change happens
                 all_zeros = not np.any(hvo_seq.hvo.flatten())
                 if not all_zeros:  # ignore silent patterns
-                    if check_if_passes_filters(metadata.loc[hvo_idx], filters):
 
-                        # add metadata to hvo_seq scores
-                        hvo_seq.drummer = metadata.loc[hvo_idx].at["drummer"]
-                        hvo_seq.session = metadata.loc[hvo_idx].at["session"]
-                        hvo_seq.master_id = metadata.loc[hvo_idx].at["master_id"]
-                        hvo_seq.style_primary = metadata.loc[hvo_idx].at["style_primary"]
-                        hvo_seq.style_secondary = metadata.loc[hvo_idx].at["style_secondary"]
-                        hvo_seq.beat_type = metadata.loc[hvo_idx].at["beat_type"]
-                        hvo_seq.loop_id = metadata.loc[hvo_idx].at["loop_id"]
-                        hvo_seq.bpm = metadata.loc[hvo_idx].at["bpm"]
+                    # add metadata to hvo_seq scores
+                    hvo_seq.drummer = metadata.loc[hvo_idx].at["drummer"]
+                    hvo_seq.session = metadata.loc[hvo_idx].at["session"]
+                    hvo_seq.master_id = metadata.loc[hvo_idx].at["master_id"]
+                    hvo_seq.style_primary = metadata.loc[hvo_idx].at["style_primary"]
+                    hvo_seq.style_secondary = metadata.loc[hvo_idx].at["style_secondary"]
+                    hvo_seq.beat_type = metadata.loc[hvo_idx].at["beat_type"]
+                    hvo_seq.loop_id = metadata.loc[hvo_idx].at["loop_id"]
+                    hvo_seq.bpm = metadata.loc[hvo_idx].at["bpm"]
 
-                        # pad with zeros to match max_len
-                        pad_count = max(max_len - hvo_seq.hvo.shape[0], 0)
-                        hvo_seq.hvo = np.pad(hvo_seq.hvo, ((0, pad_count), (0, 0)), 'constant')
-                        hvo_seq.hvo = hvo_seq.hvo[:max_len, :]  # in case seq exceeds max len
+                    # pad with zeros to match max_len
+                    pad_count = max(max_len - hvo_seq.hvo.shape[0], 0)
+                    hvo_seq.hvo = np.pad(hvo_seq.hvo, ((0, pad_count), (0, 0)), 'constant')
+                    hvo_seq.hvo = hvo_seq.hvo[:max_len, :]  # in case seq exceeds max len
 
-                        # append hvo_seq
-                        self.hvo_sequences.append(hvo_seq)
+                    # append hvo_seq
+                    self.hvo_sequences.append(hvo_seq)
 
-                        # voice_combinations
-                        voice_idx_comb = list(itertools.combinations(voice_idx, n_voices_to_remove))
-                        # combinations of sf and voices
-                        sf_v_comb = list(itertools.product(sfs, voice_idx_comb))
-                        # if there's more combinations than max_items, choose randomly
-                        if len(sf_v_comb) > max_items / len(train_set):
-                            sf_v_comb = random.choices(sf_v_comb, k=max_items)
+                    # voice_combinations
+                    voice_idx_comb = list(itertools.combinations(voice_idx, n_voices_to_remove))
+                    # combinations of sf and voices
+                    sf_v_comb = list(itertools.product(sfs, voice_idx_comb))
+                    # if there's more combinations than max_items, choose randomly
+                    if len(sf_v_comb) > max_items / len(subset):
+                        sf_v_comb = random.choices(sf_v_comb, k=max_items)
 
-                        # for every sf and voice combination
-                        for sf, v_idx in sf_v_comb:
-                            v_idx = list(v_idx)
+                    # for every sf and voice combination
+                    for sf, v_idx in sf_v_comb:
+                        v_idx = list(v_idx)
 
-                            # reset voices in hvo
-                            hvo_seq_in, hvo_seq_out = hvo_seq.reset_voices(voice_idx=voice_idx)
+                        # reset voices in hvo
+                        hvo_seq_in, hvo_seq_out = hvo_seq.reset_voices(voice_idx=voice_idx)
 
-                            # store hvo, v_idx and sf
-                            self.hvo_index.append(hvo_idx)
-                            self.voices_reduced.append(v_idx)
-                            self.soundfonts.append(sf)
+                        # store hvo, v_idx and sf
+                        self.hvo_index.append(hvo_idx)
+                        self.voices_reduced.append(v_idx)
+                        self.soundfonts.append(sf)
 
-                            # processed inputs: mso
-                            mso = hvo_seq_in.mso(sf_path=sf)
-                            self.processed_inputs.append(mso)
+                        # processed inputs: mso
+                        mso = hvo_seq_in.mso(sf_path=sf)
+                        self.processed_inputs.append(mso)
 
-                            # processed outputs complementary hvo_seq with reset voices
-                            self.processed_outputs.append(hvo_seq_out.hvo)
+                        # processed outputs complementary hvo_seq with reset voices
+                        self.processed_outputs.append(hvo_seq_out.hvo)
 
         # store hvo index and soundfonts in csv
         now = datetime.now()
@@ -147,7 +138,7 @@ class GrooveMidiDataset(Dataset):
             "dataset_name": dataset_name,
             "timestamp": dt_string,
             "dataset_info": {
-                "source_path": source_path,
+                "source_path": pickle_source_path,
                 "subset": subset,
                 "metadata_csv_filename": metadata_csv_filename,
                 "hvo_pickle_filename": hvo_pickle_filename,
