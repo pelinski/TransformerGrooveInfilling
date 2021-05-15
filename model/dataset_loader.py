@@ -5,15 +5,11 @@ import os
 import pickle
 import sys
 
-sys.path.append('../')
-sys.path.append('../../preprocessed_dataset/')
-
 import numpy as np
 import json
 from datetime import datetime
 import itertools
 import random
-from Subset_Creators.subsetters import GrooveMidiSubsetter
 
 # default parameters
 filters = {
@@ -49,7 +45,6 @@ class GrooveMidiDataset(Dataset):
 
         metadata = pd.read_csv(os.path.join(subset_info["pickle_source_path"], subset_info["subset"],
                                             subset_info["metadata_csv_filename"]))
-
 
         # init lists to store hvo sequences and processed io
         self.hvo_sequences = []
