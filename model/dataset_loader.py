@@ -26,6 +26,7 @@ mso_parameters = {
     "mean_filter_size": 22
 }
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class GrooveMidiDataset(Dataset):
     def __init__(self,
@@ -141,6 +142,10 @@ class GrooveMidiDataset(Dataset):
         parameters_json = os.path.join(parameters_path, 'parameters.json')
         with open(parameters_json, 'w') as f:
             json.dump(parameters, f)
+
+        # convert to torch tensors
+        self.processed_inputs = torch.Tensor(self.processed_inputs,device=device)
+        self.processed_outputs = torch.Tensor(self.processed_outputs,device=device)
 
     def get_hvo_sequence(self, idx):
         hvo_idx = self.hvo_index[idx]
