@@ -19,8 +19,8 @@ def cq_matrix(n_bins_per_octave, n_bins, f_min, n_fft, sr):
     @param f_min: float
     @param n_fft: int
     @param sr: int
-    @returns c_mat: matrix
-    @returns: f_cq: list (triangular filters center frequencies)
+    @return c_mat: matrix
+    @return: f_cq: list (triangular filters center frequencies)
     """
     # note range goes from -1 to bpo*num_oct for boundary issues
     f_cq = f_min * 2 ** ((np.arange(-1, n_bins + 1)) / n_bins_per_octave)  # center frequencies
@@ -36,7 +36,6 @@ def cq_matrix(n_bins_per_octave, n_bins, f_min, n_fft, sr):
             [w1[0:l1], w2[l2:]])  # concatenate two halves. l1 and l2 are different because of the log-spacing
         c_mat[k - 1, kc[k - 1]:(kc[k + 1] + 1)] = wk / np.sum(wk)  # normalized to unit sum;
     return c_mat, f_cq  # matrix with triangular filterbank
-
 
 def onset_detection_fn(x, n_fft, win_length, hop_length, n_bins_per_octave, n_octaves, f_min, sr, mean_filter_size):
     """
@@ -88,7 +87,6 @@ def onset_detection_fn(x, n_fft, win_length, hop_length, n_bins_per_octave, n_oc
 
     return od_fun, logf_stft, f_cq
 
-
 def reduce_frequency_bands_in_spectrogram(freq_out, freq_in, S):
     """
     @param freq_out:        band center frequencies in output spectrogram
@@ -132,7 +130,6 @@ def reduce_frequency_bands_in_spectrogram(freq_out, freq_in, S):
 
     return S_out
 
-
 def get_grid_timestamps(n_bars=2, time_signature_numerator=4, time_signature_denominator=4,
                         beat_division_factors=[4], qpm=120):
     """
@@ -169,7 +166,6 @@ def get_grid_timestamps(n_bars=2, time_signature_numerator=4, time_signature_den
     # grid_len = hvo_seq.total_len
 
     return grid
-
 
 def get_onset_detect(onset_strength):
     """
