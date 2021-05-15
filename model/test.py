@@ -36,60 +36,62 @@ if __name__ == "__main__":
     hvo_seq.hvo = np.concatenate((hvo_bar, hvo_bar), axis=0)
 
     # Reset voices
-    hvo_reset, hvo_out_voices = hvo_seq.reset_voices([0])
-    print(hvo_seq.hvo[:10,0],hvo_seq.hvo[:10,9],hvo_seq.hvo[:10,2*9])
-    print(hvo_reset.hvo[:10,0],hvo_reset.hvo[:10,9],hvo_reset.hvo[:10,2*9])
-    print(hvo_out_voices.hvo[:10,0],hvo_out_voices.hvo[:10,9],hvo_out_voices.hvo[:10,2*9])
+    if True:
+        hvo_reset, hvo_out_voices = hvo_seq.reset_voices([0])
+        print(hvo_seq.hvo[:10,0],hvo_seq.hvo[:10,9],hvo_seq.hvo[:10,2*9])
+        print(hvo_reset.hvo[:10,0],hvo_reset.hvo[:10,9],hvo_reset.hvo[:10,2*9])
+        print(hvo_out_voices.hvo[:10,0],hvo_out_voices.hvo[:10,9],hvo_out_voices.hvo[:10,2*9])
 
     #mso
-    mso = hvo_reset.mso(sf_path='../soundfonts/filtered_soundfonts/7mb_vinyl_drums1.sf2')
-    y = hvo_reset.synthesize(sf_path='../soundfonts/filtered_soundfonts/7mb_vinyl_drums1.sf2')
-    mso_2 = input_features_extractor(y, qpm=hvo_reset.tempos[0].qpm)
-    print(mso == mso_2)
+    if True:
+        mso = hvo_reset.mso(sf_path='../soundfonts/filtered_soundfonts/7mb_vinyl_drums1.sf2')
+        y = hvo_reset.synthesize(sf_path='../soundfonts/filtered_soundfonts/7mb_vinyl_drums1.sf2')
+        mso_2 = input_features_extractor(y, qpm=hvo_reset.tempos[0].qpm)
+        print(mso == mso_2)
 
 
     ## GMD
+    if True:
+        # load subset
+        filters = {"beat_type": ["beat"],
+                   "master_id": ["drummer1/eval_session/10"]}
+        # subset creator
+        pickle_source_path = '../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.3.0/Processed_On_13_05_2021_at_12_56_hrs'
+        subset_name = 'GrooveMIDI_processed_test'
+        metadata_csv_filename = 'metadata.csv'
+        hvo_pickle_filename = 'hvo_sequence_data.obj'
 
-    # load subset
-    filters = { "beat_type": ["beat"],
-                "master_id" : ["drummer1/eval_session/10"]}
-    # subset creator
-    pickle_source_path = '../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.3.0/Processed_On_13_05_2021_at_12_56_hrs'
-    subset_name = 'GrooveMIDI_processed_test'
-    metadata_csv_filename = 'metadata.csv'
-    hvo_pickle_filename = 'hvo_sequence_data.obj'
+        gmd_subsetter = GrooveMidiSubsetter(
+            pickle_source_path=pickle_source_path,
+            subset=subset_name,
+            hvo_pickle_filename=hvo_pickle_filename,
+            list_of_filter_dicts_for_subsets=[filters],
+        )
+        _, subset_list = gmd_subsetter.create_subsets()
 
-    gmd_subsetter = GrooveMidiSubsetter(
-        pickle_source_path=pickle_source_path,
-        subset=subset_name,
-        hvo_pickle_filename=hvo_pickle_filename,
-        list_of_filter_dicts_for_subsets=[filters],
-    )
-    _, subset_list = gmd_subsetter.create_subsets()
+        subset_info = {"pickle_source_path": pickle_source_path,
+                       "subset": subset_name,
+                       "metadata_csv_filename": metadata_csv_filename,
+                       "hvo_pickle_filename": hvo_pickle_filename,
+                       "filters": filters}
 
-    subset_info = {"pickle_source_path": pickle_source_path,
-                   "subset": subset_name,
-                   "metadata_csv_filename": metadata_csv_filename,
-                   "hvo_pickle_filename": hvo_pickle_filename,
-                   "filters": filters}
+        mso_parameters = {
+            "sr": 44100,
+            "n_fft": 1024,
+            "win_length": 1024,
+            "hop_length": 441,
+            "n_bins_per_octave": 16,
+            "n_octaves": 9,
+            "f_min": 40,
+            "mean_filter_size": 22
+        }
 
-    mso_parameters = {
-        "sr": 44100,
-        "n_fft": 1024,
-        "win_length": 1024,
-        "hop_length": 441,
-        "n_bins_per_octave": 16,
-        "n_octaves": 9,
-        "f_min": 40,
-        "mean_filter_size": 22
-    }
-
-    # load gmd
-    gmd =  GrooveMidiDataset(subset=subset_list[0], subset_info=subset_info, mso_parameters=mso_parameters)
-    # check that input corresponds to mso
-    _in,_,_ = gmd.__getitem__(1)
-    hvo_in = gmd.get_hvo_sequence(1)
-    hvo_in_reset,_ = hvo_in.reset_voices(voice_idx = gmd.get_voices_idx(1))
-    mso = hvo_in_reset.mso(sf_path=gmd.get_soundfont(1))
-    print(_in == mso)
+        # load gmd
+        gmd = GrooveMidiDataset(subset=subset_list[0], subset_info=subset_info, mso_parameters=mso_parameters)
+        # check that input corresponds to mso
+        _in, _, _ = gmd.__getitem__(1)
+        hvo_in = gmd.get_hvo_sequence(1)
+        hvo_in_reset, _ = hvo_in.reset_voices(voice_idx=gmd.get_voices_idx(1))
+        mso = hvo_in_reset.mso(sf_path=gmd.get_soundfont(1))
+        print(_in == mso)
 
