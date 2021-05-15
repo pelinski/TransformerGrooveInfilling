@@ -1,8 +1,6 @@
 import sys
 sys.path.append('../../hvo_sequence/')
-sys.path.append('../dev/')
 sys.path.append('../../preprocessed_dataset/')
-
 
 from hvo_sequence.hvo_seq import HVO_Sequence
 from hvo_sequence.drum_mappings import ROLAND_REDUCED_MAPPING

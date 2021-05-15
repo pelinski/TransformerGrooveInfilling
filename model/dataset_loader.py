@@ -97,6 +97,7 @@ class GrooveMidiDataset(Dataset):
                         v_idx = list(v_idx)
 
                         # reset voices in hvo
+                        #TODO check that hvo is not empty after resetting voices
                         hvo_seq_in, hvo_seq_out = hvo_seq.reset_voices(voice_idx=voice_idx)
 
                         # store hvo, v_idx and sf
@@ -162,3 +163,22 @@ class GrooveMidiDataset(Dataset):
 
     def __getitem__(self, idx):
         return self.processed_inputs[idx], self.processed_outputs[idx], idx
+
+
+def get_voice_combinations(voice_idx=[0, 1, 2, 3, 4], min_n_voices_to_remove=1, max_n_voices_to_remove=3,
+                           prob=[1, 1, 1, 1, 1], k=1000):
+    assert (len(voice_idx) == len(prob)), "The voice_idx list and the prob list must be the same length"
+
+    voice_idx_comb = []
+    weights = []
+
+    for i, n_voices_to_remove in enumerate(range(min_n_voices_to_remove, max_n_voices_to_remove + 1)):
+        _voice_idx_comb = list(itertools.combinations(voice_idx, n_voices_to_remove))
+        voice_idx_comb.extend(_voice_idx_comb)
+
+        _weights = list(np.repeat(prob[i], len(_voice_idx_comb)))
+        weights.extend(_weights)
+
+    voice_idx_comb = random.choices(voice_idx_comb, weights=weights, k=k)
+
+    return voice_idx_comb
