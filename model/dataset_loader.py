@@ -9,6 +9,8 @@ from datetime import datetime
 import itertools
 import random
 
+from utils import get_voice_combinations
+
 # default parameters
 filters = {
     "bpm": ["beat"],
@@ -27,7 +29,7 @@ voices_parameters = {"voice_idx":[0,1],
                  "min_n_voices_to_remove":1,
                  "max_n_voices_to_remove":2,
                  "prob":[1,1],
-                  "k": 5}
+                  "k": 5}           # set k to None to get all possible combinations
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -39,7 +41,9 @@ class GrooveMidiDataset(Dataset):
                  voices_parameters=voices_parameters,
                  sf_path="../soundfonts/filtered_soundfonts/",
                  max_len=32,
-                 max_aug_items=10,      # max number of combinations to obtain from one item
+                 max_n_sf = None,
+                 max_aug_items=10,      # max number of combinations to obtain from one item. can be less if after
+                 # removing voices resulting hvo is empty
                  dataset_name=None
                  ):
 
@@ -57,12 +61,16 @@ class GrooveMidiDataset(Dataset):
         self.soundfonts = []
 
         # list of soundfonts
-        sfs = [os.path.join(sf_path) + sf for sf in os.listdir(sf_path)]
+        sfs_list = [os.path.join(sf_path) + sf for sf in os.listdir(sf_path)]
+        if max_n_sf is not None:
+            assert (max_n_sf <= len(sfs_list)), "max_n_sf can not be larger than number of available " \
+                                                      "soundfonts"
 
         for hvo_idx, hvo_seq in enumerate(subset):  # only one subset because only one set of filters
             if len(hvo_seq.time_signatures) == 1:  # ignore if time_signature change happens
 
                 all_zeros = not np.any(hvo_seq.hvo.flatten())
+
                 if not all_zeros:  # ignore silent patterns
 
                     # add metadata to hvo_seq scores
@@ -83,10 +91,18 @@ class GrooveMidiDataset(Dataset):
                     # append hvo_seq
                     self.hvo_sequences.append(hvo_seq)
 
+                    # limit number of soundfonts to sample from
+                    if max_n_sf is not None:
+                        sfs = random.choices(sfs_list, k=max_n_sf)
+                    else:
+                        sfs = sfs_list
+
                     # voice_combinations
-                    voice_idx_comb = get_voice_combinations(voices_parameters)
+                    v_comb = get_voice_combinations(voices_parameters)  # this has a kmax already with weights that
+                    # privileges some voices over the others
                     # combinations of sf and voices
-                    sf_v_comb = list(itertools.product(sfs, voice_idx_comb))
+                    sf_v_comb = list(itertools.product(sfs, v_comb))  # all possible combinations between soundfonts
+                    # and voices
 
                     # if there's more combinations than max_aug_items, choose randomly
                     if len(sf_v_comb) > max_aug_items:
@@ -98,8 +114,10 @@ class GrooveMidiDataset(Dataset):
 
                         # reset voices in hvo
                         hvo_seq_in, hvo_seq_out = hvo_seq.reset_voices(voice_idx=v_idx)
-                        # if resetted hvo is 0 after removing the voices, skip
-                        if not np.any(hvo_seq.hvo.flatten()): continue
+                        # if the resulting hvos are 0, skip
+                        if not np.any(hvo_seq_in.hvo.flatten()): continue
+                        if not np.any(hvo_seq_out.hvo.flatten()): continue
+
 
                         # store hvo, v_idx and sf
                         self.hvo_index.append(hvo_idx)
@@ -163,30 +181,3 @@ class GrooveMidiDataset(Dataset):
 
     def __getitem__(self, idx):
         return self.processed_inputs[idx], self.processed_outputs[idx], idx
-
-
-def get_voice_combinations(**kwargs):
-    voice_idx = kwargs.get("voice_idx",[0, 1, 2, 3, 4])
-    min_n_voices_to_remove = kwargs.get("min_n_voices_to_remove", 1)
-    max_n_voices_to_remove = kwargs.get("max_n_voices_to_remove",3)
-    prob = kwargs.get("prob",[1, 1, 1, 1, 1])
-    k = kwargs.get("k", 5)
-
-
-    assert (len(voice_idx) == len(prob)), "The voice_idx list and the prob list must be the same length"
-    assert (len(voice_idx) >= min_n_voices_to_remove and len(voice_idx) <= max_n_voices_to_remove), " " \
-                      "min_n_voices_to_remove <= len(voice_idx) <= max_n_voices_to_remove"
-
-    voice_idx_comb = []
-    weights = []
-
-    for i, n_voices_to_remove in enumerate(range(min_n_voices_to_remove, max_n_voices_to_remove + 1)):
-        _voice_idx_comb = list(itertools.combinations(voice_idx, n_voices_to_remove))
-        voice_idx_comb.extend(_voice_idx_comb)
-
-        _weights = list(np.repeat(prob[i], len(_voice_idx_comb)))
-        weights.extend(_weights)
-
-    voice_idx_comb = random.choices(voice_idx_comb, weights=weights, k=k)
-
-    return voice_idx_comb
