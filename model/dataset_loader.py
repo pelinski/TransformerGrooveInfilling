@@ -2,8 +2,6 @@ import torch
 from torch.utils.data import Dataset
 import pandas as pd
 import os
-import pickle
-import sys
 
 import numpy as np
 import json
@@ -99,8 +97,9 @@ class GrooveMidiDataset(Dataset):
                         v_idx = list(v_idx)
 
                         # reset voices in hvo
-                        #TODO check that hvo is not empty after resetting voices
                         hvo_seq_in, hvo_seq_out = hvo_seq.reset_voices(voice_idx=v_idx)
+                        # if resetted hvo is 0 after removing the voices, skip
+                        if not np.any(hvo_seq.hvo.flatten()): continue
 
                         # store hvo, v_idx and sf
                         self.hvo_index.append(hvo_idx)
