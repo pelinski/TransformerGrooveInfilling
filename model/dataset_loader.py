@@ -48,6 +48,10 @@ class GrooveMidiDataset(Dataset):
                  ):
 
         """
+        Groove Midi Dataset Loader. Max number of items in dataset is N x M x K where N is the number of items in the
+        subset, M the maximum number of soundfonts to sample from for each item (max_n_sf) and K is the maximum number
+        of voice combinations.
+
         @param subset:              GrooveMidiDataset subset generated with the Subset_Creator
         @param subset_info:         Dictionary with the routes and filters passed to the Subset_Creator to generate the
                                     subset
