@@ -41,3 +41,35 @@ def get_voice_combinations(**kwargs):
         voice_idx_comb = random.choices(voice_idx_comb, weights=weights, k=k)
 
     return voice_idx_comb
+
+
+def get_sf_v_combinations(voices_parameters, max_aug_items,  max_n_sf, sfs_list):
+    """
+    Gets soundfont and voices-to-remove combinations according to the parameters specified:
+    @param voices_parameters:       Refer to get_voices_combinations docs
+    @param max_aug_items:           Maximum number of inputs to obtain from each example in dataset. Each input is
+                                    the mso of a synthesized hvo_seq with a particular soundfont and a combination
+                                    of removed voices
+    @param max_n_sf:                Maximum number of soundfonts from where to choose from for each voice combination
+    @param sfs_list:                List of available soundfonts paths
+    @return sf_v_comb:              Combinations of soundfonts and voices indexes.
+    """
+
+    # k, weighted, voice_combinations
+    v_comb = get_voice_combinations(**voices_parameters)  # this has a kmax already with weights that
+
+    # max_n_sf soundfonts to sample from
+    if max_n_sf is not None:
+        sfs = random.choices(sfs_list, k=max_n_sf)
+    else:
+        sfs = sfs_list
+
+    # all possible v_comb and sfs combination
+    sf_v_comb = list(itertools.product(sfs, v_comb))
+
+    # if there's more combinations than max_aug_items, choose randomly
+    if len(sf_v_comb) > max_aug_items:
+        sf_v_comb = random.choices(sf_v_comb, k=max_aug_items)
+
+
+    return sf_v_comb
