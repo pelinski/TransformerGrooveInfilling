@@ -37,15 +37,30 @@ class GrooveMidiDataset(Dataset):
     def __init__(self,
                  subset,
                  subset_info, # in order to store them in parameters json
+                 max_len=32,
                  mso_parameters=mso_parameters,
                  voices_parameters=voices_parameters,
                  sf_path="../soundfonts/filtered_soundfonts/",
-                 max_len=32,
                  max_n_sf = None,
                  max_aug_items=10,      # max number of combinations to obtain from one item. can be less if after
                  # removing voices resulting hvo is empty
                  dataset_name=None
                  ):
+
+        """
+        @param subset:              GrooveMidiDataset subset generated with the Subset_Creator
+        @param subset_info:         Dictionary with the routes and filters passed to the Subset_Creator to generate the
+                                    subset
+        @param max_len:             Max_length of sequences
+        @param mso_parameters:      Dictionary with the parameters for calculating the Multiband Synthesized Onsets.
+                                    Refer to `hvo_sequence.hvo_seq.mso()` for the documentation
+        @param voices_parameters:   Dictionary with parameters for generating the combinations of the voices to remove
+                                    Refer to utils.get_voice_combinations for documentation
+        @param sf_path:             Path with soundfonts
+        @param max_n_sf:            Maximum number of soundfonts to sample from for each example
+        @param max_aug_items:       Maximum number of synthesized examples per example in subset
+        @param dataset_name:        Dataset name (for experiment tracking)
+        """
 
         metadata = pd.read_csv(os.path.join(subset_info["pickle_source_path"], subset_info["subset"],
                                             subset_info["metadata_csv_filename"]))
@@ -98,7 +113,7 @@ class GrooveMidiDataset(Dataset):
                         sfs = sfs_list
 
                     # voice_combinations
-                    v_comb = get_voice_combinations(voices_parameters)  # this has a kmax already with weights that
+                    v_comb = get_voice_combinations(**voices_parameters)  # this has a kmax already with weights that
                     # privileges some voices over the others
                     # combinations of sf and voices
                     sf_v_comb = list(itertools.product(sfs, v_comb))  # all possible combinations between soundfonts
