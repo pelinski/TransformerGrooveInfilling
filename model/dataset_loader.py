@@ -2,14 +2,14 @@ import torch
 from torch.utils.data import Dataset
 import pandas as pd
 import os
-import pickle
-import sys
 
 import numpy as np
 import json
 from datetime import datetime
 import itertools
 import random
+
+from utils import get_sf_v_combinations
 
 # default parameters
 filters = {
@@ -25,24 +25,42 @@ mso_parameters = {
     "f_min": 40,
     "mean_filter_size": 22
 }
+voices_parameters = {"voice_idx": [0, 1],
+                     "min_n_voices_to_remove": 1,
+                     "max_n_voices_to_remove": 2,
+                     "prob": [1, 1],
+                     "k": 5}  # set k to None to get all possible combinations
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
 class GrooveMidiDataset(Dataset):
     def __init__(self,
                  subset,
-                 subset_info, # in order to store them in parameters json
-                 mso_parameters=mso_parameters,
-                 sf_path="../soundfonts/filtered_soundfonts/",
+                 subset_info,  # in order to store them in parameters json
                  max_len=32,
-                 voice_idx=[0],
-                 n_voices_to_remove=1,
-                 max_items=10,
+                 mso_parameters=mso_parameters,
+                 voices_parameters=voices_parameters,
+                 sf_path="../soundfonts/filtered_soundfonts/",
+                 max_n_sf=None,
+                 max_aug_items=10,
                  dataset_name=None
                  ):
 
-        assert (n_voices_to_remove <= len(
-            voice_idx)), "number of voices to remove can not be greater than length of voice_idx"
+        """
+        @param subset:              GrooveMidiDataset subset generated with the Subset_Creator
+        @param subset_info:         Dictionary with the routes and filters passed to the Subset_Creator to generate the
+                                    subset
+        @param max_len:             Max_length of sequences
+        @param mso_parameters:      Dictionary with the parameters for calculating the Multiband Synthesized Onsets.
+                                    Refer to `hvo_sequence.hvo_seq.mso()` for the documentation
+        @param voices_parameters:   Dictionary with parameters for generating the combinations of the voices to remove
+                                    Refer to utils.get_voice_combinations for documentation
+        @param sf_path:             Path with soundfonts
+        @param max_n_sf:            Maximum number of soundfonts to sample from for each example
+        @param max_aug_items:       Maximum number of synthesized examples per example in subset
+        @param dataset_name:        Dataset name (for experiment tracking)
+        """
 
         metadata = pd.read_csv(os.path.join(subset_info["pickle_source_path"], subset_info["subset"],
                                             subset_info["metadata_csv_filename"]))
@@ -58,12 +76,16 @@ class GrooveMidiDataset(Dataset):
         self.soundfonts = []
 
         # list of soundfonts
-        sfs = [os.path.join(sf_path) + sf for sf in os.listdir(sf_path)]
+        sfs_list = [os.path.join(sf_path) + sf for sf in os.listdir(sf_path)]
+        if max_n_sf is not None:
+            assert (max_n_sf <= len(sfs_list)), "max_n_sf can not be larger than number of available " \
+                                                "soundfonts"
 
         for hvo_idx, hvo_seq in enumerate(subset):  # only one subset because only one set of filters
             if len(hvo_seq.time_signatures) == 1:  # ignore if time_signature change happens
 
                 all_zeros = not np.any(hvo_seq.hvo.flatten())
+
                 if not all_zeros:  # ignore silent patterns
 
                     # add metadata to hvo_seq scores
@@ -81,23 +103,21 @@ class GrooveMidiDataset(Dataset):
                     hvo_seq.hvo = np.pad(hvo_seq.hvo, ((0, pad_count), (0, 0)), 'constant')
                     hvo_seq.hvo = hvo_seq.hvo[:max_len, :]  # in case seq exceeds max len
 
-                    # append hvo_seq
+                    # append hvo_seq to hvo_sequences list
                     self.hvo_sequences.append(hvo_seq)
 
-                    # voice_combinations
-                    voice_idx_comb = list(itertools.combinations(voice_idx, n_voices_to_remove))
-                    # combinations of sf and voices
-                    sf_v_comb = list(itertools.product(sfs, voice_idx_comb))
-                    # if there's more combinations than max_items, choose randomly
-                    if len(sf_v_comb) > max_items / len(subset):
-                        sf_v_comb = random.choices(sf_v_comb, k=max_items)
+                    # get voices and sf combinations
+                    sf_v_comb = get_sf_v_combinations(voices_parameters, max_aug_items, max_n_sf, sfs_list)
 
                     # for every sf and voice combination
                     for sf, v_idx in sf_v_comb:
                         v_idx = list(v_idx)
 
                         # reset voices in hvo
-                        hvo_seq_in, hvo_seq_out = hvo_seq.reset_voices(voice_idx=voice_idx)
+                        hvo_seq_in, hvo_seq_out = hvo_seq.reset_voices(voice_idx=v_idx)
+                        # if the resulting hvos are 0, skip
+                        if not np.any(hvo_seq_in.hvo.flatten()): continue
+                        if not np.any(hvo_seq_out.hvo.flatten()): continue
 
                         # store hvo, v_idx and sf
                         self.hvo_index.append(hvo_idx)
@@ -111,27 +131,23 @@ class GrooveMidiDataset(Dataset):
                         # processed outputs complementary hvo_seq with reset voices
                         self.processed_outputs.append(hvo_seq_out.hvo)
 
-        # store hvo index and soundfonts in csv
-        now = datetime.now()
-        dt_string = now.strftime("%d_%m_%Y_at_%H_%M_hrs")
+        # current time
+        dt_string = datetime.now().strftime("%d_%m_%Y_at_%H_%M_hrs")
 
         # dataset name
         if dataset_name is None: dataset_name = "Dataset_" + dt_string
 
-        # save parameters
-        parameters_path = os.path.join('../result', dataset_name)
-        if not os.path.exists(parameters_path): os.makedirs(parameters_path)
-
+        # dataset creation parameters
         parameters = {
             "dataset_name": dataset_name,
             "timestamp": dt_string,
-            "subset_info" : {**subset_info,
-                              "sf_path": sf_path,
-                                "max_len": max_len,
-                                "max_items": max_items},
+            "subset_info": {**subset_info,
+                            "sf_path": sf_path,
+                            "max_len": max_len,
+                            "max_aug_items": max_aug_items},
             "mso_parameters": mso_parameters,
-            "voice_idx": voice_idx,
-            "n_voices_to_remove": n_voices_to_remove,
+            "voices_parameters": voices_parameters,
+            "max_n_sf": max_n_sf,
             "dictionaries": {
                 "hvo_index": self.hvo_index,
                 "voices_reduced": self.voices_reduced,
@@ -139,13 +155,17 @@ class GrooveMidiDataset(Dataset):
             }
 
         }
+
+        # save parameters
+        parameters_path = os.path.join('../result', dataset_name)
+        if not os.path.exists(parameters_path): os.makedirs(parameters_path)
         parameters_json = os.path.join(parameters_path, 'parameters.json')
         with open(parameters_json, 'w') as f:
             json.dump(parameters, f)
 
-        # convert to torch tensors
-        self.processed_inputs = torch.Tensor(self.processed_inputs,device=device)
-        self.processed_outputs = torch.Tensor(self.processed_outputs,device=device)
+        # convert inputs and outputs to torch tensors
+        self.processed_inputs = torch.Tensor(self.processed_inputs, device=device)
+        self.processed_outputs = torch.Tensor(self.processed_outputs, device=device)
 
     def get_hvo_sequence(self, idx):
         hvo_idx = self.hvo_index[idx]
