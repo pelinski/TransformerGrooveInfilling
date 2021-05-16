@@ -6,8 +6,6 @@ import os
 import numpy as np
 import json
 from datetime import datetime
-import itertools
-import random
 
 from utils import get_sf_v_combinations
 
