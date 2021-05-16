@@ -2,12 +2,9 @@ import torch
 from torch.utils.data import Dataset
 import pandas as pd
 import os
-
 import numpy as np
 import json
 from datetime import datetime
-import itertools
-import random
 
 from utils import get_sf_v_combinations
 
@@ -33,7 +30,6 @@ voices_parameters = {"voice_idx": [0, 1],
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-
 class GrooveMidiDataset(Dataset):
     def __init__(self,
                  subset,
@@ -48,6 +44,10 @@ class GrooveMidiDataset(Dataset):
                  ):
 
         """
+        Groove Midi Dataset Loader. Max number of items in dataset is N x M x K where N is the number of items in the
+        subset, M the maximum number of soundfonts to sample from for each item (max_n_sf) and K is the maximum number
+        of voice combinations.
+
         @param subset:              GrooveMidiDataset subset generated with the Subset_Creator
         @param subset_info:         Dictionary with the routes and filters passed to the Subset_Creator to generate the
                                     subset
