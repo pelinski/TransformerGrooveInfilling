@@ -2,7 +2,6 @@ import torch
 from torch.utils.data import Dataset
 import pandas as pd
 import os
-
 import numpy as np
 import json
 from datetime import datetime
@@ -30,7 +29,6 @@ voices_parameters = {"voice_idx": [0, 1],
                      "k": 5}  # set k to None to get all possible combinations
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 
 class GrooveMidiDataset(Dataset):
     def __init__(self,
