@@ -1,6 +1,7 @@
 import numpy as np
 import itertools
 import random
+import json
 
 def get_voice_combinations(**kwargs):
     """
@@ -20,12 +21,12 @@ def get_voice_combinations(**kwargs):
     prob = kwargs.get("prob", [1, 1, 1]) # prob of each n_voices_to_remove set in ascending order
     k = kwargs.get("k", 5)  # max number of combinations to return
 
+    if len(voice_idx) < max_n_voices_to_remove: max_n_voices_to_remove = len(voice_idx)
+
     range_items = range(min_n_voices_to_remove, max_n_voices_to_remove + 1)
 
     assert (len(prob) == len(
         range_items)), "The prob list must be the same length as the range(min_n_voices_to_remove, max_n_voices_to_remove)"
-    assert (len(voice_idx) >= min_n_voices_to_remove and len(voice_idx) >= max_n_voices_to_remove), " " \
-                                                                                                    "min_n_voices_to_remove <= len(voice_idx) <= max_n_voices_to_remove"
 
     voice_idx_comb = []
     weights = []
@@ -56,7 +57,7 @@ def get_sf_v_combinations(voices_parameters, max_aug_items,  max_n_sf, sfs_list)
     """
 
     # k, weighted, voice_combinations
-    v_comb = get_voice_combinations(**voices_parameters)  # this has a kmax already with weights that
+    v_comb = get_voice_combinations(**voices_parameters)
 
     # max_n_sf soundfonts to sample from
     if max_n_sf is not None:
@@ -73,3 +74,18 @@ def get_sf_v_combinations(voices_parameters, max_aug_items,  max_n_sf, sfs_list)
 
 
     return sf_v_comb
+
+
+class NpEncoder(json.JSONEncoder):
+    """
+    Encoder to store parameters in numpy data types in json file
+    """
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return super(NpEncoder, self).default(obj)
