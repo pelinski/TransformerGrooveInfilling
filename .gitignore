@@ -13,4 +13,4 @@ soundfonts/sounds/
 
 # test experiments
 result/
-model/test.html
+model/*.html
