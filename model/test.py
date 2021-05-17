@@ -34,14 +34,15 @@ if __name__ == "__main__":
     hvo_seq.hvo = np.concatenate((hvo_bar, hvo_bar), axis=0)
 
     # Reset voices
-    if True:
+    if False:
         hvo_reset, hvo_out_voices = hvo_seq.reset_voices([0])
+        print(hvo_seq.get_active_voices())
         print(hvo_seq.hvo[:10,0],hvo_seq.hvo[:10,9],hvo_seq.hvo[:10,2*9])
         print(hvo_reset.hvo[:10,0],hvo_reset.hvo[:10,9],hvo_reset.hvo[:10,2*9])
         print(hvo_out_voices.hvo[:10,0],hvo_out_voices.hvo[:10,9],hvo_out_voices.hvo[:10,2*9])
 
     #mso
-    if True:
+    if False:
         mso = hvo_reset.mso(sf_path='../soundfonts/filtered_soundfonts/7mb_vinyl_drums1.sf2')
         y = hvo_reset.synthesize(sf_path='../soundfonts/filtered_soundfonts/7mb_vinyl_drums1.sf2')
         mso_2 = input_features_extractor(y, qpm=hvo_reset.tempos[0].qpm)
@@ -89,12 +90,23 @@ if __name__ == "__main__":
         # check that input corresponds to mso
         _in, _, _ = gmd.__getitem__(1)
         hvo_in = gmd.get_hvo_sequence(1)
+        hvo_in.get_active_voices()
         hvo_in_reset, _ = hvo_in.reset_voices(voice_idx=gmd.get_voices_idx(1))
         mso = hvo_in_reset.mso(sf_path=gmd.get_soundfont(1))
         print(_in == mso)
 
+    voices_parameters = {"voice_idx": [0, 1, 3, 5],
+                         "min_n_voices_to_remove": 1,
+                         "max_n_voices_to_remove": 3,
+                         "prob": [1, 1, 1],
+                         "k": 5}
 
     gmd = GrooveMidiDataset(subset=subset_list[0], subset_info=subset_info, mso_parameters=mso_parameters,
-                            max_aug_items=10)
+                            max_aug_items=10,voices_parameters = voices_parameters)
     print(gmd.__len__(), len(gmd.hvo_sequences))
+
+    hvo = gmd.get_hvo_sequence(1)
+    in_, out_, idx = gmd.__getitem__(1)
+    hvo.to_html_plot(show_figure=True)
+    print(hvo.get_active_voices())
 

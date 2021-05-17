@@ -6,7 +6,7 @@ import numpy as np
 import json
 from datetime import datetime
 
-from utils import get_sf_v_combinations
+from utils import get_sf_v_combinations, NpEncoder
 
 # default parameters
 filters = {
@@ -106,8 +106,19 @@ class GrooveMidiDataset(Dataset):
                     # append hvo_seq to hvo_sequences list
                     self.hvo_sequences.append(hvo_seq)
 
+                    # remove voices in voice_idx not present in item
+                    active_voices = hvo_seq.get_active_voices()
+                    _voice_idx = voices_parameters["voice_idx"]
+                    non_present_voices_idx = np.argwhere(~np.isin(_voice_idx,active_voices)).flatten()
+                    _voice_idx = np.delete(_voice_idx, non_present_voices_idx)
+
+                    # create voices_parameters dict with adapted voices for item
+                    v_params = voices_parameters
+                    v_params["voice_idx"] = list(_voice_idx)
+                    v_params["prob"] = voices_parameters["prob"][:len(_voice_idx)]
+
                     # get voices and sf combinations
-                    sf_v_comb = get_sf_v_combinations(voices_parameters, max_aug_items, max_n_sf, sfs_list)
+                    sf_v_comb = get_sf_v_combinations(v_params, max_aug_items, max_n_sf, sfs_list)
 
                     # for every sf and voice combination
                     for sf, v_idx in sf_v_comb:
@@ -140,6 +151,7 @@ class GrooveMidiDataset(Dataset):
         # dataset creation parameters
         parameters = {
             "dataset_name": dataset_name,
+            "length" : len(self.processed_inputs),
             "timestamp": dt_string,
             "subset_info": {**subset_info,
                             "sf_path": sf_path,
@@ -161,11 +173,11 @@ class GrooveMidiDataset(Dataset):
         if not os.path.exists(parameters_path): os.makedirs(parameters_path)
         parameters_json = os.path.join(parameters_path, 'parameters.json')
         with open(parameters_json, 'w') as f:
-            json.dump(parameters, f)
+            json.dump(parameters, f, cls=NpEncoder)
 
         # convert inputs and outputs to torch tensors
-        self.processed_inputs = torch.Tensor(self.processed_inputs, device=device)
-        self.processed_outputs = torch.Tensor(self.processed_outputs, device=device)
+        self.processed_inputs = torch.Tensor(self.processed_inputs, device=device).to(torch.float32)
+        self.processed_outputs = torch.Tensor(self.processed_outputs, device=device).to(torch.float32)
 
     def get_hvo_sequence(self, idx):
         hvo_idx = self.hvo_index[idx]
