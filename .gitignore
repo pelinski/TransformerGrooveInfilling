@@ -2,3 +2,15 @@
 .vscode/
 __pycache__/
 .DS_Store
+processed_dataset/
+dev/synthesized_audio/
+misc/
+.idea/
+
+# only keep the good soundfonts
+soundfonts/all_soundfonts/
+soundfonts/sounds/
+
+# test experiments
+result/
+model/test.html
