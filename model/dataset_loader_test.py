@@ -4,7 +4,6 @@ sys.path.append('../../preprocessed_dataset/')
 
 from hvo_sequence.hvo_seq import HVO_Sequence
 from hvo_sequence.drum_mappings import ROLAND_REDUCED_MAPPING
-from dev.input_features.onsets import input_features_extractor
 from dataset_loader import GrooveMidiDataset
 import numpy as np
 from Subset_Creators.subsetters import GrooveMidiSubsetter
