@@ -75,7 +75,6 @@ def get_sf_v_combinations(voices_parameters, max_aug_items,  max_n_sf, sfs_list)
     if len(sf_v_comb) > max_aug_items:
         sf_v_comb = random.choices(sf_v_comb, k=max_aug_items)
 
-
     return sf_v_comb
 
 
