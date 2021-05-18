@@ -110,7 +110,8 @@ class GrooveMidiDataset(Dataset):
                     active_voices = hvo_seq.get_active_voices()
                     _voice_idx = voices_parameters["voice_idx"]
                     non_present_voices_idx = np.argwhere(~np.isin(_voice_idx,active_voices)).flatten()
-                    _voice_idx = np.delete(_voice_idx, non_present_voices_idx)
+                    _voice_idx = np.delete(_voice_idx, non_present_voices_idx).tolist()
+                    if len(_voice_idx) == 0: continue   # if there are no voices to remove, continue
 
                     # create voices_parameters dict with adapted voices for item
                     v_params = voices_parameters
@@ -119,10 +120,8 @@ class GrooveMidiDataset(Dataset):
 
                     # get voices and sf combinations
                     sf_v_comb = get_sf_v_combinations(v_params, max_aug_items, max_n_sf, sfs_list)
-
                     # for every sf and voice combination
                     for sf, v_idx in sf_v_comb:
-                        v_idx = list(v_idx)
 
                         # reset voices in hvo
                         hvo_seq_in, hvo_seq_out = hvo_seq.reset_voices(voice_idx=v_idx)

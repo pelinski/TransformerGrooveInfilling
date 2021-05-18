@@ -41,7 +41,7 @@ def get_voice_combinations(**kwargs):
     if k is not None: # if there is no k, return all possible combinations
         voice_idx_comb = random.choices(voice_idx_comb, weights=weights, k=k)
 
-    return voice_idx_comb
+    return list(voice_idx_comb)
 
 
 def get_sf_v_combinations(voices_parameters, max_aug_items,  max_n_sf, sfs_list):
@@ -57,7 +57,10 @@ def get_sf_v_combinations(voices_parameters, max_aug_items,  max_n_sf, sfs_list)
     """
 
     # k, weighted, voice_combinations
-    v_comb = get_voice_combinations(**voices_parameters)
+    if len(voices_parameters["voice_idx"]) == 1:
+        v_comb = voices_parameters["voice_idx"]
+    else:
+        v_comb = get_voice_combinations(**voices_parameters)
 
     # max_n_sf soundfonts to sample from
     if max_n_sf is not None:
