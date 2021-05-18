@@ -20,11 +20,10 @@ print(os.path.join(source_path, "GrooveMIDI_processed_train", "hvo_data.obj"))
 train_file = open(os.path.join(source_path, "GrooveMIDI_processed_train", "hvo_sequence_data.obj"),'rb')
 train_set = pickle.load(train_file)
 dataset_size = len(train_set)
-ix =  int(np.random.random_sample()*dataset_size)
-example = train_set[0]
+
 
 # select pack
-pack = 'pack2'
+pack = 'pack1'
 sf_path_root = os.path.join('./all_soundfonts', pack)
 sf_list = os.listdir(sf_path_root)
 print(sf_list)
@@ -39,11 +38,23 @@ for idx,sf in enumerate(sf_list):
     sf_path = os.path.join(sf_path_root, sf)
     sounds_path = os.path.join('./sounds', pack)
     if sf.split('.')[0] == "": continue  # .DS_Store
-    filename = os.path.join(sounds_path, str(idx) + "_" + sf.split('.')[-2] + '.wav')
     print(sf_path)
-    audio = example.synthesize(sr=44100, sf_path=sf_path)
-    if len(librosa.onset.onset_detect(audio)) > 1:
-        example.save_audio(filename=filename, sr=44100, sf_path=sf_path)
-        shutil.copy(sf_path, './filtered_soundfonts')
+
+    i = 0
+    while i<3:
+
+        filename = os.path.join(sounds_path,sf.split('.')[-2] +'_'+str(i) + '.wav')
+
+        idx = int(np.random.random_sample()*dataset_size)
+
+        audio = train_set[idx].synthesize(sr=44100, sf_path=sf_path)
+        if len(librosa.onset.onset_detect(audio)) > 1:
+            train_set[idx].save_audio(filename=filename, sr=44100, sf_path=sf_path)
+            shutil.copy(sf_path, './filtered_soundfonts')
+        else:
+            os.remove(sf_path)      # remove noisy sfs
+            break
+
+        i+=1
 
 
