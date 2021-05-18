@@ -8,13 +8,9 @@ from dataset_loader import GrooveMidiDataset
 from Subset_Creators.subsetters import GrooveMidiSubsetter
 
 if __name__ == "__main__":
-    # GMD
-
-    # load subset
     filters = {"beat_type": ["beat"],
-               "master_id": ["drummer1/eval_session/10"]}
+               "time_signature" : ["4-4"]}
 
-    # subset creator
     pickle_source_path = '../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.4.2/Processed_On_17_05_2021_at_22_32_hrs'
     subset_name = 'GrooveMIDI_processed_train'
     metadata_csv_filename = 'metadata.csv'
@@ -44,11 +40,12 @@ if __name__ == "__main__":
                       "mean_filter_size": 22
                       }
 
-    voices_parameters = {"voice_idx": [0, 1, 3, 5],
+    voices_parameters = {"voice_idx": [2], # closed hihat
                          "min_n_voices_to_remove": 1,
-                         "max_n_voices_to_remove": 3,
-                         "prob": [1, 1, 1],
-                         "k": 5}
+                         "max_n_voices_to_remove": 1,
+                         "prob": [1],
+                         "k": 1}
+
 
     gmd = GrooveMidiDataset(subset=subset_list[0], subset_info=subset_info, mso_parameters=mso_parameters,
-                            max_aug_items=100, voices_parameters=voices_parameters)
+                            max_aug_items=100, voices_parameters=voices_parameters,dataset_name="train1")
