@@ -2,7 +2,6 @@
 .vscode/
 __pycache__/
 .DS_Store
-processed_dataset/
 dev/synthesized_audio/
 misc/
 .idea/
@@ -14,3 +13,5 @@ soundfonts/sounds/
 # test experiments
 result/
 model/*.html
+
+dev/outdated/*
