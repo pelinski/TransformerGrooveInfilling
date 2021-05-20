@@ -92,15 +92,15 @@ def train_loop(dataloader, model, loss_fn, optimizer):
         X = X.permute(1,0,2)  # reorder dimensions to 32xNx embedding_size
         y = y.permute(1,0,2)  # reorder dimensions
 
-        # Compute prediction and loss
 
         # y_shifted
         y_s = torch.zeros([1, y.shape[1], y.shape[2]])
         y_s = torch.cat((y_s, y[:-1,:,:]), dim=0)
 
+        # prediction
         h, v, o = model(X, y_s)
 
-        # TODO sum 3 different losses
+        #loss
         loss = loss_fn(h,v,o, y)
 
         # Backpropagation
