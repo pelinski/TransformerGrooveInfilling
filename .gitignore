@@ -13,5 +13,3 @@ soundfonts/sounds/
 # test experiments
 result/
 model/*.html
-
-dev/outdated/*
