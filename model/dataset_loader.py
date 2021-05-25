@@ -6,7 +6,7 @@ import numpy as np
 import json
 from datetime import datetime
 
-from utils import get_sf_v_combinations, NpEncoder
+from _utils import get_sf_v_combinations, NpEncoder
 
 # default parameters
 filters = {

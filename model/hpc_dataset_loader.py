@@ -48,4 +48,4 @@ if __name__ == "__main__":
 
 
     gmd = GrooveMidiDataset(subset=subset_list[0], subset_info=subset_info, mso_parameters=mso_parameters,
-                            max_aug_items=100, voices_parameters=voices_parameters,dataset_name="train1")
+                            max_aug_items=100, voices_parameters=voices_parameters,dataset_name="train1",max_n_sf=4)
