@@ -175,8 +175,8 @@ class GrooveMidiDataset(Dataset):
             json.dump(parameters, f, cls=NpEncoder)
 
         # convert inputs and outputs to torch tensors
-        self.processed_inputs = torch.Tensor(self.processed_inputs, device=device).to(torch.float32)
-        self.processed_outputs = torch.Tensor(self.processed_outputs, device=device).to(torch.float32)
+        self.processed_inputs = torch.Tensor(self.processed_inputs).to(device=device)
+        self.processed_outputs = torch.Tensor(self.processed_outputs).to(device=device)
 
     def get_hvo_sequence(self, idx):
         hvo_idx = self.hvo_index[idx]
