@@ -1,8 +1,7 @@
 import sys
 import torch
 
-import dataset
-
+from dataset import GrooveMidiDataset
 sys.path.append("../../BaseGrooveTransformers/models/")
 from train import initialize_model, load_dataset, calculate_loss, train_loop
 
@@ -17,7 +16,7 @@ if __name__ == "__main__":
     filters = {
         "beat_type": ["beat"],
         "time_signature": ["4-4"],
-#        "master_id": ["drummer9/session1/8"]
+        "master_id": ["drummer9/session1/8"]
     }
 
     subset_info = {
@@ -67,7 +66,7 @@ if __name__ == "__main__":
         'dataset_name': None
     }
 
-    dataloader = load_dataset(dataset, subset_info, filters, training_parameters['batch_size'], dataset_parameters)
+    dataloader = load_dataset(GrooveMidiDataset, subset_info, filters, training_parameters['batch_size'], dataset_parameters)
 
     epoch_save_div = 100
 
