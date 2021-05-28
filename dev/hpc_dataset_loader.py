@@ -4,7 +4,7 @@ import numpy as np
 sys.path.append('../../hvo_sequence/')
 sys.path.append('../../preprocessed_dataset/')
 
-from dataset_loader import GrooveMidiDataset
+from dataset import GrooveMidiDataset
 from Subset_Creators.subsetters import GrooveMidiSubsetter
 
 if __name__ == "__main__":
