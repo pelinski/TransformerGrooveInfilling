@@ -70,7 +70,10 @@ class GrooveMidiDataset(Dataset):
         self.soundfonts = []
 
         # list of soundfonts
-        sfs_list = [os.path.join(sf_path) + sf for sf in os.listdir(sf_path) if sf.endswith('.sf2')]
+        if sf_path.endswith('.sf2'): # if the sf_path is to one sf2 file
+            sfs_list = [sf_path]
+        else:                       # if sf_path is a dir with sf2 files
+            sfs_list = [os.path.join(sf_path) + sf for sf in os.listdir(sf_path) if sf.endswith('.sf2')]
         if max_n_sf is not None:
             assert (max_n_sf <= len(sfs_list)), "max_n_sf can not be larger than number of available " \
                                                 "soundfonts"
