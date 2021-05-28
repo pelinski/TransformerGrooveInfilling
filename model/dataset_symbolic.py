@@ -11,7 +11,7 @@ from _utils import get_voice_combinations, NpEncoder
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-class GrooveMidiDataset(Dataset):
+class GrooveMidiDatasetSymbolic(Dataset):
     def __init__(self,
                  subset,
                  subset_info,  # in order to store them in parameters json
@@ -143,7 +143,6 @@ class GrooveMidiDataset(Dataset):
                 "hvo_index": self.hvo_index,
                 "voices_reduced": self.voices_reduced,
             }
-
         }
 
         # save parameters
