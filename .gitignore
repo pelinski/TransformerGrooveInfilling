@@ -12,4 +12,5 @@ soundfonts/sounds/
 
 # test experiments
 result/
+train_results/
 model/*.html
