@@ -94,18 +94,33 @@ if __name__ == "__main__":
         mso = hvo_in_reset.mso(sf_path=gmd.get_soundfont(1))
         print(_in == mso)
 
-    voices_parameters = {"voice_idx": [0, 1, 3, 5],
-                         "min_n_voices_to_remove": 1,
-                         "max_n_voices_to_remove": 3,
-                         "prob": [1, 1, 1],
-                         "k": 5}
+    if False:
+        voices_parameters = {"voice_idx": [0, 1, 3, 5],
+                             "min_n_voices_to_remove": 1,
+                             "max_n_voices_to_remove": 3,
+                             "prob": [1, 1, 1],
+                             "k": 5}
+        
+        gmd = GrooveMidiDataset(subset=subset_list[0], subset_info=subset_info, mso_parameters=mso_parameters,
+                                max_aug_items=10,voices_parameters = voices_parameters)
+        print(gmd.__len__(), len(gmd.hvo_sequences))
+        
+        hvo = gmd.get_hvo_sequence(1)
+        in_, out_, idx = gmd.__getitem__(1)
+        hvo.to_html_plot(show_figure=True)
+        print(hvo.get_active_voices())
 
-    gmd = GrooveMidiDataset(subset=subset_list[0], subset_info=subset_info, mso_parameters=mso_parameters,
-                            max_aug_items=10,voices_parameters = voices_parameters)
-    print(gmd.__len__(), len(gmd.hvo_sequences))
-
-    hvo = gmd.get_hvo_sequence(1)
-    in_, out_, idx = gmd.__getitem__(1)
-    hvo.to_html_plot(show_figure=True)
-    print(hvo.get_active_voices())
+    ## test dataset with kwargs
+    dataset_parameters = {
+        'max_len': 32,
+        'mso_parameters': {'sr': 44100, 'n_fft': 1024, 'win_length': 1024, 'hop_length':
+            441, 'n_bins_per_octave': 16, 'n_octaves': 9, 'f_min': 40, 'mean_filter_size': 22},
+        'voices_parameters': {'voice_idx': [0, 1], 'min_n_voices_to_remove': 1,
+                              'max_n_voices_to_remove': 2, 'prob': [1, 1], 'k': 5},
+        'sf_path': '../soundfonts/filtered_soundfonts/',
+        'max_n_sf': None,
+        'max_aug_items': 10,
+        'dataset_name': "test_kwargs"
+    }
+    gmd = GrooveMidiDataset(subset=subset_list[0], subset_info=subset_info, **dataset_parameters)
 

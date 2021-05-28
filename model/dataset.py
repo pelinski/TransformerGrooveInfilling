@@ -8,40 +8,14 @@ from datetime import datetime
 
 from _utils import get_sf_v_combinations, NpEncoder
 
-# default parameters
-filters = {
-    "bpm": ["beat"],
-}
-mso_parameters = {
-    "sr": 44100,
-    "n_fft": 1024,
-    "win_length": 1024,
-    "hop_length": 441,
-    "n_bins_per_octave": 16,
-    "n_octaves": 9,
-    "f_min": 40,
-    "mean_filter_size": 22
-}
-voices_parameters = {"voice_idx": [0, 1],
-                     "min_n_voices_to_remove": 1,
-                     "max_n_voices_to_remove": 2,
-                     "prob": [1, 1],
-                     "k": 5}  # set k to None to get all possible combinations
-
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
 class GrooveMidiDataset(Dataset):
     def __init__(self,
                  subset,
                  subset_info,  # in order to store them in parameters json
-                 max_len=32,
-                 mso_parameters=mso_parameters,
-                 voices_parameters=voices_parameters,
-                 sf_path="../soundfonts/filtered_soundfonts/",
-                 max_n_sf=None,
-                 max_aug_items=10,
-                 dataset_name=None
-                 ):
+                 **kwargs):
 
         """
         Groove Midi Dataset Loader. Max number of items in dataset is N x M x K where N is the number of items in the
@@ -50,7 +24,16 @@ class GrooveMidiDataset(Dataset):
 
         @param subset:              GrooveMidiDataset subset generated with the Subset_Creator
         @param subset_info:         Dictionary with the routes and filters passed to the Subset_Creator to generate the
-                                    subset
+                                    subset. Example:
+                                    subset_info = {
+                                    "pickle_source_path": '../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.4.2'
+                                               '/Processed_On_17_05_2021_at_22_32_hrs',
+                                    "subset": 'GrooveMIDI_processed_train',
+                                    "metadata_csv_filename": 'metadata.csv',
+                                    "hvo_pickle_filename": 'hvo_sequence_data.obj',
+                                    "filters": "bpm": ["beat"],
+                                    }
+
         @param max_len:             Max_length of sequences
         @param mso_parameters:      Dictionary with the parameters for calculating the Multiband Synthesized Onsets.
                                     Refer to `hvo_sequence.hvo_seq.mso()` for the documentation
@@ -61,6 +44,17 @@ class GrooveMidiDataset(Dataset):
         @param max_aug_items:       Maximum number of synthesized examples per example in subset
         @param dataset_name:        Dataset name (for experiment tracking)
         """
+
+        # default values for kwargs
+        max_len = kwargs.get('max_len', 32)
+        mso_parameters = kwargs.get('mso_parameters', {"sr": 44100, "n_fft": 1024, "win_length": 1024, "hop_length":
+            441, "n_bins_per_octave": 16, "n_octaves": 9, "f_min": 40, "mean_filter_size": 22})
+        voices_parameters = kwargs.get('voices_parameters', {"voice_idx": [0, 1], "min_n_voices_to_remove": 1,
+                                                             "max_n_voices_to_remove": 2, "prob": [1, 1], "k": 5})
+        sf_path = kwargs.get('sf_path', "../soundfonts/filtered_soundfonts/")
+        max_n_sf = kwargs.get('max_n_sf', None)
+        max_aug_items = kwargs.get('max_aug_items', 10)
+        dataset_name = kwargs.get('dataset_name', None)
 
         metadata = pd.read_csv(os.path.join(subset_info["pickle_source_path"], subset_info["subset"],
                                             subset_info["metadata_csv_filename"]))
@@ -109,9 +103,9 @@ class GrooveMidiDataset(Dataset):
                     # remove voices in voice_idx not present in item
                     active_voices = hvo_seq.get_active_voices()
                     _voice_idx = voices_parameters["voice_idx"]
-                    non_present_voices_idx = np.argwhere(~np.isin(_voice_idx,active_voices)).flatten()
+                    non_present_voices_idx = np.argwhere(~np.isin(_voice_idx, active_voices)).flatten()
                     _voice_idx = np.delete(_voice_idx, non_present_voices_idx).tolist()
-                    if len(_voice_idx) == 0: continue   # if there are no voices to remove, continue
+                    if len(_voice_idx) == 0: continue  # if there are no voices to remove, continue
 
                     # create voices_parameters dict with adapted voices for item
                     v_params = voices_parameters
@@ -150,7 +144,7 @@ class GrooveMidiDataset(Dataset):
         # dataset creation parameters
         parameters = {
             "dataset_name": dataset_name,
-            "length" : len(self.processed_inputs),
+            "length": len(self.processed_inputs),
             "timestamp": dt_string,
             "subset_info": {**subset_info,
                             "sf_path": sf_path,
