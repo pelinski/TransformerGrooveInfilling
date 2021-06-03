@@ -52,7 +52,7 @@ if __name__ == "__main__":
     BCE_fn = torch.nn.BCEWithLogitsLoss(reduction='none')
     MSE_fn = torch.nn.MSELoss(reduction='none')
 
-    model, optimizer, ep = initialize_model(model_parameters, training_parameters, save_info,
+    model, optimizer, scheduler, ep = initialize_model(model_parameters, training_parameters, save_info,
                                             load_from_checkpoint=False)
     dataset_parameters = {
         'max_len': 32,
@@ -73,7 +73,7 @@ if __name__ == "__main__":
     while True:
         ep += 1
         print(f"Epoch {ep}\n-------------------------------")
-        train_loop(dataloader=dataloader, groove_transformer=model, opt=optimizer, epoch=ep,
+        train_loop(dataloader=dataloader, groove_transformer=model, opt=optimizer, scheduler=scheduler, epoch=ep,
                    loss_fn=calculate_loss, bce_fn=BCE_fn, mse_fn=MSE_fn, save_epoch=epoch_save_div, cp_info=save_info,
                    device=model_parameters['device'])
         print("-------------------------------\n")
