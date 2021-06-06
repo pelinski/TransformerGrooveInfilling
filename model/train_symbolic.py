@@ -1,5 +1,7 @@
 import sys
 import torch
+import wandb
+import numpy as np
 
 from dataset_symbolic import GrooveMidiDatasetSymbolic
 
@@ -7,6 +9,23 @@ sys.path.append("../../BaseGrooveTransformers/models/")
 from train import initialize_model, load_dataset, calculate_loss, train_loop
 
 if __name__ == "__main__":
+
+    hyperparameter_defaults = dict(
+        d_model=128,
+        n_heads=8,
+        dropout=0.1,
+        num_encoder_layers=1,
+        num_decoder_layers=1,
+        learning_rate=1e-3,
+        batch_size=64,
+        dim_feedforward=1280,
+        epochs=100,
+        lr_scheduler_step_size=30,
+        lr_scheduler_gamma=0.1
+    )
+
+    wandb.init(config=hyperparameter_defaults, project="infilling-symbolic", entity="tpelinski")
+
 
     save_info = {
         'checkpoint_path': '../symbolic_train_results/',
@@ -17,7 +36,7 @@ if __name__ == "__main__":
     filters = {
         "beat_type": ["beat"],
         "time_signature": ["4-4"],
-        "master_id": ["drummer9/session1/8"]
+        #"master_id": ["drummer9/session1/8"]
     }
 
     subset_info = {
@@ -31,22 +50,25 @@ if __name__ == "__main__":
 
     # TRANSFORMER MODEL PARAMETERS
     model_parameters = {
-        'd_model': 128,
-        'n_heads': 8,
-        'dim_feedforward': 1280,
-        'dropout': 0.1,
-        'num_encoder_layers': 1,
-        'num_decoder_layers': 1,
+        'd_model': wandb.config.d_model,
+        'n_heads': wandb.config.n_heads,
+        'dim_feedforward': wandb.config.dim_feedforward,
+        'dropout': wandb.config.dropout,
+        'num_encoder_layers': wandb.config.num_encoder_layers,
+        'num_decoder_layers': wandb.config.num_decoder_layers,
         'max_len': 32,
-        'embedding_size_src': 27,  # mso
+        'embedding_size_src': 27,  # hvo
         'embedding_size_tgt': 27,  # hvo
         'device': 'cuda' if torch.cuda.is_available() else 'cpu'
     }
 
     # TRAINING PARAMETERS
     training_parameters = {
-        'learning_rate': 1e-3,
-        'batch_size': 64
+        'learning_rate': wandb.config.learning_rate,
+        'batch_size':  wandb.config.batch_size,
+        'batch_size': wandb.config.batch_size,
+        'lr_scheduler_step_size': wandb.config.lr_scheduler_step_size,
+        'lr_scheduler_gamma': wandb.config.lr_scheduler_gamma
     }
 
     # PYTORCH LOSS FUNCTIONS
@@ -67,15 +89,21 @@ if __name__ == "__main__":
         'dataset_name': None
     }
 
+    wandb.watch(model)
     dataloader = load_dataset(GrooveMidiDatasetSymbolic, subset_info, filters, training_parameters['batch_size'],
                               dataset_parameters)
 
     epoch_save_div = 100
+    eps = wandb.config.epochs
 
-    while True:
-        ep += 1
-        print(f"Epoch {ep}\n-------------------------------")
-        train_loop(dataloader=dataloader, groove_transformer=model, opt=optimizer, scheduler=scheduler, epoch=ep,
+
+    try:
+        for i in np.arange(eps):
+            eps += 1
+            print(f"Epoch {eps}\n-------------------------------")
+            train_loop(dataloader=dataloader, groove_transformer=model, opt=optimizer, scheduler=scheduler, epoch=ep,
                    loss_fn=calculate_loss, bce_fn=BCE_fn, mse_fn=MSE_fn, save_epoch=epoch_save_div, cp_info=save_info,
                    device=model_parameters['device'])
-        print("-------------------------------\n")
+            print("-------------------------------\n")
+    finally:
+        wandb.finish()

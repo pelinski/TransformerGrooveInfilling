@@ -5,6 +5,7 @@ import os
 import numpy as np
 import json
 from datetime import datetime
+from tqdm import tqdm
 
 from _utils import get_sf_v_combinations, NpEncoder
 
@@ -70,15 +71,15 @@ class GrooveMidiDataset(Dataset):
         self.soundfonts = []
 
         # list of soundfonts
-        if sf_path.endswith('.sf2'): # if the sf_path is to one sf2 file
+        if sf_path.endswith('.sf2'):  # if the sf_path is to one sf2 file
             sfs_list = [sf_path]
-        else:                       # if sf_path is a dir with sf2 files
+        else:  # if sf_path is a dir with sf2 files
             sfs_list = [os.path.join(sf_path) + sf for sf in os.listdir(sf_path) if sf.endswith('.sf2')]
         if max_n_sf is not None:
             assert (max_n_sf <= len(sfs_list)), "max_n_sf can not be larger than number of available " \
                                                 "soundfonts"
 
-        for hvo_idx, hvo_seq in enumerate(subset):  # only one subset because only one set of filters
+        for hvo_idx, hvo_seq in enumerate(tqdm(subset)):  # only one subset because only one set of filters
             if len(hvo_seq.time_signatures) == 1:  # ignore if time_signature change happens
 
                 all_zeros = not np.any(hvo_seq.hvo.flatten())

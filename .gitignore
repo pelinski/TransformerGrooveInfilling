@@ -13,7 +13,11 @@ soundfonts/sounds/
 # test experiments
 result/
 train_results/
+symbolic_train_results/
 model/*.html
 
 # plots code 
 plots/
+
+#wandb
+wandb/
