@@ -8,6 +8,7 @@ sys.path.append("../../BaseGrooveTransformers/models/")
 from train import initialize_model, load_dataset, calculate_loss, train_loop
 
 if __name__ == "__main__":
+
     hyperparameter_defaults = dict(
         d_model=128,
         n_heads=8,
@@ -17,7 +18,9 @@ if __name__ == "__main__":
         learning_rate=1e-3,
         batch_size=64,
         dim_feedforward=1280,
-        epochs=100
+        epochs=100,
+        lr_scheduler_step_size=30,
+        lr_scheduler_gamma=0.1
     )
 
     wandb.init(config=hyperparameter_defaults, project="infilling", entity="tpelinski")
@@ -61,7 +64,10 @@ if __name__ == "__main__":
     # TRAINING PARAMETERS
     training_parameters = {
         'learning_rate': wandb.config.learning_rate,
-        'batch_size':  wandb.config.batch_size
+        'batch_size':  wandb.config.batch_size,
+        'batch_size': wandb.config.batch_size,
+        'lr_scheduler_step_size': wandb.config.lr_scheduler_step_size,
+        'lr_scheduler_gamma': wandb.config.lr_scheduler_gamma
     }
 
     # PYTORCH LOSS FUNCTIONS
@@ -88,10 +94,13 @@ if __name__ == "__main__":
     epoch_save_div = 100
     eps = wandb.config.epochs
 
-    for i in np.arange(eps):
-        eps += 1
-        print(f"Epoch {ep}\n-------------------------------")
-        train_loop(dataloader=dataloader, groove_transformer=model, opt=optimizer, scheduler=scheduler, epoch=ep,
+    try:
+        for i in np.arange(eps):
+            eps += 1
+            print(f"Epoch {ep}\n-------------------------------")
+            train_loop(dataloader=dataloader, groove_transformer=model, opt=optimizer, scheduler=scheduler, epoch=ep,
                    loss_fn=calculate_loss, bce_fn=BCE_fn, mse_fn=MSE_fn, save_epoch=epoch_save_div, cp_info=save_info,
                    device=model_parameters['device'])
-        print("-------------------------------\n")
+            print("-------------------------------\n")
+    finally:
+        wandb.finish()

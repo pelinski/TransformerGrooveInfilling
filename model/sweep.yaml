@@ -3,6 +3,14 @@ metric:
   goal: minimize
   name: loss
 parameters:
+  lr_scheduler_step_size:
+    values:
+      10,
+      50
+  lr_scheduler_gamma:
+    values:
+      0.1,
+      0.01
   batch_size:
     values:
     - 64
