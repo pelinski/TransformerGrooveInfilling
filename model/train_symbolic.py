@@ -36,7 +36,7 @@ if __name__ == "__main__":
     filters = {
         "beat_type": ["beat"],
         "time_signature": ["4-4"],
-        "master_id": ["drummer9/session1/8"]
+        #"master_id": ["drummer9/session1/8"]
     }
 
     subset_info = {
@@ -57,7 +57,7 @@ if __name__ == "__main__":
         'num_encoder_layers': wandb.config.num_encoder_layers,
         'num_decoder_layers': wandb.config.num_decoder_layers,
         'max_len': 32,
-        'embedding_size_src': 16,  # mso
+        'embedding_size_src': 27,  # hvo
         'embedding_size_tgt': 27,  # hvo
         'device': 'cuda' if torch.cuda.is_available() else 'cpu'
     }
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     try:
         for i in np.arange(eps):
             eps += 1
-            print(f"Epoch {ep}\n-------------------------------")
+            print(f"Epoch {eps}\n-------------------------------")
             train_loop(dataloader=dataloader, groove_transformer=model, opt=optimizer, scheduler=scheduler, epoch=ep,
                    loss_fn=calculate_loss, bce_fn=BCE_fn, mse_fn=MSE_fn, save_epoch=epoch_save_div, cp_info=save_info,
                    device=model_parameters['device'])

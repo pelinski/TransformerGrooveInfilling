@@ -97,7 +97,7 @@ if __name__ == "__main__":
     try:
         for i in np.arange(eps):
             eps += 1
-            print(f"Epoch {ep}\n-------------------------------")
+            print(f"Epoch {eps}\n-------------------------------")
             train_loop(dataloader=dataloader, groove_transformer=model, opt=optimizer, scheduler=scheduler, epoch=ep,
                    loss_fn=calculate_loss, bce_fn=BCE_fn, mse_fn=MSE_fn, save_epoch=epoch_save_div, cp_info=save_info,
                    device=model_parameters['device'])
