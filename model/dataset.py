@@ -8,7 +8,7 @@ from datetime import datetime
 from tqdm import tqdm
 import wandb
 
-from _utils import get_sf_v_combinations, NpEncoder
+from utils import get_sf_v_combinations, NpEncoder
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
