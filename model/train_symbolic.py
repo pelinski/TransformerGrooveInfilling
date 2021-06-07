@@ -76,8 +76,8 @@ if __name__ == "__main__":
     }
 
     # PYTORCH LOSS FUNCTIONS
-    BCE_fn = torch.nn.BCEWithLogitsLoss(reduction='none')
-    MSE_fn = torch.nn.MSELoss(reduction='none')
+    BCE_fn = torch.nn.BCEWithLogitsLoss()
+    MSE_fn = torch.nn.MSELoss()
 
     model, optimizer, scheduler, ep = initialize_model(model_parameters, training_parameters, save_info,
                                             load_from_checkpoint=False)
