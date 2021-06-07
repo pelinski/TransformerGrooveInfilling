@@ -6,6 +6,7 @@ import numpy as np
 import json
 from datetime import datetime
 from tqdm import tqdm
+import wandb
 
 from _utils import get_sf_v_combinations, NpEncoder
 
@@ -164,6 +165,8 @@ class GrooveMidiDataset(Dataset):
             }
 
         }
+
+        wandb.config.update(parameters, allow_val_change=True) # update defaults
 
         # save parameters
         parameters_path = os.path.join('../result', dataset_name)

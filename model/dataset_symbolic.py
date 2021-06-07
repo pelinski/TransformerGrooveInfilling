@@ -6,6 +6,7 @@ import numpy as np
 import json
 from datetime import datetime
 from tqdm import tqdm
+import wandb
 
 from _utils import get_voice_combinations, NpEncoder
 
@@ -144,6 +145,7 @@ class GrooveMidiDatasetSymbolic(Dataset):
                 "voices_reduced": self.voices_reduced,
             }
         }
+        wandb.config.update(parameters, allow_val_change=True) # update defaults
 
         # save parameters
         parameters_path = os.path.join('../result', dataset_name)
