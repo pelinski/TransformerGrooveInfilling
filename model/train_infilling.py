@@ -7,9 +7,12 @@ from dataset import GrooveMidiDataset
 sys.path.append("../../BaseGrooveTransformers/models/")
 from train import initialize_model, load_dataset, calculate_loss, train_loop
 
+# disable wandb for testing
+# os.environ['WANDB_MODE'] = 'offline'
 if __name__ == "__main__":
 
     hyperparameter_defaults = dict(
+        optimizer_algorithm='sgd',
         d_model=128,
         n_heads=8,
         dropout=0.1,
@@ -23,7 +26,7 @@ if __name__ == "__main__":
         lr_scheduler_gamma=0.1
     )
 
-    wandb.init(config=hyperparameter_defaults, project="infilling", entity="tpelinski")
+    wandb.init(config=hyperparameter_defaults)
 
 
     save_info = {
@@ -49,6 +52,7 @@ if __name__ == "__main__":
 
     # TRANSFORMER MODEL PARAMETERS
     model_parameters = {
+        'optimizer': wandb.config.optimizer_algorithm,
         'd_model': wandb.config.d_model,
         'n_heads': wandb.config.n_heads,
         'dim_feedforward': wandb.config.dim_feedforward,
@@ -88,6 +92,7 @@ if __name__ == "__main__":
         'dataset_name': None
     }
 
+    wandb.config.update(dataset_parameters)
     wandb.watch(model)
     dataloader = load_dataset(GrooveMidiDataset, subset_info, filters, training_parameters['batch_size'], dataset_parameters)
 
@@ -96,7 +101,7 @@ if __name__ == "__main__":
 
     try:
         for i in np.arange(eps):
-            eps += 1
+            ep += 1
             print(f"Epoch {eps}\n-------------------------------")
             train_loop(dataloader=dataloader, groove_transformer=model, opt=optimizer, scheduler=scheduler, epoch=ep,
                    loss_fn=calculate_loss, bce_fn=BCE_fn, mse_fn=MSE_fn, save_epoch=epoch_save_div, cp_info=save_info,
