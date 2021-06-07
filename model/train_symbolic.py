@@ -30,7 +30,7 @@ if __name__ == "__main__":
         lr_scheduler_gamma=0.1
     )
 
-    wandb.init(config=hyperparameter_defaults,project='TransformerGrooveInfilling-symbolic-model',entity='tpelinski')
+    wandb.init(config=hyperparameter_defaults,project='infilling-symbolic')
 
 
     save_info = {
