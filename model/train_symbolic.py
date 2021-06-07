@@ -11,6 +11,7 @@ from train import initialize_model, load_dataset, calculate_loss, train_loop
 if __name__ == "__main__":
 
     hyperparameter_defaults = dict(
+        optimizer_algorithm='sgd',
         d_model=128,
         n_heads=8,
         dropout=0.1,
@@ -24,7 +25,7 @@ if __name__ == "__main__":
         lr_scheduler_gamma=0.1
     )
 
-    wandb.init(config=hyperparameter_defaults, project="infilling-symbolic", entity="tpelinski")
+    wandb.init(config=hyperparameter_defaults)
 
 
     save_info = {
@@ -50,6 +51,7 @@ if __name__ == "__main__":
 
     # TRANSFORMER MODEL PARAMETERS
     model_parameters = {
+        'optimizer': wandb.config.optimizer_algorithm,
         'd_model': wandb.config.d_model,
         'n_heads': wandb.config.n_heads,
         'dim_feedforward': wandb.config.dim_feedforward,
