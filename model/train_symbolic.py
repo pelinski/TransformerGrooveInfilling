@@ -5,11 +5,14 @@ import numpy as np
 
 from dataset_symbolic import GrooveMidiDatasetSymbolic
 
-sys.path.append("../../BaseGrooveTransformers/models/")
-from train import initialize_model, load_dataset, calculate_loss, train_loop
+sys.path.insert(1, "../../BaseGrooveTransformers/")
+sys.path.insert(1, "../BaseGrooveTransformers/")
+from models.train import initialize_model, load_dataset, calculate_loss, train_loop
 
 # disable wandb for testing
-# os.environ['WANDB_MODE'] = 'offline'
+import os
+os.environ['WANDB_MODE'] = 'offline'
+
 if __name__ == "__main__":
 
     hyperparameter_defaults = dict(
