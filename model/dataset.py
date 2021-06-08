@@ -62,6 +62,7 @@ class GrooveMidiDataset(Dataset):
         self.timestamp = datetime.now().strftime("%d_%m_%Y_at_%H_%M_hrs")
         self.dataset_name =  "Dataset_" + self.timestamp if kwargs.get('dataset_name') is None else kwargs.get(
             'dataset_name', "Dataset_" + self.timestamp )
+        self.save_params = kwargs.get('save_params', True)
 
         self.subset_info = subset_info
         self.metadata = pd.read_csv(os.path.join(subset_info["pickle_source_path"], subset_info["subset"],
@@ -103,11 +104,8 @@ class GrooveMidiDataset(Dataset):
             wandb.config.update(params, allow_val_change=True)  # update defaults
 
         # save parameters to json
-        save_parameters_to_json(params)
-
-        # convert inputs and outputs to torch tensors
-        self.processed_inputs = torch.Tensor(self.processed_inputs).to(device=device)
-        self.processed_outputs = torch.Tensor(self.processed_outputs).to(device=device)
+        if self.save_params:
+            save_parameters_to_json(params)
 
     def preprocess_dataset(self, subset):
         # init lists to store hvo sequences and processed io
@@ -163,6 +161,10 @@ class GrooveMidiDataset(Dataset):
 
                         # processed outputs complementary hvo_seq with reset voices
                         processed_outputs.append(hvo_seq_out.hvo)
+
+        # convert inputs and outputs to torch tensors
+        processed_inputs = torch.Tensor(processed_inputs).to(device=device)
+        processed_outputs = torch.Tensor(processed_outputs).to(device=device)
 
         return (hvo_sequences, processed_inputs, processed_outputs), (hvo_index, voices_reduced, soundfonts)
 

@@ -113,7 +113,8 @@ if __name__ == "__main__":
                                          hvo_pickle_filename=subset_info["hvo_pickle_filename"],
                                          list_of_filter_dicts_for_subsets=[filters]).create_subsets()
 
-    gmd = GrooveMidiDataset(subset=subset_list[0], subset_info=subset_info, **dataset_parameters)
+    #FIXME save_params is true for experiment
+    gmd = GrooveMidiDataset(subset=subset_list[0], subset_info=subset_info, **dataset_parameters, save_params=False)
     dataloader = DataLoader(gmd, batch_size=training_parameters['batch_size'], shuffle=True)
 
     evaluator = Evaluator(
@@ -131,9 +132,9 @@ if __name__ == "__main__":
 
     # get gt evaluator
     evaluator_subset = evaluator.get_ground_truth_hvo_sequences()
-    (hvo_sequences, processed_inputs, processed_outputs), \
-    (hvo_index, voices_reduced, soundfonts) = gmd.preprocess_dataset(evaluator_subset)
-
+    (eval_hvo_sequences, eval_processed_inputs, eval_processed_outputs), \
+    (eval_hvo_index, eval_voices_reduced, eval_soundfonts) = gmd.preprocess_dataset(evaluator_subset)
+    # FIXME save this?
 
     epoch_save_div = 100
     eps = wandb.config.epochs
@@ -146,7 +147,15 @@ if __name__ == "__main__":
                    loss_fn=calculate_loss, bce_fn=BCE_fn, mse_fn=MSE_fn, save_epoch=epoch_save_div, cp_info=save_info,
                    device=model_parameters['device'])
             print("-------------------------------\n")
-            # generate evaluator predictions
+
+            # generate evaluator predictions after each epoch
+            pred = model.predict(eval_processed_inputs, use_thres=True, thres=0.5)
+            pred_hvo_array = np.concatenate(pred, axis=2)
+            evaluator.add_predictions(pred_hvo_array)
+
+            # log and frequencies
+
+
     finally:
         wandb.finish()
 
