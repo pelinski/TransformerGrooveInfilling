@@ -166,7 +166,8 @@ class GrooveMidiDataset(Dataset):
 
         }
 
-        wandb.config.update(parameters, allow_val_change=True) # update defaults
+        if wandb.ensure_configured(): # if running experiment file with wandb.init()
+            wandb.config.update(parameters, allow_val_change=True) # update defaults
 
         # save parameters
         parameters_path = os.path.join('../result', dataset_name)
