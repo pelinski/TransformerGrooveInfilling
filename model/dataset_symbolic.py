@@ -13,7 +13,7 @@ from utils import get_voice_combinations, NpEncoder
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-
+# FIXME
 class GrooveMidiDatasetSymbolic(Dataset):
     def __init__(self,
                  subset,
