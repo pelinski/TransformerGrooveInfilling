@@ -4,10 +4,20 @@ import wandb
 import numpy as np
 
 from dataset import GrooveMidiDataset
+from torch.utils.data import DataLoader
+
 
 sys.path.insert(1, "../../BaseGrooveTransformers/")
 sys.path.insert(1, "../BaseGrooveTransformers/")
+sys.path.insert(1, "../../GrooveEvaluator")
+sys.path.insert(1, "../GrooveEvaluator")
 from models.train import initialize_model, load_dataset, calculate_loss, train_loop
+from GrooveEvaluator.evaluator import Evaluator
+
+sys.path.append('../../preprocessed_dataset/')
+from Subset_Creators.subsetters import GrooveMidiSubsetter
+
+
 
 # disable wandb for testing
 import os
@@ -30,7 +40,7 @@ if __name__ == "__main__":
         lr_scheduler_gamma=0.1
     )
 
-    wandb.init(config=hyperparameter_defaults)
+    wandb.init(config=hyperparameter_defaults,project='infilling')
 
 
     save_info = {
@@ -73,7 +83,6 @@ if __name__ == "__main__":
     training_parameters = {
         'learning_rate': wandb.config.learning_rate,
         'batch_size':  wandb.config.batch_size,
-        'batch_size': wandb.config.batch_size,
         'lr_scheduler_step_size': wandb.config.lr_scheduler_step_size,
         'lr_scheduler_gamma': wandb.config.lr_scheduler_gamma
     }
@@ -98,7 +107,33 @@ if __name__ == "__main__":
 
     wandb.config.update(dataset_parameters)
     wandb.watch(model)
-    dataloader = load_dataset(GrooveMidiDataset, subset_info, filters, training_parameters['batch_size'], dataset_parameters)
+
+    _, subset_list = GrooveMidiSubsetter(pickle_source_path=subset_info["pickle_source_path"],
+                                         subset=subset_info["subset"],
+                                         hvo_pickle_filename=subset_info["hvo_pickle_filename"],
+                                         list_of_filter_dicts_for_subsets=[filters]).create_subsets()
+
+    gmd = GrooveMidiDataset(subset=subset_list[0], subset_info=subset_info, **dataset_parameters)
+    dataloader = DataLoader(gmd, batch_size=training_parameters['batch_size'], shuffle=True)
+
+    evaluator = Evaluator(
+        pickle_source_path=subset_info["pickle_source_path"],
+        set_subfolder=subset_info["subset"],
+        hvo_pickle_filename=subset_info["hvo_pickle_filename"],
+        list_of_filter_dicts_for_subsets=[filters],
+        max_hvo_shape=(32,27),
+        n_samples_to_use=3,
+        n_samples_to_synthesize_visualize_per_subset=1,
+        disable_tqdm=False,
+        analyze_heatmap=True,
+        analyze_global_features=True
+    )
+
+    # get gt evaluator
+    evaluator_subset = evaluator.get_ground_truth_hvo_sequences()
+    (hvo_sequences, processed_inputs, processed_outputs), \
+    (hvo_index, voices_reduced, soundfonts) = gmd.preprocess_dataset(evaluator_subset)
+
 
     epoch_save_div = 100
     eps = wandb.config.epochs
@@ -111,5 +146,7 @@ if __name__ == "__main__":
                    loss_fn=calculate_loss, bce_fn=BCE_fn, mse_fn=MSE_fn, save_epoch=epoch_save_div, cp_info=save_info,
                    device=model_parameters['device'])
             print("-------------------------------\n")
+            # generate evaluator predictions
     finally:
         wandb.finish()
+
