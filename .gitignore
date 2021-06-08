@@ -14,7 +14,7 @@ soundfonts/sounds/
 result/
 train_results/
 symbolic_train_results/
-model/*.html
+model/tests/*.html
 
 # plots code 
 plots/
