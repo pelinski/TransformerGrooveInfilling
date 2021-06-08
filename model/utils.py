@@ -132,7 +132,7 @@ def add_metadata_to_hvo_seq(hvo_seq, hvo_idx, metadata):
 
 def save_parameters_to_json(params, params_path=None):
     if params_path is None:
-        params_path = os.path.join('../result', params["dataset_name"])
+        params_path = os.path.join('../dataset', params["dataset_name"])
     if not os.path.exists(params_path):
         os.makedirs(params_path)
     params_json = os.path.join(params_path, 'params.json')

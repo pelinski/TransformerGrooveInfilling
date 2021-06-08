@@ -10,6 +10,7 @@ import wandb
 
 from utils import get_voice_combinations, NpEncoder
 
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 

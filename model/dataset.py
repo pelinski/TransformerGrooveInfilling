@@ -60,7 +60,8 @@ class GrooveMidiDataset(Dataset):
         self.max_n_sf = kwargs.get('max_n_sf', None)
         self.max_aug_items = kwargs.get('max_aug_items', 10)
         self.timestamp = datetime.now().strftime("%d_%m_%Y_at_%H_%M_hrs")
-        self.dataset_name = kwargs.get('dataset_name', "Dataset_" + self.timestamp)
+        self.dataset_name =  "Dataset_" + self.timestamp if kwargs.get('dataset_name') is None else kwargs.get(
+            'dataset_name', "Dataset_" + self.timestamp )
 
         self.subset_info = subset_info
         self.metadata = pd.read_csv(os.path.join(subset_info["pickle_source_path"], subset_info["subset"],
@@ -109,7 +110,6 @@ class GrooveMidiDataset(Dataset):
         self.processed_outputs = torch.Tensor(self.processed_outputs).to(device=device)
 
     def preprocess_dataset(self, subset):
-
         # init lists to store hvo sequences and processed io
         hvo_sequences = []
         processed_inputs = []
