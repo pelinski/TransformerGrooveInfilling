@@ -73,6 +73,8 @@ class GrooveMidiDataset(Dataset):
             assert (self.max_n_sf <= len(self.sfs_list)), "max_n_sf can not be larger than number of available " \
                                                           "soundfonts"
 
+        # assigning here so that preprocess_dataset can be used as external method for processing the samples given
+        # by the evaluator
         (self.hvo_sequences, self.processed_inputs, self.processed_outputs), \
         (self.hvo_index, self.voices_reduced, self.soundfonts) = self.preprocess_dataset(subset)
 
@@ -162,7 +164,7 @@ class GrooveMidiDataset(Dataset):
                         # processed outputs complementary hvo_seq with reset voices
                         processed_outputs.append(hvo_seq_out.hvo)
 
-        return (hvo_seq, processed_inputs, processed_inputs), (hvo_idx, voices_reduced, soundfonts)
+        return (hvo_sequences, processed_inputs, processed_outputs), (hvo_index, voices_reduced, soundfonts)
 
     # getters
 
