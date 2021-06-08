@@ -130,7 +130,7 @@ def add_metadata_to_hvo_seq(hvo_seq, hvo_idx, metadata):
     hvo_seq.bpm = metadata.loc[hvo_idx].at["bpm"]
 
 
-def save_parameters_to_json(self, params, params_path=None):
+def save_parameters_to_json(params, params_path=None):
     if params_path is None:
         params_path = os.path.join('../result', params["dataset_name"])
     if not os.path.exists(params_path):
