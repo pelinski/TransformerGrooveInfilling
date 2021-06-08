@@ -4,6 +4,7 @@ import random
 import json
 import os
 
+# hvo preprocess methods
 
 def pad_to_match_max_len(hvo_seq, max_len):
     pad_count = max(max_len - hvo_seq.hvo.shape[0], 0)
@@ -11,6 +12,18 @@ def pad_to_match_max_len(hvo_seq, max_len):
     hvo_seq.hvo = hvo_seq.hvo[:max_len, :]  # in case seq exceeds max len
 
     return hvo_seq
+
+def get_sf_list(sf_path):
+
+    if sf_path.endswith('.sf2'):  # if the sf_path is to one sf2 file
+        sfs_list = [sf_path]
+    else:  # if sf_path is a dir with sf2 files
+        sfs_list = [os.path.join(sf_path) + sf for sf in os.listdir(sf_path) if sf.endswith('.sf2')]
+
+    return sfs_list
+
+
+# voice combinations methods
 
 def get_voice_idx_for_item(hvo_seq, voices_params):
     """
@@ -113,14 +126,15 @@ def add_metadata_to_hvo_seq(hvo_seq, hvo_idx, metadata):
     hvo_seq.loop_id = metadata.loc[hvo_idx].at["loop_id"]
     hvo_seq.bpm = metadata.loc[hvo_idx].at["bpm"]
 
-def save_parameters_to_json(parameters, parameters_path=None ):
-    if parameters_path is None:
-        parameters_path = os.path.join('../result', parameters["dataset_name"])
-    if not os.path.exists(parameters_path):
-        os.makedirs(parameters_path)
-    parameters_json = os.path.join(parameters_path, 'parameters.json')
-    with open(parameters_json, 'w') as f:
-        json.dump(parameters, f, cls=NpEncoder)
+def save_parameters_to_json(self, params, params_path=None):
+    if params_path is None:
+        params_path = os.path.join('../result', params["dataset_name"])
+    if not os.path.exists(params_path):
+        os.makedirs(params_path)
+    params_json = os.path.join(params_path, 'params.json')
+    with open(params_json, 'w') as f:
+        json.dump(params, f, cls=NpEncoder)
+
 
 class NpEncoder(json.JSONEncoder):
     """
