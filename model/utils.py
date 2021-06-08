@@ -4,6 +4,7 @@ import random
 import json
 import os
 
+
 # hvo preprocess methods
 
 def pad_to_match_max_len(hvo_seq, max_len):
@@ -13,8 +14,8 @@ def pad_to_match_max_len(hvo_seq, max_len):
 
     return hvo_seq
 
-def get_sf_list(sf_path):
 
+def get_sf_list(sf_path):
     if sf_path.endswith('.sf2'):  # if the sf_path is to one sf2 file
         sfs_list = [sf_path]
     else:  # if sf_path is a dir with sf2 files
@@ -115,8 +116,10 @@ def get_sf_v_combinations(voices_parameters, max_aug_items, max_n_sf, sfs_list):
 
     return sf_v_comb
 
-def add_metadata_to_hvo_seq(hvo_seq, hvo_idx, metadata):
 
+# general
+
+def add_metadata_to_hvo_seq(hvo_seq, hvo_idx, metadata):
     hvo_seq.drummer = metadata.loc[hvo_idx].at["drummer"]
     hvo_seq.session = metadata.loc[hvo_idx].at["session"]
     hvo_seq.master_id = metadata.loc[hvo_idx].at["master_id"]
@@ -125,6 +128,7 @@ def add_metadata_to_hvo_seq(hvo_seq, hvo_idx, metadata):
     hvo_seq.beat_type = metadata.loc[hvo_idx].at["beat_type"]
     hvo_seq.loop_id = metadata.loc[hvo_idx].at["loop_id"]
     hvo_seq.bpm = metadata.loc[hvo_idx].at["bpm"]
+
 
 def save_parameters_to_json(self, params, params_path=None):
     if params_path is None:
