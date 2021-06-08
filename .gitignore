@@ -6,6 +6,8 @@ dev/synthesized_audio/
 misc/
 .idea/
 
+dataset/
+
 # only keep the good soundfonts
 soundfonts/all_soundfonts/
 soundfonts/sounds/
