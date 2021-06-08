@@ -6,7 +6,6 @@ import numpy as np
 from dataset import GrooveMidiDataset
 from torch.utils.data import DataLoader
 
-
 sys.path.insert(1, "../../BaseGrooveTransformers/")
 sys.path.insert(1, "../BaseGrooveTransformers/")
 sys.path.insert(1, "../../GrooveEvaluator")
@@ -17,11 +16,14 @@ from GrooveEvaluator.evaluator import Evaluator
 sys.path.append('../../preprocessed_dataset/')
 from Subset_Creators.subsetters import GrooveMidiSubsetter
 
-
+sys.path.insert(1, "../../hvo_sequence")
+sys.path.insert(1, "../hvo_sequence")
+from hvo_sequence.drum_mappings import ROLAND_REDUCED_MAPPING
 
 # disable wandb for testing
 import os
-os.environ['WANDB_MODE'] = 'offline'
+
+# os.environ['WANDB_MODE'] = 'offline'
 
 if __name__ == "__main__":
 
@@ -40,8 +42,7 @@ if __name__ == "__main__":
         lr_scheduler_gamma=0.1
     )
 
-    wandb.init(config=hyperparameter_defaults,project='infilling')
-
+    wandb_run = wandb.init(config=hyperparameter_defaults, project='infilling')
 
     save_info = {
         'checkpoint_path': '../train_results/',
@@ -82,7 +83,7 @@ if __name__ == "__main__":
     # TRAINING PARAMETERS
     training_parameters = {
         'learning_rate': wandb.config.learning_rate,
-        'batch_size':  wandb.config.batch_size,
+        'batch_size': wandb.config.batch_size,
         'lr_scheduler_step_size': wandb.config.lr_scheduler_step_size,
         'lr_scheduler_gamma': wandb.config.lr_scheduler_gamma
     }
@@ -92,12 +93,12 @@ if __name__ == "__main__":
     MSE_fn = torch.nn.MSELoss()
 
     model, optimizer, scheduler, ep = initialize_model(model_parameters, training_parameters, save_info,
-                                            load_from_checkpoint=False)
+                                                       load_from_checkpoint=False)
     dataset_parameters = {
         'max_len': 32,
         'mso_parameters': {'sr': 44100, 'n_fft': 1024, 'win_length': 1024, 'hop_length':
             441, 'n_bins_per_octave': 16, 'n_octaves': 9, 'f_min': 40, 'mean_filter_size': 22},
-        'voices_parameters': {'voice_idx': [2], 'min_n_voices_to_remove': 1,    # closed hh
+        'voices_parameters': {'voice_idx': [2], 'min_n_voices_to_remove': 1,  # closed hh
                               'max_n_voices_to_remove': 1, 'prob': [1], 'k': None},
         'sf_path': '../soundfonts/filtered_soundfonts/Standard_Drum_Kit.sf2',
         'max_n_sf': 1,
@@ -113,7 +114,7 @@ if __name__ == "__main__":
                                          hvo_pickle_filename=subset_info["hvo_pickle_filename"],
                                          list_of_filter_dicts_for_subsets=[filters]).create_subsets()
 
-    #FIXME save_params is true for experiment
+    # FIXME save_params is true for experiment
     gmd = GrooveMidiDataset(subset=subset_list[0], subset_info=subset_info, **dataset_parameters, save_params=False)
     dataloader = DataLoader(gmd, batch_size=training_parameters['batch_size'], shuffle=True)
 
@@ -122,7 +123,7 @@ if __name__ == "__main__":
         set_subfolder=subset_info["subset"],
         hvo_pickle_filename=subset_info["hvo_pickle_filename"],
         list_of_filter_dicts_for_subsets=[filters],
-        max_hvo_shape=(32,27),
+        max_hvo_shape=(32, 27),
         n_samples_to_use=3,
         n_samples_to_synthesize_visualize_per_subset=1,
         disable_tqdm=False,
@@ -132,7 +133,7 @@ if __name__ == "__main__":
 
     # get gt evaluator
     evaluator_subset = evaluator.get_ground_truth_hvo_sequences()
-    (eval_hvo_sequences, eval_processed_inputs, eval_processed_outputs), \
+    (_, eval_processed_inputs, _), \
     (eval_hvo_index, eval_voices_reduced, eval_soundfonts) = gmd.preprocess_dataset(evaluator_subset)
     # FIXME save this?
 
@@ -144,18 +145,35 @@ if __name__ == "__main__":
             ep += 1
             print(f"Epoch {ep}\n-------------------------------")
             train_loop(dataloader=dataloader, groove_transformer=model, opt=optimizer, scheduler=scheduler, epoch=ep,
-                   loss_fn=calculate_loss, bce_fn=BCE_fn, mse_fn=MSE_fn, save_epoch=epoch_save_div, cp_info=save_info,
-                   device=model_parameters['device'])
+                       loss_fn=calculate_loss, bce_fn=BCE_fn, mse_fn=MSE_fn, save_epoch=epoch_save_div,
+                       cp_info=save_info,
+                       device=model_parameters['device'])
             print("-------------------------------\n")
 
             # generate evaluator predictions after each epoch
-            pred = model.predict(eval_processed_inputs, use_thres=True, thres=0.5)
-            pred_hvo_array = np.concatenate(pred, axis=2)
-            evaluator.add_predictions(pred_hvo_array)
+            eval_pred = model.predict(eval_processed_inputs, use_thres=True, thres=0.5)
+            eval_pred_hvo_array = np.concatenate(eval_pred, axis=2)
+            evaluator.add_predictions(eval_pred_hvo_array)
 
-            # log and frequencies
+            # log to wandb
+            accuracy_dict = evaluator.get_hits_accuracies(drum_mapping=ROLAND_REDUCED_MAPPING)
+            vel_mse_dict = evaluator.get_velocity_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
+            off_mse_dict = evaluator.get_micro_timing_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
+            wandb.log(accuracy_dict, commit=False)
+            wandb.log(vel_mse_dict, commit=False)
+            wandb.log(off_mse_dict, commit=False)
 
+            rhythmic_distances = evaluator.get_rhythmic_distances()
+            wandb.log(rhythmic_distances, commit=False)
+
+            if ep % 10 == 0:
+                heatmaps_global_features = evaluator.get_wandb_logging_media(sf_paths=['../soundfonts/filtered_soundfonts/Standard_Drum_Kit.sf2'])
+                if len(heatmaps_global_features.keys()) > 0:
+                    wandb.log(heatmaps_global_features, commit=False)
+
+            wandb.log({"epoch": ep})
+
+            evaluator.dump(path="misc/evaluator_run_{}_Epoch_{}.Eval".format(wandb_run.name, ep))
 
     finally:
         wandb.finish()
-
