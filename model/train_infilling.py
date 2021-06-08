@@ -7,17 +7,13 @@ from dataset import GrooveMidiDataset
 from torch.utils.data import DataLoader
 
 sys.path.insert(1, "../../BaseGrooveTransformers/")
-sys.path.insert(1, "../BaseGrooveTransformers/")
 sys.path.insert(1, "../../GrooveEvaluator")
-sys.path.insert(1, "../GrooveEvaluator")
-from models.train import initialize_model, load_dataset, calculate_loss, train_loop
-from GrooveEvaluator.evaluator import Evaluator
-
 sys.path.append('../../preprocessed_dataset/')
-from Subset_Creators.subsetters import GrooveMidiSubsetter
-
 sys.path.insert(1, "../../hvo_sequence")
-sys.path.insert(1, "../hvo_sequence")
+
+from models.train import initialize_model, calculate_loss, train_loop, load_dataset
+from GrooveEvaluator.evaluator import Evaluator
+from Subset_Creators.subsetters import GrooveMidiSubsetter
 from hvo_sequence.drum_mappings import ROLAND_REDUCED_MAPPING
 
 # disable wandb for testing
@@ -44,16 +40,24 @@ if __name__ == "__main__":
 
     wandb_run = wandb.init(config=hyperparameter_defaults, project='infilling')
 
+    # PARAMETERS
     save_info = {
         'checkpoint_path': '../train_results/',
         'checkpoint_save_str': '../train_results/transformer_groove_infilling-epoch-{}',
         'df_path': '../train_results/losses_df/'
     }
 
-    filters = {
-        "beat_type": ["beat"],
-        "time_signature": ["4-4"],
-        "master_id": ["drummer9/session1/8"]
+    # DATASET PARAMETERS
+    dataset_parameters = {
+        'max_len': 32,
+        'mso_parameters': {'sr': 44100, 'n_fft': 1024, 'win_length': 1024, 'hop_length':
+            441, 'n_bins_per_octave': 16, 'n_octaves': 9, 'f_min': 40, 'mean_filter_size': 22},
+        'voices_parameters': {'voice_idx': [2], 'min_n_voices_to_remove': 1,  # closed hh
+                              'max_n_voices_to_remove': 1, 'prob': [1], 'k': None},
+        'sf_path': '../soundfonts/filtered_soundfonts/Standard_Drum_Kit.sf2',
+        'max_n_sf': 1,
+        'max_aug_items': 1,
+        'dataset_name': None
     }
 
     subset_info = {
@@ -62,7 +66,11 @@ if __name__ == "__main__":
         "subset": 'GrooveMIDI_processed_train',
         "metadata_csv_filename": 'metadata.csv',
         "hvo_pickle_filename": 'hvo_sequence_data.obj',
-        "filters": filters
+        "filters": {
+            "beat_type": ["beat"],
+            "time_signature": ["4-4"],
+            "master_id": ["drummer9/session1/8"]
+        }
     }
 
     # TRANSFORMER MODEL PARAMETERS
@@ -94,17 +102,6 @@ if __name__ == "__main__":
 
     model, optimizer, scheduler, ep = initialize_model(model_parameters, training_parameters, save_info,
                                                        load_from_checkpoint=False)
-    dataset_parameters = {
-        'max_len': 32,
-        'mso_parameters': {'sr': 44100, 'n_fft': 1024, 'win_length': 1024, 'hop_length':
-            441, 'n_bins_per_octave': 16, 'n_octaves': 9, 'f_min': 40, 'mean_filter_size': 22},
-        'voices_parameters': {'voice_idx': [2], 'min_n_voices_to_remove': 1,  # closed hh
-                              'max_n_voices_to_remove': 1, 'prob': [1], 'k': None},
-        'sf_path': '../soundfonts/filtered_soundfonts/Standard_Drum_Kit.sf2',
-        'max_n_sf': 1,
-        'max_aug_items': 1,
-        'dataset_name': None
-    }
 
     wandb.config.update(dataset_parameters)
     wandb.watch(model)
@@ -112,7 +109,7 @@ if __name__ == "__main__":
     _, subset_list = GrooveMidiSubsetter(pickle_source_path=subset_info["pickle_source_path"],
                                          subset=subset_info["subset"],
                                          hvo_pickle_filename=subset_info["hvo_pickle_filename"],
-                                         list_of_filter_dicts_for_subsets=[filters]).create_subsets()
+                                         list_of_filter_dicts_for_subsets=[subset_info["filters"]]).create_subsets()
 
     # FIXME save_params is true for experiment
     gmd = GrooveMidiDataset(subset=subset_list[0], subset_info=subset_info, **dataset_parameters, save_params=False)
@@ -122,7 +119,7 @@ if __name__ == "__main__":
         pickle_source_path=subset_info["pickle_source_path"],
         set_subfolder=subset_info["subset"],
         hvo_pickle_filename=subset_info["hvo_pickle_filename"],
-        list_of_filter_dicts_for_subsets=[filters],
+        list_of_filter_dicts_for_subsets=[subset_info["filters"]],
         max_hvo_shape=(32, 27),
         n_samples_to_use=3,
         n_samples_to_synthesize_visualize_per_subset=1,
@@ -135,7 +132,10 @@ if __name__ == "__main__":
     evaluator_subset = evaluator.get_ground_truth_hvo_sequences()
     (_, eval_processed_inputs, _), \
     (eval_hvo_index, eval_voices_reduced, eval_soundfonts) = gmd.preprocess_dataset(evaluator_subset)
-    # FIXME save this?
+    wandb.config.update({"eval_hvo_index": eval_hvo_index,
+                         "eval_voices_reduced": eval_voices_reduced,
+                         "eval_soundfons": eval_soundfonts})
+    # FIXME this should be the same sf as the generated examples
 
     epoch_save_div = 100
     eps = wandb.config.epochs
@@ -146,8 +146,7 @@ if __name__ == "__main__":
             print(f"Epoch {ep}\n-------------------------------")
             train_loop(dataloader=dataloader, groove_transformer=model, opt=optimizer, scheduler=scheduler, epoch=ep,
                        loss_fn=calculate_loss, bce_fn=BCE_fn, mse_fn=MSE_fn, save_epoch=epoch_save_div,
-                       cp_info=save_info,
-                       device=model_parameters['device'])
+                       cp_info=save_info, device=model_parameters['device'])
             print("-------------------------------\n")
 
             # generate evaluator predictions after each epoch
@@ -159,19 +158,19 @@ if __name__ == "__main__":
             accuracy_dict = evaluator.get_hits_accuracies(drum_mapping=ROLAND_REDUCED_MAPPING)
             vel_mse_dict = evaluator.get_velocity_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
             off_mse_dict = evaluator.get_micro_timing_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
+            rhythmic_distances = evaluator.get_rhythmic_distances()
+
             wandb.log(accuracy_dict, commit=False)
             wandb.log(vel_mse_dict, commit=False)
             wandb.log(off_mse_dict, commit=False)
-
-            rhythmic_distances = evaluator.get_rhythmic_distances()
             wandb.log(rhythmic_distances, commit=False)
 
+            # TODO add frequencies
             if ep % 10 == 0:
-                heatmaps_global_features = evaluator.get_wandb_logging_media(sf_paths=['../soundfonts/filtered_soundfonts/Standard_Drum_Kit.sf2'])
+                heatmaps_global_features = evaluator.get_wandb_logging_media(
+                    sf_paths=['../soundfonts/filtered_soundfonts/Standard_Drum_Kit.sf2'])
                 if len(heatmaps_global_features.keys()) > 0:
                     wandb.log(heatmaps_global_features, commit=False)
-
-            wandb.log({"epoch": ep})
 
             evaluator.dump(path="misc/evaluator_run_{}_Epoch_{}.Eval".format(wandb_run.name, ep))
 
