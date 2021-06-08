@@ -8,7 +8,8 @@ from datetime import datetime
 from tqdm import tqdm
 import wandb
 
-from utils import get_sf_v_combinations, NpEncoder
+from utils import add_metadata_to_hvo_seq, pad_to_match_max_len, get_voice_idx_for_item, get_sf_v_combinations, \
+    save_parameters_to_json, NpEncoder
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -88,37 +89,21 @@ class GrooveMidiDataset(Dataset):
                 if not all_zeros:  # ignore silent patterns
 
                     # add metadata to hvo_seq scores
-                    hvo_seq.drummer = metadata.loc[hvo_idx].at["drummer"]
-                    hvo_seq.session = metadata.loc[hvo_idx].at["session"]
-                    hvo_seq.master_id = metadata.loc[hvo_idx].at["master_id"]
-                    hvo_seq.style_primary = metadata.loc[hvo_idx].at["style_primary"]
-                    hvo_seq.style_secondary = metadata.loc[hvo_idx].at["style_secondary"]
-                    hvo_seq.beat_type = metadata.loc[hvo_idx].at["beat_type"]
-                    hvo_seq.loop_id = metadata.loc[hvo_idx].at["loop_id"]
-                    hvo_seq.bpm = metadata.loc[hvo_idx].at["bpm"]
+                    add_metadata_to_hvo_seq(hvo_seq,hvo_idx,metadata)
 
                     # pad with zeros to match max_len
-                    pad_count = max(max_len - hvo_seq.hvo.shape[0], 0)
-                    hvo_seq.hvo = np.pad(hvo_seq.hvo, ((0, pad_count), (0, 0)), 'constant')
-                    hvo_seq.hvo = hvo_seq.hvo[:max_len, :]  # in case seq exceeds max len
+                    hvo_seq = pad_to_match_max_len(hvo_seq,max_len)
 
                     # append hvo_seq to hvo_sequences list
                     self.hvo_sequences.append(hvo_seq)
 
                     # remove voices in voice_idx not present in item
-                    active_voices = hvo_seq.get_active_voices()
-                    _voice_idx = voices_parameters["voice_idx"]
-                    non_present_voices_idx = np.argwhere(~np.isin(_voice_idx, active_voices)).flatten()
-                    _voice_idx = np.delete(_voice_idx, non_present_voices_idx).tolist()
+                    _voice_idx, _voices_params = get_voice_idx_for_item(hvo_seq, voices_parameters["voice_idx"])
                     if len(_voice_idx) == 0: continue  # if there are no voices to remove, continue
 
-                    # create voices_parameters dict with adapted voices for item
-                    v_params = voices_parameters
-                    v_params["voice_idx"] = list(_voice_idx)
-                    v_params["prob"] = voices_parameters["prob"][:len(_voice_idx)]
-
                     # get voices and sf combinations
-                    sf_v_comb = get_sf_v_combinations(v_params, max_aug_items, max_n_sf, sfs_list)
+                    sf_v_comb = get_sf_v_combinations(_voices_params, max_aug_items, max_n_sf, sfs_list)
+
                     # for every sf and voice combination
                     for sf, v_idx in sf_v_comb:
 
@@ -143,12 +128,9 @@ class GrooveMidiDataset(Dataset):
         # current time
         dt_string = datetime.now().strftime("%d_%m_%Y_at_%H_%M_hrs")
 
-        # dataset name
-        if dataset_name is None: dataset_name = "Dataset_" + dt_string
-
         # dataset creation parameters
         parameters = {
-            "dataset_name": dataset_name,
+            "dataset_name": dataset_name if dataset_name is not None else "Dataset_" + dt_string,
             "length": len(self.processed_inputs),
             "timestamp": dt_string,
             "subset_info": {**subset_info,
@@ -170,11 +152,7 @@ class GrooveMidiDataset(Dataset):
             wandb.config.update(parameters, allow_val_change=True) # update defaults
 
         # save parameters
-        parameters_path = os.path.join('../result', dataset_name)
-        if not os.path.exists(parameters_path): os.makedirs(parameters_path)
-        parameters_json = os.path.join(parameters_path, 'parameters.json')
-        with open(parameters_json, 'w') as f:
-            json.dump(parameters, f, cls=NpEncoder)
+        save_parameters_to_json(parameters)
 
         # convert inputs and outputs to torch tensors
         self.processed_inputs = torch.Tensor(self.processed_inputs).to(device=device)
