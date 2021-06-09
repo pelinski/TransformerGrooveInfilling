@@ -16,11 +16,12 @@ def pad_to_match_max_len(hvo_seq, max_len):
 
 
 def get_sf_list(sf_path):
-    if sf_path.endswith('.sf2'):  # if the sf_path is to one sf2 file
+    if not isinstance(sf_path, list) and sf_path.endswith('.sf2'): # if only one sf is given
         sfs_list = [sf_path]
-    else:  # if sf_path is a dir with sf2 files
+    elif not isinstance(sf_path, list) and os.path.isdir(sf_path): # if dir with sfs is given
         sfs_list = [os.path.join(sf_path) + sf for sf in os.listdir(sf_path) if sf.endswith('.sf2')]
-
+    else:
+        sfs_list = sf_path # list of paths
     return sfs_list
 
 
