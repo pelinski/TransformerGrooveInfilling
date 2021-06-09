@@ -48,9 +48,6 @@ class GrooveMidiDataset(Dataset):
         """
 
         # default values for kwargs
-
-        print(kwargs)
-
         self.max_len = kwargs.get('max_len', 32)
         self.mso_params = kwargs.get('mso_params', {"sr": 44100, "n_fft": 1024, "win_length": 1024,
                                                             "hop_length": 441, "n_bins_per_octave": 16, "n_octaves":
