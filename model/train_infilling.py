@@ -17,8 +17,8 @@ from Subset_Creators.subsetters import GrooveMidiSubsetter
 from hvo_sequence.drum_mappings import ROLAND_REDUCED_MAPPING
 
 # disable wandb for testing
-#import os
-#os.environ['WANDB_MODE'] = 'offline'
+import os
+os.environ['WANDB_MODE'] = 'offline'
 
 if __name__ == "__main__":
 
@@ -59,7 +59,6 @@ if __name__ == "__main__":
         'max_aug_items': 1,
         'dataset_name': None
     }
-
 
     subset_info = {
         "pickle_source_path": '../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.4.4'
@@ -121,7 +120,7 @@ if __name__ == "__main__":
     list_of_filter_dicts_for_subsets = []
     for style in styles:
         list_of_filter_dicts_for_subsets.append(
-           {"style_primary": [style], "beat_type": ["beat"], "time_signature": ["4-4"]}
+            {"style_primary": [style], "beat_type": ["beat"], "time_signature": ["4-4"]}
         )
 
     evaluator = Evaluator(
@@ -139,7 +138,7 @@ if __name__ == "__main__":
 
     # get gt evaluator
     evaluator_subset = evaluator.get_ground_truth_hvo_sequences()
-    (_, eval_processed_inputs, _), \
+    (eval_hvo_sequences, eval_processed_inputs, eval_processed_outputs), \
     (eval_hvo_index, eval_voices_reduced, eval_soundfonts) = gmd.preprocess_dataset(evaluator_subset)
     wandb.config.update({"eval_hvo_index": eval_hvo_index,
                          "eval_voices_reduced": eval_voices_reduced,
@@ -167,18 +166,16 @@ if __name__ == "__main__":
             print(f"Epoch {ep}\n-------------------------------")
             train_loop(dataloader=dataloader, groove_transformer=model, opt=optimizer, scheduler=scheduler, epoch=ep,
                        loss_fn=calculate_loss, bce_fn=BCE_fn, mse_fn=MSE_fn, save=save_model, device=model_parameters[
-                'device'])
+                    'device'])
             print("-------------------------------\n")
 
             # generate evaluator predictions after each epoch
             eval_pred = model.predict(eval_processed_inputs, use_thres=True, thres=0.5)
             eval_pred_hvo_array = np.concatenate(eval_pred, axis=2)
-            # FIXME inputs + outputs
+            # FIXME what gt and pred to compare
             evaluator.add_predictions(eval_pred_hvo_array)
 
-
             if i in epoch_save_partial or i in epoch_save_all:
-
                 # Evaluate
                 acc_h = evaluator.get_hits_accuracies(drum_mapping=ROLAND_REDUCED_MAPPING)
                 mse_v = evaluator.get_velocity_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
@@ -195,7 +192,7 @@ if __name__ == "__main__":
 
                 # Heatmaps
                 heatmaps_global_features = evaluator.get_wandb_logging_media(sf_paths=eval_soundfonts,
-                                                                          use_custom_sf=True)
+                                                                             use_custom_sf=True)
                 if len(heatmaps_global_features.keys()) > 0:
                     wandb.log(heatmaps_global_features, commit=False)
 
