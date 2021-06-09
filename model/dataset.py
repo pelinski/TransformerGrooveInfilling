@@ -16,8 +16,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class GrooveMidiDataset(Dataset):
     def __init__(self,
-                 subset,
-                 subset_info,  # in order to store them in parameters json
+                 data,
                  **kwargs):
 
         """
@@ -25,7 +24,7 @@ class GrooveMidiDataset(Dataset):
         subset, M the maximum number of soundfonts to sample from for each item (max_n_sf) and K is the maximum number
         of voice combinations.
 
-        @param subset:              GrooveMidiDataset subset generated with the Subset_Creator
+        @param data:              GrooveMidiDataset subset generated with the Subset_Creator
         @param subset_info:         Dictionary with the routes and filters passed to the Subset_Creator to generate the
                                     subset. Example:
                                     subset_info = {
@@ -38,7 +37,7 @@ class GrooveMidiDataset(Dataset):
                                     }
 
         @param max_len:             Max_length of sequences
-        @param mso_parameters:      Dictionary with the parameters for calculating the Multiband Synthesized Onsets.
+        @param mso_params:      Dictionary with the parameters for calculating the Multiband Synthesized Onsets.
                                     Refer to `hvo_sequence.hvo_seq.mso()` for the documentation
         @param voices_params:   Dictionary with parameters for generating the combinations of the voices to remove
                                     Refer to utils.get_voice_combinations for documentation
@@ -50,11 +49,13 @@ class GrooveMidiDataset(Dataset):
 
         # default values for kwargs
 
+        print(kwargs)
+
         self.max_len = kwargs.get('max_len', 32)
-        self.mso_parameters = kwargs.get('mso_parameters', {"sr": 44100, "n_fft": 1024, "win_length": 1024,
+        self.mso_params = kwargs.get('mso_params', {"sr": 44100, "n_fft": 1024, "win_length": 1024,
                                                             "hop_length": 441, "n_bins_per_octave": 16, "n_octaves":
                                                                 9, "f_min": 40, "mean_filter_size": 22})
-        self.voices_params = kwargs.get('voices_parameters', {"voice_idx": [0, 1], "min_n_voices_to_remove": 1,
+        self.voices_params = kwargs.get('voices_params', {"voice_idx": [0, 1], "min_n_voices_to_remove": 1,
                                                               "max_n_voices_to_remove": 2, "prob": [1, 1], "k": 5})
         self.sf_path = kwargs.get('sf_path', "../soundfonts/filtered_soundfonts/")
         self.max_n_sf = kwargs.get('max_n_sf', None)
@@ -62,11 +63,17 @@ class GrooveMidiDataset(Dataset):
         self.timestamp = datetime.now().strftime("%d_%m_%Y_at_%H_%M_hrs")
         self.dataset_name =  "Dataset_" + self.timestamp if kwargs.get('dataset_name') is None else kwargs.get(
             'dataset_name', "Dataset_" + self.timestamp )
-        self.save_params = kwargs.get('save_params', True)
+        self.save_params = kwargs.get('cp_paths', True)
 
-        self.subset_info = subset_info
-        self.metadata = pd.read_csv(os.path.join(subset_info["pickle_source_path"], subset_info["subset"],
-                                                 subset_info["metadata_csv_filename"]))
+        self.subset_info = {
+            "pickle_source_path" : kwargs.get('pickle_source_path', ""),
+            "subset": kwargs.get('subset', ""),
+            "metadata_csv_filename":  kwargs.get('metadata_csv_filename', ""),
+            "hvo_pickle_filename": kwargs.get('hvo_pickle_filename', "")
+        }
+
+        self.metadata = pd.read_csv(os.path.join(self.subset_info["pickle_source_path"], self.subset_info["subset"],
+                                                 self.subset_info["metadata_csv_filename"]))
 
         # list of soundfonts
         self.sfs_list = get_sf_list(self.sf_path)
@@ -78,7 +85,7 @@ class GrooveMidiDataset(Dataset):
         # assigning here so that preprocess_dataset can be used as external method for processing the samples given
         # by the evaluator
         (self.hvo_sequences, self.processed_inputs, self.processed_outputs), \
-        (self.hvo_index, self.voices_reduced, self.soundfonts) = self.preprocess_dataset(subset)
+        (self.hvo_index, self.voices_reduced, self.soundfonts) = self.preprocess_dataset(data)
 
         # dataset creation parameters
         params = {
@@ -89,8 +96,8 @@ class GrooveMidiDataset(Dataset):
                             "sf_path": self.sf_path,
                             "max_len": self.max_len,
                             "max_aug_items": self.max_aug_items},
-            "mso_parameters": self.mso_parameters,
-            "voices_parameters": self.voices_params,
+            "mso_params": self.mso_params,
+            "voices_params": self.voices_params,
             "max_n_sf": self.max_n_sf,
             "dictionaries": {
                 "hvo_index": self.hvo_index,
@@ -107,7 +114,7 @@ class GrooveMidiDataset(Dataset):
         if self.save_params:
             save_parameters_to_json(params)
 
-    def preprocess_dataset(self, subset):
+    def preprocess_dataset(self, data):
         # init lists to store hvo sequences and processed io
         hvo_sequences = []
         processed_inputs = []
@@ -118,7 +125,7 @@ class GrooveMidiDataset(Dataset):
         voices_reduced = []
         soundfonts = []
 
-        for hvo_idx, hvo_seq in enumerate(tqdm(subset)):  # only one subset because only one set of filters
+        for hvo_idx, hvo_seq in enumerate(tqdm(data)):  # only one subset because only one set of filters
             if len(hvo_seq.time_signatures) == 1:  # ignore if time_signature change happens
 
                 all_zeros = not np.any(hvo_seq.hvo.flatten())
@@ -156,7 +163,7 @@ class GrooveMidiDataset(Dataset):
                         soundfonts.append(sf)
 
                         # processed inputs: mso
-                        mso = hvo_seq_in.mso(sf_path=sf, **self.mso_parameters)
+                        mso = hvo_seq_in.mso(sf_path=sf, **self.mso_params)
                         processed_inputs.append(mso)
 
                         # processed outputs complementary hvo_seq with reset voices
