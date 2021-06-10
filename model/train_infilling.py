@@ -7,14 +7,15 @@ from dataset import GrooveMidiDataset
 from torch.utils.data import DataLoader
 
 sys.path.insert(1, "../../BaseGrooveTransformers/")
-sys.path.insert(1, "../../GrooveEvaluator")
+#sys.path.insert(1, "../../GrooveEvaluator")
 sys.path.append('../../preprocessed_dataset/')
 sys.path.insert(1, "../../hvo_sequence")
 
 from models.train import initialize_model, calculate_loss, train_loop
-from GrooveEvaluator.evaluator import Evaluator
+#from GrooveEvaluator.evaluator import Evaluator
 from Subset_Creators.subsetters import GrooveMidiSubsetter
 from hvo_sequence.drum_mappings import ROLAND_REDUCED_MAPPING
+from evaluator import InfillingEvaluator
 
 # disable wandb for testing
 import os
@@ -129,7 +130,7 @@ if __name__ == "__main__":
             {"style_primary": [style], "beat_type": ["beat"], "time_signature": ["4-4"]}
         )
 
-    evaluator = Evaluator(
+    evaluator = InfillingEvaluator(
         pickle_source_path=params["dataset"]["pickle_source_path"],
         set_subfolder=params["dataset"]["subset"],
         hvo_pickle_filename=params["dataset"]["hvo_pickle_filename"],
@@ -144,8 +145,15 @@ if __name__ == "__main__":
 
     # get gt evaluator
     evaluator_subset = evaluator.get_ground_truth_hvo_sequences()
-    (eval_hvo_sequences, eval_processed_inputs, eval_processed_outputs), \
+
+    (eval_processed_inputs, eval_processed_outputs), \
+    (eval_hvo_sequences, eval_hvo_sequences_inputs, eval_hvo_sequences_outputs), \
     (eval_hvo_index, eval_voices_reduced, eval_soundfonts) = gmd.preprocess_dataset(evaluator_subset)
+
+    eval_hvo_array = np.stack([hvo_seq.hvo for hvo_seq in eval_hvo_sequences_inputs])
+    evaluator.set_gt_hvo_arrays(eval_hvo_array)
+    evaluator.set_gt_hvo_sequences(eval_hvo_sequences_inputs)
+
     wandb.config.update({"eval_hvo_index": eval_hvo_index,
                          "eval_voices_reduced": eval_voices_reduced,
                          "eval_soundfons": eval_soundfonts})
