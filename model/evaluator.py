@@ -26,7 +26,7 @@ class InfillingEvaluator(Evaluator):
                            _identifier=_identifier,
                            n_samples_to_use=n_samples_to_use,
                            max_hvo_shape=max_hvo_shape,
-                           n_samples_to_synthesize_visualize_per_subset=20,
+                           n_samples_to_synthesize_visualize_per_subset=n_samples_to_synthesize_visualize_per_subset,
                            analyze_heatmap=analyze_heatmap,
                            analyze_global_features=analyze_global_features,
                            disable_tqdm=disable_tqdm,
