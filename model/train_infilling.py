@@ -184,7 +184,8 @@ if __name__ == "__main__":
             # generate evaluator predictions after each epoch
             eval_pred = model.predict(eval_processed_inputs, use_thres=True, thres=0.5)
             eval_pred_hvo_array = np.concatenate(eval_pred, axis=2)
-            # FIXME what gt and pred to compare
+            # FIXME  set all voices to 0 except removed voices
+            # zero tensor with same shape as eval_pred_hvo_array and fill voices with eval_pred_hvo_array
             evaluator.add_predictions(eval_pred_hvo_array)
 
             if i in epoch_save_partial or i in epoch_save_all:
