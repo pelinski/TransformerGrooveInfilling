@@ -84,13 +84,28 @@ if __name__ == "__main__":
         "cp_paths": {
             'checkpoint_path': '../train_results/',
             'checkpoint_save_str': '../train_results/transformer_groove_infilling-epoch-{}'
-        }
+        },
+        "load_model":None,
+
+        # load_model options
+        # "load_model": {
+        #    "location": "local",
+        #    "dir": "./wandb/run-20210609_162149-1tsi1g1n/files/saved_models/",
+        #    "file_pattern": "transformer_run_{}_Epoch_{}.Model"
+        # }
+        # "load_model": {
+        #    "location": "wandb",
+        #    "dir": "marinaniet0/tap2drum/1tsi1g1n/",
+        #    "file_pattern": "saved_models/transformer_run_{}_Epoch_{}.Model",
+        #    "epoch": 51,
+        #    "run": "1tsi1g1n"
+        # }
     }
 
     BCE_fn = torch.nn.BCEWithLogitsLoss()
     MSE_fn = torch.nn.MSELoss()
 
-    model, optimizer, scheduler, ep = initialize_model(params, load_from_checkpoint=False)
+    model, optimizer, scheduler, ep = initialize_model(params)
 
     # log all params to wandb
     wandb.config.update(params)
@@ -180,8 +195,6 @@ if __name__ == "__main__":
                 wandb.log(rhythmic_distances, commit=False)
 
             if i in epoch_save_all:
-
-                # Heatmaps
                 heatmaps_global_features = evaluator.get_wandb_logging_media(sf_paths=eval_soundfonts,
                                                                              use_custom_sf=True)
                 if len(heatmaps_global_features.keys()) > 0:
