@@ -50,22 +50,22 @@ class GrooveMidiDataset(Dataset):
         # default values for kwargs
         self.max_len = kwargs.get('max_len', 32)
         self.mso_params = kwargs.get('mso_params', {"sr": 44100, "n_fft": 1024, "win_length": 1024,
-                                                            "hop_length": 441, "n_bins_per_octave": 16, "n_octaves":
-                                                                9, "f_min": 40, "mean_filter_size": 22})
+                                                    "hop_length": 441, "n_bins_per_octave": 16, "n_octaves":
+                                                        9, "f_min": 40, "mean_filter_size": 22})
         self.voices_params = kwargs.get('voices_params', {"voice_idx": [0, 1], "min_n_voices_to_remove": 1,
-                                                              "max_n_voices_to_remove": 2, "prob": [1, 1], "k": 5})
+                                                          "max_n_voices_to_remove": 2, "prob": [1, 1], "k": 5})
         self.sf_path = kwargs.get('sf_path', "../soundfonts/filtered_soundfonts/")
         self.max_n_sf = kwargs.get('max_n_sf', None)
         self.max_aug_items = kwargs.get('max_aug_items', 10)
         self.timestamp = datetime.now().strftime("%d_%m_%Y_at_%H_%M_hrs")
-        self.dataset_name =  "Dataset_" + self.timestamp if kwargs.get('dataset_name') is None else kwargs.get(
-            'dataset_name', "Dataset_" + self.timestamp )
+        self.dataset_name = "Dataset_" + self.timestamp if kwargs.get('dataset_name') is None else kwargs.get(
+            'dataset_name', "Dataset_" + self.timestamp)
         self.save_params = kwargs.get('cp_paths', True)
 
         self.subset_info = {
-            "pickle_source_path" : kwargs.get('pickle_source_path', ""),
+            "pickle_source_path": kwargs.get('pickle_source_path', ""),
             "subset": kwargs.get('subset', ""),
-            "metadata_csv_filename":  kwargs.get('metadata_csv_filename', ""),
+            "metadata_csv_filename": kwargs.get('metadata_csv_filename', ""),
             "hvo_pickle_filename": kwargs.get('hvo_pickle_filename', "")
         }
 
@@ -81,7 +81,8 @@ class GrooveMidiDataset(Dataset):
 
         # assigning here so that preprocess_dataset can be used as external method for processing the samples given
         # by the evaluator
-        (self.hvo_sequences, self.processed_inputs, self.processed_outputs), \
+        (self.processed_inputs, self.processed_outputs), \
+        (self.hvo_sequences, self.hvo_sequences_inputs, self.hvo_sequences_outputs), \
         (self.hvo_index, self.voices_reduced, self.soundfonts) = self.preprocess_dataset(data)
 
         # dataset creation parameters
@@ -114,6 +115,8 @@ class GrooveMidiDataset(Dataset):
     def preprocess_dataset(self, data):
         # init lists to store hvo sequences and processed io
         hvo_sequences = []
+        hvo_sequences_inputs = []
+        hvo_sequences_outputs = []
         processed_inputs = []
         processed_outputs = []
 
@@ -154,6 +157,9 @@ class GrooveMidiDataset(Dataset):
                         if not np.any(hvo_seq_in.hvo.flatten()): continue
                         if not np.any(hvo_seq_out.hvo.flatten()): continue
 
+                        hvo_sequences_inputs.append(hvo_seq_in)
+                        hvo_sequences_outputs.append(hvo_seq_out)
+
                         # store hvo, v_idx and sf
                         hvo_index.append(hvo_idx)
                         voices_reduced.append(v_idx)
@@ -170,7 +176,8 @@ class GrooveMidiDataset(Dataset):
         processed_inputs = torch.Tensor(processed_inputs).to(device=device)
         processed_outputs = torch.Tensor(processed_outputs).to(device=device)
 
-        return (hvo_sequences, processed_inputs, processed_outputs), (hvo_index, voices_reduced, soundfonts)
+        return (processed_inputs, processed_outputs), (hvo_sequences, hvo_sequences_inputs, hvo_sequences_outputs), \
+               (hvo_index, voices_reduced, soundfonts)
 
     # getters
 
@@ -191,6 +198,3 @@ class GrooveMidiDataset(Dataset):
 
     def __getitem__(self, idx):
         return self.processed_inputs[idx], self.processed_outputs[idx], idx
-
-
-
