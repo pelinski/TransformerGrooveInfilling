@@ -7,12 +7,10 @@ from dataset import GrooveMidiDataset
 from torch.utils.data import DataLoader
 
 sys.path.insert(1, "../../BaseGrooveTransformers/")
-#sys.path.insert(1, "../../GrooveEvaluator")
 sys.path.append('../../preprocessed_dataset/')
 sys.path.insert(1, "../../hvo_sequence")
 
 from models.train import initialize_model, calculate_loss, train_loop
-#from GrooveEvaluator.evaluator import Evaluator
 from Subset_Creators.subsetters import GrooveMidiSubsetter
 from hvo_sequence.drum_mappings import ROLAND_REDUCED_MAPPING
 from evaluator import InfillingEvaluator
