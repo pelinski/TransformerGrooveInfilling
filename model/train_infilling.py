@@ -15,7 +15,6 @@ from Subset_Creators.subsetters import GrooveMidiSubsetter
 from hvo_sequence.drum_mappings import ROLAND_REDUCED_MAPPING
 
 from evaluator import InfillingEvaluator
-from utils import get_hvo_idx_for_voice
 # disable wandb for testing
 import os
 
@@ -131,6 +130,7 @@ if __name__ == "__main__":
             {"style_primary": [style], "beat_type": ["beat"], "time_signature": ["4-4"]}
         )
 
+    # instance evaluator and set gt
     evaluator = InfillingEvaluator(
         pickle_source_path=params["dataset"]["pickle_source_path"],
         set_subfolder=params["dataset"]["subset"],
@@ -142,26 +142,15 @@ if __name__ == "__main__":
             "n_samples_to_synthesize_visualize_per_subset"],
         disable_tqdm=False,
         analyze_heatmap=True,
-        analyze_global_features=True
-    )
-
-    # get gt evaluator
-    evaluator_subset = evaluator.get_ground_truth_hvo_sequences()
-
-    # preprocess evaluator_subset
-    (eval_processed_inputs, eval_processed_outputs), \
-    (eval_hvo_sequences, eval_hvo_sequences_inputs, eval_hvo_sequences_outputs), \
-    (eval_hvo_index, eval_voices_reduced, eval_soundfonts) = gmd.preprocess_dataset(evaluator_subset)
-
-    # get gt inputs
-    eval_hvo_array = np.stack([hvo_seq.hvo for hvo_seq in eval_hvo_sequences_inputs])
-    evaluator.set_gt_hvo_arrays(eval_hvo_array)
-    evaluator.set_gt_hvo_sequences(eval_hvo_sequences_inputs)
+        analyze_global_features=True,
+        dataset=gmd,
+        model=model)
+    evaluator.set_gt()
 
     # log eval_subset parameters to wandb
-    wandb.config.update({"eval_hvo_index": eval_hvo_index,
-                         "eval_voices_reduced": eval_voices_reduced,
-                         "eval_soundfons": eval_soundfonts})
+    wandb.config.update({"eval_hvo_index": evaluator.eval_hvo_index,
+                         "eval_voices_reduced": evaluator.eval_voices_reduced,
+                         "eval_soundfons": evaluator.eval_soundfonts})
 
     epoch_save_div = 100
     eps = wandb.config.epochs
@@ -189,19 +178,7 @@ if __name__ == "__main__":
             print("-------------------------------\n")
 
             # generate evaluator predictions after each epoch
-            eval_pred = model.predict(eval_processed_inputs, use_thres=True, thres=0.5)
-            eval_pred_hvo_array = np.concatenate(eval_pred, axis=2)
-            eval_pred = np.zeros_like(eval_pred_hvo_array)
-            # set all voices different from voices_reduced to 0
-            for idx in range(eval_pred_hvo_array.shape[0]):  # N
-                # FIXME works for only one voice
-                h_idx, v_idx, o_idx = get_hvo_idx_for_voice(voice_idx=eval_voices_reduced[idx],
-                                                            n_voices=eval_pred_hvo_array.shape[2] // 3)
-                eval_pred[idx, :, h_idx] = eval_pred_hvo_array[idx][:, h_idx]
-                eval_pred[idx, :, v_idx] = eval_pred_hvo_array[idx][:, v_idx]
-                eval_pred[idx, :, o_idx] = eval_pred_hvo_array[idx][:, o_idx]
-
-            evaluator.add_predictions(eval_pred_hvo_array)
+            evaluator.set_pred()
 
             if i in epoch_save_partial or i in epoch_save_all:
                 # get metrics
@@ -217,7 +194,7 @@ if __name__ == "__main__":
                 wandb.log(rhythmic_distances, commit=False)
 
             if i in epoch_save_all:
-                heatmaps_global_features = evaluator.get_wandb_logging_media(sf_paths=eval_soundfonts,
+                heatmaps_global_features = evaluator.get_wandb_logging_media(sf_paths=evaluator.eval_soundfonts,
                                                                              use_custom_sf=True)
                 if len(heatmaps_global_features.keys()) > 0:
                     wandb.log(heatmaps_global_features, commit=False)

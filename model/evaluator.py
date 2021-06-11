@@ -1,7 +1,9 @@
 import sys
+import numpy as np
 
 sys.path.insert(1, "../../GrooveEvaluator")
 from GrooveEvaluator.evaluator import Evaluator
+from utils import get_hvo_idx_for_voice
 
 
 class InfillingEvaluator(Evaluator):
@@ -17,8 +19,8 @@ class InfillingEvaluator(Evaluator):
                  analyze_heatmap=True,
                  analyze_global_features=True,
                  disable_tqdm=True,
-                 ):
-
+                 dataset=None,
+                 model=None):
         super(InfillingEvaluator, self).__init__(pickle_source_path,
                                                  set_subfolder,
                                                  hvo_pickle_filename,
@@ -32,8 +34,37 @@ class InfillingEvaluator(Evaluator):
                                                  disable_tqdm=disable_tqdm,
                                                  )
 
-    def set_gt_hvo_arrays(self, gt_hvo_array):
-        self._gt_hvos_array = gt_hvo_array
+        self.dataset = dataset
+        self.model = model
 
-    def set_gt_hvo_sequences(self, gt_hvo_sequences):
-        self._gt_hvo_sequences = gt_hvo_sequences
+    def set_gt(self):
+        # get gt evaluator
+        evaluator_subset = self.get_ground_truth_hvo_sequences()
+
+        # preprocess evaluator_subset
+        (self.eval_processed_inputs, self.eval_processed_gt), \
+        (_, _, eval_hvo_sequences_gt), \
+        (self.eval_hvo_index, self.eval_voices_reduced, self.eval_soundfonts) = self.dataset.preprocess_dataset(
+            evaluator_subset)
+
+        # get gt
+        eval_hvo_array = np.stack([hvo_seq.hvo for hvo_seq in eval_hvo_sequences_gt])
+
+        self._gt_hvos_array = eval_hvo_array
+        self._gt_hvo_sequences = eval_hvo_sequences_gt
+
+    def set_pred(self):
+        eval_pred = self.model.predict(self.eval_processed_inputs, use_thres=True, thres=0.5)
+
+        eval_pred_hvo_array = np.concatenate(eval_pred, axis=2)
+        eval_pred = np.zeros_like(eval_pred_hvo_array)
+        # set all voices different from voices_reduced to 0
+        for idx in range(eval_pred_hvo_array.shape[0]):  # N
+            # FIXME works for only one voice
+            h_idx, v_idx, o_idx = get_hvo_idx_for_voice(voice_idx=self.eval_voices_reduced[idx],
+                                                        n_voices=eval_pred_hvo_array.shape[2] // 3)
+            eval_pred[idx, :, h_idx] = eval_pred_hvo_array[idx][:, h_idx]
+            eval_pred[idx, :, v_idx] = eval_pred_hvo_array[idx][:, v_idx]
+            eval_pred[idx, :, o_idx] = eval_pred_hvo_array[idx][:, o_idx]
+
+        self.add_predictions(eval_pred_hvo_array)
