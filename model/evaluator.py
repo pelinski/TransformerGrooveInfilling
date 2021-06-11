@@ -11,7 +11,6 @@ class InfillingEvaluator(Evaluator):
                  pickle_source_path,
                  set_subfolder,
                  hvo_pickle_filename,
-                 list_of_filter_dicts_for_subsets,
                  _identifier="Train",
                  n_samples_to_use=1024,
                  max_hvo_shape=(32, 27),
@@ -22,6 +21,16 @@ class InfillingEvaluator(Evaluator):
                  dataset=None,
                  model=None,
                  n_epochs=None):
+
+        # common filters
+        eval_styles = ["hiphop", "funk", "reggae", "soul", "latin", "jazz", "pop", "afrobeat", "highlife", "punk",
+                       "rock"]
+        list_of_filter_dicts_for_subsets = []
+        for style in eval_styles:
+            list_of_filter_dicts_for_subsets.append(
+                {"style_primary": [style], "beat_type": ["beat"], "time_signature": ["4-4"]}
+            )
+
         super(InfillingEvaluator, self).__init__(pickle_source_path,
                                                  set_subfolder,
                                                  hvo_pickle_filename,

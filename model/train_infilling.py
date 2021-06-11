@@ -122,20 +122,11 @@ if __name__ == "__main__":
     gmd = GrooveMidiDataset(data=subset_list[0], **params['dataset'])
     dataloader = DataLoader(gmd, batch_size=params['training']['batch_size'], shuffle=True)
 
-    # styles filters for eval
-    eval_styles = ["hiphop", "funk", "reggae", "soul", "latin", "jazz", "pop", "afrobeat", "highlife", "punk", "rock"]
-    list_of_filter_dicts_for_subsets = []
-    for style in eval_styles:
-        list_of_filter_dicts_for_subsets.append(
-            {"style_primary": [style], "beat_type": ["beat"], "time_signature": ["4-4"]}
-        )
-
     # instance evaluator and set gt
     evaluator = InfillingEvaluator(
         pickle_source_path=params["dataset"]["pickle_source_path"],
         set_subfolder=params["dataset"]["subset"],
         hvo_pickle_filename=params["dataset"]["hvo_pickle_filename"],
-        list_of_filter_dicts_for_subsets=list_of_filter_dicts_for_subsets,
         max_hvo_shape=(32, 27),
         n_samples_to_use=params["evaluator"]["n_samples_to_use"],
         n_samples_to_synthesize_visualize_per_subset=params["evaluator"][
@@ -145,7 +136,7 @@ if __name__ == "__main__":
         analyze_global_features=True,
         dataset=gmd,
         model=model,
-        n_epochs = wandb.config.epochs)
+        n_epochs=wandb.config.epochs)
     evaluator.set_gt()
 
     # log eval_subset parameters to wandb
