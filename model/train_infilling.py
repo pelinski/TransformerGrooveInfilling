@@ -144,7 +144,8 @@ if __name__ == "__main__":
         analyze_heatmap=True,
         analyze_global_features=True,
         dataset=gmd,
-        model=model)
+        model=model,
+        n_epochs = wandb.config.epochs)
     evaluator.set_gt()
 
     # log eval_subset parameters to wandb
@@ -155,22 +156,10 @@ if __name__ == "__main__":
     epoch_save_div = 100
     eps = wandb.config.epochs
 
-    # log frequency
-    first_epochs_step = 1
-    first_epochs_lim = 10 if eps >= 10 else eps
-    epoch_save_partial = np.arange(first_epochs_lim, step=first_epochs_step)
-    epoch_save_all = np.arange(first_epochs_lim, step=first_epochs_step)
-    if first_epochs_lim != eps:
-        remaining_epochs_step_partial, remaining_epochs_step_all = 5, 10
-        epoch_save_partial = np.append(epoch_save_partial,
-                                       np.arange(start=first_epochs_lim, step=remaining_epochs_step_partial, stop=eps))
-        epoch_save_all = np.append(epoch_save_all,
-                                   np.arange(start=first_epochs_lim, step=remaining_epochs_step_all, stop=eps))
-
     try:
         for i in np.arange(eps):
             ep += 1
-            save_model = (i in epoch_save_partial or i in epoch_save_all)
+            save_model = (i in evaluator.epoch_save_partial or i in evaluator.epoch_save_all)
             print(f"Epoch {ep}\n-------------------------------")
             train_loop(dataloader=dataloader, groove_transformer=model, opt=optimizer, scheduler=scheduler, epoch=ep,
                        loss_fn=calculate_loss, bce_fn=BCE_fn, mse_fn=MSE_fn, save=save_model, device=params["model"][
@@ -180,7 +169,7 @@ if __name__ == "__main__":
             # generate evaluator predictions after each epoch
             evaluator.set_pred()
 
-            if i in epoch_save_partial or i in epoch_save_all:
+            if i in evaluator.epoch_save_partial or i in evaluator.epoch_save_all:
                 # get metrics
                 acc_h = evaluator.get_hits_accuracies(drum_mapping=ROLAND_REDUCED_MAPPING)
                 mse_v = evaluator.get_velocity_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
@@ -193,7 +182,7 @@ if __name__ == "__main__":
                 wandb.log(mse_o, commit=False)
                 wandb.log(rhythmic_distances, commit=False)
 
-            if i in epoch_save_all:
+            if i in evaluator.epoch_save_all:
                 heatmaps_global_features = evaluator.get_wandb_logging_media(sf_paths=evaluator.eval_soundfonts,
                                                                              use_custom_sf=True)
                 if len(heatmaps_global_features.keys()) > 0:

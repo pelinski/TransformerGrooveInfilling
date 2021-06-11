@@ -20,7 +20,8 @@ class InfillingEvaluator(Evaluator):
                  analyze_global_features=True,
                  disable_tqdm=True,
                  dataset=None,
-                 model=None):
+                 model=None,
+                 n_epochs=None):
         super(InfillingEvaluator, self).__init__(pickle_source_path,
                                                  set_subfolder,
                                                  hvo_pickle_filename,
@@ -36,6 +37,21 @@ class InfillingEvaluator(Evaluator):
 
         self.dataset = dataset
         self.model = model
+        self.eps = n_epochs
+
+
+        # log frequency
+        first_epochs_step = 1
+        first_epochs_lim = 10 if self.eps >= 10 else self.eps
+        self.epoch_save_partial = np.arange(first_epochs_lim, step=first_epochs_step)
+        self.epoch_save_all = np.arange(first_epochs_lim, step=first_epochs_step)
+        if first_epochs_lim != self.eps:
+            remaining_epochs_step_partial, remaining_epochs_step_all = 5, 10
+            self.epoch_save_partial = np.append(self.epoch_save_partial,
+                                           np.arange(start=first_epochs_lim, step=remaining_epochs_step_partial,
+                                                     stop=self.eps))
+            self.epoch_save_all = np.append(self.epoch_save_all,
+                                       np.arange(start=first_epochs_lim, step=remaining_epochs_step_all, stop=self.eps))
 
     def set_gt(self):
         # get gt evaluator
