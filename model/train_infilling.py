@@ -13,10 +13,12 @@ sys.path.insert(1, "../../hvo_sequence")
 from models.train import initialize_model, calculate_loss, train_loop
 from Subset_Creators.subsetters import GrooveMidiSubsetter
 from hvo_sequence.drum_mappings import ROLAND_REDUCED_MAPPING
-from evaluator import InfillingEvaluator
 
+from evaluator import InfillingEvaluator
+from utils import get_hvo_idx_for_voice
 # disable wandb for testing
 import os
+
 os.environ['WANDB_MODE'] = 'offline'
 
 if __name__ == "__main__":
@@ -74,17 +76,18 @@ if __name__ == "__main__":
                 441, 'n_bins_per_octave': 16, 'n_octaves': 9, 'f_min': 40, 'mean_filter_size': 22},
             'voices_params': {'voice_idx': [2], 'min_n_voices_to_remove': 1,  # closed hh
                               'max_n_voices_to_remove': 1, 'prob': [1], 'k': None},
-            'sf_path': ['../soundfonts/filtered_soundfonts/Standard_Drum_Kit.sf2',
-                        '../soundfonts/filtered_soundfonts/HardRockDrums.sf2'],
-            'max_n_sf': 2,
+            'sf_path': ['../soundfonts/filtered_soundfonts/Standard_Drum_Kit.sf2'],
+            'max_n_sf': 1,
             'max_aug_items': 1,
             'dataset_name': None
         },
+        "evaluator": {"n_samples_to_use": 3,
+                      "n_samples_to_synthesize_visualize_per_subset": 3},
         "cp_paths": {
             'checkpoint_path': '../train_results/',
             'checkpoint_save_str': '../train_results/transformer_groove_infilling-epoch-{}'
         },
-        "load_model":None,
+        "load_model": None,
 
         # load_model options
         # "load_model": {
@@ -134,8 +137,9 @@ if __name__ == "__main__":
         hvo_pickle_filename=params["dataset"]["hvo_pickle_filename"],
         list_of_filter_dicts_for_subsets=list_of_filter_dicts_for_subsets,
         max_hvo_shape=(32, 27),
-        n_samples_to_use=3,
-        n_samples_to_synthesize_visualize_per_subset=3,
+        n_samples_to_use=params["evaluator"]["n_samples_to_use"],
+        n_samples_to_synthesize_visualize_per_subset=params["evaluator"][
+            "n_samples_to_synthesize_visualize_per_subset"],
         disable_tqdm=False,
         analyze_heatmap=True,
         analyze_global_features=True
@@ -144,14 +148,17 @@ if __name__ == "__main__":
     # get gt evaluator
     evaluator_subset = evaluator.get_ground_truth_hvo_sequences()
 
+    # preprocess evaluator_subset
     (eval_processed_inputs, eval_processed_outputs), \
     (eval_hvo_sequences, eval_hvo_sequences_inputs, eval_hvo_sequences_outputs), \
     (eval_hvo_index, eval_voices_reduced, eval_soundfonts) = gmd.preprocess_dataset(evaluator_subset)
 
+    # get gt inputs
     eval_hvo_array = np.stack([hvo_seq.hvo for hvo_seq in eval_hvo_sequences_inputs])
     evaluator.set_gt_hvo_arrays(eval_hvo_array)
     evaluator.set_gt_hvo_sequences(eval_hvo_sequences_inputs)
 
+    # log eval_subset parameters to wandb
     wandb.config.update({"eval_hvo_index": eval_hvo_index,
                          "eval_voices_reduced": eval_voices_reduced,
                          "eval_soundfons": eval_soundfonts})
@@ -184,18 +191,26 @@ if __name__ == "__main__":
             # generate evaluator predictions after each epoch
             eval_pred = model.predict(eval_processed_inputs, use_thres=True, thres=0.5)
             eval_pred_hvo_array = np.concatenate(eval_pred, axis=2)
-            # FIXME  set all voices to 0 except removed voices
-            # zero tensor with same shape as eval_pred_hvo_array and fill voices with eval_pred_hvo_array
+            eval_pred = np.zeros_like(eval_pred_hvo_array)
+            # set all voices different from voices_reduced to 0
+            for idx in range(eval_pred_hvo_array.shape[0]):  # N
+                # FIXME works for only one voice
+                h_idx, v_idx, o_idx = get_hvo_idx_for_voice(voice_idx=eval_voices_reduced[idx],
+                                                            n_voices=eval_pred_hvo_array.shape[2] // 3)
+                eval_pred[idx, :, h_idx] = eval_pred_hvo_array[idx][:, h_idx]
+                eval_pred[idx, :, v_idx] = eval_pred_hvo_array[idx][:, v_idx]
+                eval_pred[idx, :, o_idx] = eval_pred_hvo_array[idx][:, o_idx]
+
             evaluator.add_predictions(eval_pred_hvo_array)
 
             if i in epoch_save_partial or i in epoch_save_all:
-                # Evaluate
+                # get metrics
                 acc_h = evaluator.get_hits_accuracies(drum_mapping=ROLAND_REDUCED_MAPPING)
                 mse_v = evaluator.get_velocity_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
                 mse_o = evaluator.get_micro_timing_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
                 rhythmic_distances = evaluator.get_rhythmic_distances()
 
-                # Log
+                # log metrics to wandb
                 wandb.log(acc_h, commit=False)
                 wandb.log(mse_v, commit=False)
                 wandb.log(mse_o, commit=False)
