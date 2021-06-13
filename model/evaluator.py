@@ -82,8 +82,9 @@ class InfillingEvaluator(Evaluator):
         eval_pred = self.model.predict(self.eval_processed_inputs, use_thres=True, thres=0.5)
 
         eval_pred_hvo_array = np.concatenate(eval_pred, axis=2)
-        eval_pred = np.zeros_like(eval_pred_hvo_array)
-        # set all voices different from voices_reduced to 0
+        eval_pred  = np.zeros_like(eval_pred_hvo_array)
+        # sets all voices different from voices_reduced to 0
+        # sync between hits and vels+offs is done when converted to hvo sequence
         for idx in range(eval_pred_hvo_array.shape[0]):  # N
             # FIXME works for only one voice
             h_idx, v_idx, o_idx = get_hvo_idx_for_voice(voice_idx=self.eval_voices_reduced[idx],
@@ -92,4 +93,4 @@ class InfillingEvaluator(Evaluator):
             eval_pred[idx, :, v_idx] = eval_pred_hvo_array[idx][:, v_idx]
             eval_pred[idx, :, o_idx] = eval_pred_hvo_array[idx][:, o_idx]
 
-        self.add_predictions(eval_pred_hvo_array)
+        self.add_predictions(eval_pred)
