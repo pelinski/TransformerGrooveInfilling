@@ -3,6 +3,7 @@ import itertools
 import random
 import json
 import os
+from copy import deepcopy
 
 
 # hvo preprocess methods
@@ -40,13 +41,13 @@ def get_voice_idx_for_item(hvo_seq, voices_params):
     Removes the voices in voice_idx that are not present in the hvo_seq. Returns updated dict of voice props for item
     """
     active_voices = hvo_seq.get_active_voices()
-    _voice_idx = voices_params["voice_idx"]
+    _voice_idx = deepcopy(voices_params["voice_idx"])
     non_present_voices_idx = np.argwhere(~np.isin(_voice_idx, active_voices)).flatten()
     _voice_idx = np.delete(_voice_idx, non_present_voices_idx).tolist()
 
-    _voices_params = voices_params
+    _voices_params = deepcopy(voices_params)
     _voices_params["voice_idx"] = list(_voice_idx)
-    _voices_params["prob"] = voices_params["prob"][:len(_voice_idx)]
+    _voices_params["prob"] = _voices_params["prob"][:len(_voice_idx)]
 
     return _voice_idx, _voices_params
 
