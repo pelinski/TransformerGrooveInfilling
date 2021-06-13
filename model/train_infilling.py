@@ -144,7 +144,6 @@ if __name__ == "__main__":
                          "eval_voices_reduced": evaluator.eval_voices_reduced,
                          "eval_soundfons": evaluator.eval_soundfonts})
 
-    epoch_save_div = 100
     eps = wandb.config.epochs
 
     try:
