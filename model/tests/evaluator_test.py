@@ -4,7 +4,7 @@ import wandb
 import numpy as np
 
 sys.path.insert(1, "../../model")
-from dataset import GrooveMidiDataset
+from dataset import GrooveMidiDatasetInfilling
 from torch.utils.data import DataLoader
 
 sys.path.insert(1, "../../../GrooveEvaluator")
@@ -17,9 +17,9 @@ from Subset_Creators.subsetters import GrooveMidiSubsetter
 from hvo_sequence.drum_mappings import ROLAND_REDUCED_MAPPING
 from utils import get_hvo_idx_for_voice
 
-
 from evaluator import InfillingEvaluator
 import os
+
 os.environ['WANDB_MODE'] = 'offline'
 
 wandb.init()
@@ -83,7 +83,7 @@ _, subset_list = GrooveMidiSubsetter(pickle_source_path=params["dataset"]["pickl
                                      list_of_filter_dicts_for_subsets=[
                                          params['dataset']['filters']]).create_subsets()
 
-gmd = GrooveMidiDataset(data=subset_list[0], **params['dataset'])
+gmd = GrooveMidiDatasetInfilling(data=subset_list[0], **params['dataset'])
 dataloader = DataLoader(gmd, batch_size=params['training']['batch_size'], shuffle=True)
 
 # instance evaluator and set gt
@@ -107,7 +107,7 @@ evaluator.set_gt()
 post_gt = evaluator.get_ground_truth_hvo_sequences()  # gt after processing
 
 (gt_eval_processed_inputs, gt_eval_processed_gt), (_, _, eval_hvo_sequences_gt), (
-gt_eval_hvo_index, gt_eval_voices_reduced, gt_eval_soundfonts) = evaluator.dataset.preprocess_dataset(
+    gt_eval_hvo_index, gt_eval_voices_reduced, gt_eval_soundfonts) = evaluator.dataset.preprocess_dataset(
     pre_gt)
 
 eval_hvo_array = np.stack([hvo_seq.hvo for hvo_seq in eval_hvo_sequences_gt])
@@ -136,7 +136,7 @@ for idx in range(eval_pred_hvo_array.shape[0]):  # N
     eval_pred[idx, :, v_idx] = eval_pred_hvo_array[idx][:, v_idx]
     eval_pred[idx, :, o_idx] = eval_pred_hvo_array[idx][:, o_idx]
 
-assert np.all(evaluator._prediction_hvos_array==eval_pred)
+assert np.all(evaluator._prediction_hvos_array == eval_pred)
 
 """
     if i in evaluator.epoch_save_partial or i in evaluator.epoch_save_all:

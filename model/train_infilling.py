@@ -3,7 +3,7 @@ import torch
 import wandb
 import numpy as np
 
-from dataset import GrooveMidiDataset
+from dataset import GrooveMidiDatasetInfilling
 from torch.utils.data import DataLoader
 
 sys.path.insert(1, "../../BaseGrooveTransformers/")
@@ -119,8 +119,8 @@ if __name__ == "__main__":
                                          list_of_filter_dicts_for_subsets=[
                                              params['dataset']['filters']]).create_subsets()
 
-    gmd = GrooveMidiDataset(data=subset_list[0], **params['dataset'])
-    dataloader = DataLoader(gmd, batch_size=params['training']['batch_size'], shuffle=True)
+    dataset = GrooveMidiDatasetInfilling(data=subset_list[0], **params['dataset'])
+    dataloader = DataLoader(dataset, batch_size=params['training']['batch_size'], shuffle=True)
 
     # instance evaluator and set gt
     evaluator = InfillingEvaluator(
@@ -134,7 +134,7 @@ if __name__ == "__main__":
         disable_tqdm=False,
         analyze_heatmap=True,
         analyze_global_features=True,
-        dataset=gmd,
+        dataset=dataset,
         model=model,
         n_epochs=wandb.config.epochs)
     evaluator.set_gt()

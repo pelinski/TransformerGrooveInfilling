@@ -14,7 +14,7 @@ from utils import get_sf_list, add_metadata_to_hvo_seq, pad_to_match_max_len, ge
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-class GrooveMidiDataset(Dataset):
+class GrooveMidiDatasetInfilling(Dataset):
     def __init__(self,
                  data,
                  **kwargs):
