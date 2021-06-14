@@ -15,7 +15,7 @@ from GrooveEvaluator.evaluator import Evaluator
 # disable wandb for testing
 # import os
 # os.environ['WANDB_MODE'] = 'offline'
-
+# FIXME update
 if __name__ == "__main__":
 
     hyperparameter_defaults = dict(
