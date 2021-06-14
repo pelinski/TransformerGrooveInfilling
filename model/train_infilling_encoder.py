@@ -16,9 +16,8 @@ from hvo_sequence.drum_mappings import ROLAND_REDUCED_MAPPING
 
 from evaluator import InfillingEvaluator
 # disable wandb for testing
-import os
-
-os.environ['WANDB_MODE'] = 'offline'
+#import os
+#os.environ['WANDB_MODE'] = 'offline'
 
 if __name__ == "__main__":
 
@@ -59,15 +58,14 @@ if __name__ == "__main__":
             'lr_scheduler_gamma': wandb.config.lr_scheduler_gamma
         },
         "dataset": {
-            "pickle_source_path": '../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.4.4'
-                                  '/Processed_On_09_06_2021_at_12_41_hrs',
+            "pickle_source_path": '../../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.4.5/Processed_On_14_06_2021_at_14_26_hrs',
             "subset": 'GrooveMIDI_processed_train',
             "metadata_csv_filename": 'metadata.csv',
             "hvo_pickle_filename": 'hvo_sequence_data.obj',
             "filters": {
                 "beat_type": ["beat"],
                 "time_signature": ["4-4"],
-                "master_id": ["drummer9/session1/8"]
+                #     "master_id": ["drummer9/session1/8"]
             },
             'max_len': 32,
             'mso_params': {'sr': 44100, 'n_fft': 1024, 'win_length': 1024, 'hop_length':
