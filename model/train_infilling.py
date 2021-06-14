@@ -158,6 +158,7 @@ if __name__ == "__main__":
 
             # generate evaluator predictions after each epoch
             evaluator.set_pred()
+            evaluator.identifier = 'Test_Epoch_{}'.format(ep)
 
             if i in evaluator.epoch_save_partial or i in evaluator.epoch_save_all:
                 # get metrics
