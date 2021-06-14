@@ -58,7 +58,7 @@ if __name__ == "__main__":
             'lr_scheduler_gamma': wandb.config.lr_scheduler_gamma
         },
         "dataset": {
-            "pickle_source_path": '../../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.4.5/Processed_On_14_06_2021_at_14_26_hrs',
+            "pickle_source_path": '../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.4.5/Processed_On_14_06_2021_at_14_26_hrs',
             "subset": 'GrooveMIDI_processed_train',
             "metadata_csv_filename": 'metadata.csv',
             "hvo_pickle_filename": 'hvo_sequence_data.obj',
