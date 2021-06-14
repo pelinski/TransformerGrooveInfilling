@@ -119,7 +119,9 @@ print("set_gt()", np.all(evaluator._gt_hvos_array == eval_hvo_array))
 
 # train for 1 epoch, updates model
 train_loop(dataloader=dataloader, groove_transformer=model, opt=optimizer, scheduler=scheduler, epoch=ep,
-           loss_fn=calculate_loss, bce_fn=torch.nn.BCEWithLogitsLoss(), mse_fn=torch.nn.MSELoss(), save=False,
+           loss_fn=calculate_loss, bce_fn=torch.nn.BCEWithLogitsLoss(reduction='none'), mse_fn=torch.nn.MSELoss(
+        reduction='none'),
+           save=False,
            device=params["model"][
                'device'])
 
