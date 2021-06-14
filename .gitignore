@@ -6,6 +6,8 @@ dev/synthesized_audio/
 misc/
 .idea/
 
+dataset/
+
 # only keep the good soundfonts
 soundfonts/all_soundfonts/
 soundfonts/sounds/
@@ -14,10 +16,12 @@ soundfonts/sounds/
 result/
 train_results/
 symbolic_train_results/
-model/*.html
+model/tests/*.html
 
 # plots code 
 plots/
 
 #wandb
 wandb/
+
+notes.txt

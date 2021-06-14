@@ -10,9 +10,10 @@ import wandb
 
 from utils import get_voice_combinations, NpEncoder
 
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-
+# FIXME
 class GrooveMidiDatasetSymbolic(Dataset):
     def __init__(self,
                  subset,
@@ -145,7 +146,9 @@ class GrooveMidiDatasetSymbolic(Dataset):
                 "voices_reduced": self.voices_reduced,
             }
         }
-        wandb.config.update(parameters, allow_val_change=True) # update defaults
+
+        if wandb.ensure_configured(): # if running experiment file with wandb.init()
+            wandb.config.update(parameters, allow_val_change=True) # update defaults
 
         # save parameters
         parameters_path = os.path.join('../result', dataset_name)

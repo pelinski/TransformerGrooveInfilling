@@ -10,7 +10,7 @@ sys.path.insert(1, "../../BaseGrooveTransformers/")
 sys.path.append('../../preprocessed_dataset/')
 sys.path.insert(1, "../../hvo_sequence")
 
-from models.train import initialize_model, calculate_loss, train_loop
+from models.train_encoder import initialize_model, calculate_loss, train_loop
 from Subset_Creators.subsetters import GrooveMidiSubsetter
 from hvo_sequence.drum_mappings import ROLAND_REDUCED_MAPPING
 
@@ -36,8 +36,7 @@ if __name__ == "__main__":
         lr_scheduler_gamma=0.1
     )
 
-
-    wandb_run = wandb.init(config=hyperparameter_defaults, project='infilling')
+    wandb_run = wandb.init(config=hyperparameter_defaults, project='infilling-encoder')
 
     params = {
         "model": {

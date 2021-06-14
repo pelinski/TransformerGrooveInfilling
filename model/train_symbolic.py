@@ -7,12 +7,15 @@ from dataset_symbolic import GrooveMidiDatasetSymbolic
 
 sys.path.insert(1, "../../BaseGrooveTransformers/")
 sys.path.insert(1, "../BaseGrooveTransformers/")
+sys.path.insert(1, "../../GrooveEvaluator")
+sys.path.insert(1, "../GrooveEvaluator")
 from models.train import initialize_model, load_dataset, calculate_loss, train_loop
+from GrooveEvaluator.evaluator import Evaluator
 
 # disable wandb for testing
-import os
-os.environ['WANDB_MODE'] = 'offline'
-
+# import os
+# os.environ['WANDB_MODE'] = 'offline'
+# FIXME update
 if __name__ == "__main__":
 
     hyperparameter_defaults = dict(
@@ -42,7 +45,7 @@ if __name__ == "__main__":
     filters = {
         "beat_type": ["beat"],
         "time_signature": ["4-4"],
-        "master_id": ["drummer9/session1/8"]
+        #"master_id": ["drummer9/session1/8"]
     }
 
     subset_info = {
@@ -100,6 +103,19 @@ if __name__ == "__main__":
     wandb.watch(model)
     dataloader = load_dataset(GrooveMidiDatasetSymbolic, subset_info, filters, training_parameters['batch_size'],
                               dataset_parameters)
+
+    evaluator = Evaluator(
+        pickle_source_path=subset_info["pickle_source_path"],
+        set_subfolder=subset_info["subset"],
+        hvo_pickle_filename=subset_info["hvo_pickle_filename"],
+        list_of_filter_dicts_for_subsets=[filters],
+        max_hvo_shape=(32,27),
+        n_samples_to_use=training_parameters['batch_size'],
+        n_samples_to_synthesize_visualize_per_subset=10,
+        disable_tqdm=False,
+        analyze_heatmap=True,
+        analyze_global_features=True
+    )
 
     epoch_save_div = 100
     eps = wandb.config.epochs
