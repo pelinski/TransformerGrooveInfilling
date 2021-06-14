@@ -20,7 +20,8 @@ def get_sf_list(sf_path):
     if not isinstance(sf_path, list) and sf_path.endswith('.sf2'):  # if only one sf is given
         sfs_list = [sf_path]
     elif not isinstance(sf_path, list) and os.path.isdir(sf_path):  # if dir with sfs is given
-        sfs_list = [os.path.join(sf_path) + sf for sf in os.listdir(sf_path) if sf.endswith('.sf2')]
+        sfs_list = [os.path.join(
+            sf_path) + sf for sf in os.listdir(sf_path) if sf.endswith('.sf2')]
     else:
         sfs_list = sf_path  # list of paths
     return sfs_list
@@ -42,7 +43,8 @@ def get_voice_idx_for_item(hvo_seq, voices_params):
     """
     active_voices = hvo_seq.get_active_voices()
     _voice_idx = deepcopy(voices_params["voice_idx"])
-    non_present_voices_idx = np.argwhere(~np.isin(_voice_idx, active_voices)).flatten()
+    non_present_voices_idx = np.argwhere(
+        ~np.isin(_voice_idx, active_voices)).flatten()
     _voice_idx = np.delete(_voice_idx, non_present_voices_idx).tolist()
 
     _voices_params = deepcopy(voices_params)
@@ -64,13 +66,18 @@ def get_voice_combinations(**kwargs):
     @return voice_idx_comb: combinations of voice indexes
     """
 
-    voice_idx = kwargs.get("voice_idx", [0, 1, 2, 3, 4])  # list of voices to remove
-    min_n_voices_to_remove = kwargs.get("min_n_voices_to_remove", 1)  # min size of the combination
-    max_n_voices_to_remove = kwargs.get("max_n_voices_to_remove", 3)  # max size of the combination
-    prob = kwargs.get("prob", [1, 1, 1])  # prob of each n_voices_to_remove set in ascending order
+    # list of voices to remove
+    voice_idx = kwargs.get("voice_idx", [0, 1, 2, 3, 4])
+    min_n_voices_to_remove = kwargs.get(
+        "min_n_voices_to_remove", 1)  # min size of the combination
+    max_n_voices_to_remove = kwargs.get(
+        "max_n_voices_to_remove", 3)  # max size of the combination
+    # prob of each n_voices_to_remove set in ascending order
+    prob = kwargs.get("prob", [1, 1, 1])
     k = kwargs.get("k", 5)  # max number of combinations to return
 
-    if len(voice_idx) < max_n_voices_to_remove: max_n_voices_to_remove = len(voice_idx)
+    if len(voice_idx) < max_n_voices_to_remove:
+        max_n_voices_to_remove = len(voice_idx)
 
     range_items = range(min_n_voices_to_remove, max_n_voices_to_remove + 1)
 
@@ -81,7 +88,8 @@ def get_voice_combinations(**kwargs):
     weights = []
 
     for i, n_voices_to_remove in enumerate(range_items):
-        _voice_idx_comb = list(itertools.combinations(voice_idx, n_voices_to_remove))
+        _voice_idx_comb = list(itertools.combinations(
+            voice_idx, n_voices_to_remove))
         voice_idx_comb.extend(_voice_idx_comb)
 
         _weights = list(np.repeat(prob[i], len(_voice_idx_comb)))
@@ -138,6 +146,26 @@ def add_metadata_to_hvo_seq(hvo_seq, hvo_idx, metadata):
     hvo_seq.beat_type = metadata.loc[hvo_idx].at["beat_type"]
     hvo_seq.loop_id = metadata.loc[hvo_idx].at["loop_id"]
     hvo_seq.bpm = metadata.loc[hvo_idx].at["bpm"]
+
+# subsetter
+
+
+def _convert_hvos_array_to_subsets(hvos_array_tags, hvos_array_predicted, hvo_seqs_templates_):
+    hvo_seqs_templates = deepcopy(hvo_seqs_templates_)
+
+    tags = list(set(hvos_array_tags))
+    temp_dict = {tag: [] for tag in tags}
+    hvo_index_dict = {tag: [] for tag in tags}
+
+    for i in range(hvos_array_predicted.shape[0]):
+        hvo_seqs_templates[i].hvo = hvos_array_predicted[i, :, :]
+        temp_dict[hvos_array_tags[i]].append(hvo_seqs_templates[i])
+        hvo_index_dict[hvos_array_tags[i]].append(i)
+
+    tags = list(temp_dict.keys())
+    subsets = list(temp_dict.values())
+
+    return tags, subsets, hvo_index_dict
 
 
 def save_parameters_to_json(params, params_path=None):
