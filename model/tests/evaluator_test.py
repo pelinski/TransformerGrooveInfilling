@@ -44,15 +44,15 @@ params = {
         'lr_scheduler_gamma': 0.1
     },
     "dataset": {
-        "pickle_source_path": '../../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.4.4'
-                              '/Processed_On_09_06_2021_at_12_41_hrs',
+        "pickle_source_path": '../../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.4.5/Processed_On_14_06_2021_at_14_26_hrs',
         "subset": 'GrooveMIDI_processed_train',
         "metadata_csv_filename": 'metadata.csv',
         "hvo_pickle_filename": 'hvo_sequence_data.obj',
         "filters": {
             "beat_type": ["beat"],
             "time_signature": ["4-4"],
-            "master_id": ["drummer9/session1/8"]
+            #"master_id": ["drummer9/session1/8"]
+            "master_id":["drummer1/session1/201"]
         },
         'max_len': 32,
         'mso_params': {'sr': 44100, 'n_fft': 1024, 'win_length': 1024, 'hop_length':
@@ -64,8 +64,8 @@ params = {
         'max_aug_items': 1,
         'dataset_name': None
     },
-    "evaluator": {"n_samples_to_use": 3,
-                  "n_samples_to_synthesize_visualize_per_subset": 3},
+    "evaluator": {"n_samples_to_use": 12,
+                  "n_samples_to_synthesize_visualize_per_subset": 10},
     "cp_paths": {
         'checkpoint_path': '../train_results/',
         'checkpoint_save_str': '../train_results/transformer_groove_infilling-epoch-{}'
@@ -103,18 +103,19 @@ evaluator = InfillingEvaluator(pickle_source_path=params["dataset"]["pickle_sour
 
 # TEST set_gt() method
 pre_gt = evaluator.get_ground_truth_hvo_sequences()  # gt without processing
+# FIXME gt should also have the sf at synthesis
 evaluator.set_gt()
-post_gt = evaluator.get_ground_truth_hvo_sequences()  # gt after processing
+#post_gt = evaluator.get_ground_truth_hvo_sequences()  # gt after processing
 
-(gt_eval_processed_inputs, gt_eval_processed_gt), (_, _, eval_hvo_sequences_gt), (
+(gt_eval_processed_inputs, gt_eval_processed_gt), (_, eval_hvo_sequences_inputs, eval_hvo_sequences_gt), (
     gt_eval_hvo_index, gt_eval_voices_reduced, gt_eval_soundfonts) = evaluator.dataset.preprocess_dataset(
     pre_gt)
 
 eval_hvo_array = np.stack([hvo_seq.hvo for hvo_seq in eval_hvo_sequences_gt])
 
-assert np.all(evaluator._gt_hvos_array == eval_hvo_array)
-post_gt_eval_hvo_array = np.stack([hvo_seq.hvo for hvo_seq in post_gt])
-assert np.all(evaluator._gt_hvos_array == post_gt_eval_hvo_array)
+print("set_gt()", np.all(evaluator._gt_hvos_array == eval_hvo_array))
+#post_gt_eval_hvo_array = np.stack([hvo_seq.hvo for hvo_seq in post_gt])
+#assert np.all(evaluator._gt_hvos_array == post_gt_eval_hvo_array)
 
 # train for 1 epoch, updates model
 train_loop(dataloader=dataloader, groove_transformer=model, opt=optimizer, scheduler=scheduler, epoch=ep,
@@ -133,11 +134,14 @@ for idx in range(eval_pred_hvo_array.shape[0]):  # N
     h_idx, v_idx, o_idx = get_hvo_idx_for_voice(voice_idx=gt_eval_voices_reduced[idx],
                                                 n_voices=eval_pred_hvo_array.shape[2] // 3)
     eval_pred[idx, :, h_idx] = eval_pred_hvo_array[idx][:, h_idx]
-    eval_pred[idx, :, v_idx] = eval_pred_hvo_array[idx][:, v_idx]
-    eval_pred[idx, :, o_idx] = eval_pred_hvo_array[idx][:, o_idx]
+    eval_pred[idx, :, v_idx] = eval_pred_hvo_array[idx][:, h_idx] * eval_pred_hvo_array[idx][:, v_idx]
+    eval_pred[idx, :, o_idx] = eval_pred_hvo_array[idx][:, h_idx] * eval_pred_hvo_array[idx][:, o_idx]
 
-assert np.all(evaluator._prediction_hvos_array == eval_pred)
+print("set_pred()", np.all(evaluator._prediction_hvos_array == eval_pred))
 
+# TODO use_hvo_comp in synth
+media = evaluator.get_wandb_logging_media(sf_paths=evaluator.eval_soundfonts, use_sf_dict=True)
+wandb.log(media)
 """
     if i in evaluator.epoch_save_partial or i in evaluator.epoch_save_all:
         # get metrics
