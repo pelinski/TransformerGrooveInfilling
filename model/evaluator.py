@@ -3,12 +3,12 @@ import numpy as np
 from tqdm import tqdm
 import wandb
 
-
 sys.path.insert(1, "../../GrooveEvaluator")
 from GrooveEvaluator.evaluator import Evaluator, HVOSeq_SubSet_Evaluator
+
 sys.path.insert(1, "../preprocessed_dataset/")
 from Subset_Creators import subsetters
-from utils import get_hvo_idx_for_voice
+from utils import get_hvo_idx_for_voice, _convert_hvos_array_to_subsets
 from bokeh.embed import file_html
 from bokeh.resources import CDN
 
@@ -80,14 +80,13 @@ class InfillingEvaluator(Evaluator):
         self._gt_hvos_array = np.stack(self._gt_hvos_array)
 
         self.gt_SubSet_Evaluator = HVOSeq_SubSet_InfillingEvaluator(
-            self._gt_subsets,              # Ground Truth typically
+            self._gt_subsets,  # Ground Truth typically
             self._gt_tags,
-            "{}_Set_Ground_Truth".format(self._identifier),             # a name for the subset
+            "{}_Set_Ground_Truth".format(self._identifier),  # a name for the subset
             disable_tqdm=self.disable_tqdm,
             group_by_minor_keys=True)
 
         self.audio_sample_locations = self.get_sample_indices(n_samples_to_synthesize_visualize_per_subset)
-
 
         # log frequency
         first_epochs_step = 1
@@ -103,10 +102,9 @@ class InfillingEvaluator(Evaluator):
                                             np.arange(start=first_epochs_lim, step=remaining_epochs_step_all,
                                                       stop=self.eps))
 
-
     def get_wandb_logging_media(self, velocity_heatmap_html=True, global_features_html=True,
-                         piano_roll_html=True, audio_files=True,
-                         use_sf_dict = False, sf_paths=[
+                                piano_roll_html=True, audio_files=True,
+                                use_sf_dict=False, sf_paths=[
                 "../hvo_sequence/hvo_sequence/soundfonts/Standard_Drum_Kit.sf2"], recalculate_ground_truth=True):
 
         sf_dict = {}
@@ -114,13 +112,10 @@ class InfillingEvaluator(Evaluator):
             for key in self.audio_sample_locations.keys():
                 sf_dict[key] = []
                 for idx in self.audio_sample_locations[key]:
-                    # FIXME
                     sf_dict[key].append(self.eval_soundfonts[self._subset_hvo_array_index[key][idx]])
-
 
         # Get logging data for ground truth data
         if recalculate_ground_truth is True or self._gt_logged_once_wandb is False:
-
 
             gt_logging_media = self.gt_SubSet_Evaluator.get_wandb_logging_media(
                 velocity_heatmap_html=velocity_heatmap_html,
@@ -159,7 +154,7 @@ class InfillingEvaluator(Evaluator):
     def add_predictions(self, prediction_hvos_array):
         self._prediction_hvos_array = prediction_hvos_array
         self._prediction_tags, self._prediction_subsets, self._subset_hvo_array_index = \
-            subsetters.convert_hvos_array_to_subsets(
+            _convert_hvos_array_to_subsets(
                 self._gt_hvos_array_tags,
                 prediction_hvos_array,
                 self._prediction_hvo_seq_templates
@@ -168,7 +163,7 @@ class InfillingEvaluator(Evaluator):
         self.prediction_SubSet_Evaluator = HVOSeq_SubSet_InfillingEvaluator(
             self._prediction_subsets,
             self._prediction_tags,
-            "{}_Set_Predictions".format(self._identifier),             # a name for the subset
+            "{}_Set_Predictions".format(self._identifier),  # a name for the subset
             disable_tqdm=self.disable_tqdm,
             group_by_minor_keys=True)
 
@@ -207,7 +202,6 @@ class InfillingEvaluator(Evaluator):
 
         self.add_predictions(eval_pred)
 
-        # TODO update get_audios
 
 class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
     def __init__(
@@ -223,16 +217,14 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
             analyze_global_features=True
     ):
         super(HVOSeq_SubSet_InfillingEvaluator, self).__init__(set_subsets,
-                                                      set_tags,
-                                                      set_identifier,
-                                                      max_samples_in_subset,
-                                                      n_samples_to_synthesize_visualize,
-                                                      disable_tqdm,
-                                                      group_by_minor_keys,
-                                                      analyze_heatmap,
-                                                      analyze_global_features)
-
-
+                                                               set_tags,
+                                                               set_identifier,
+                                                               max_samples_in_subset,
+                                                               n_samples_to_synthesize_visualize,
+                                                               disable_tqdm,
+                                                               group_by_minor_keys,
+                                                               analyze_heatmap,
+                                                               analyze_global_features)
 
     def get_logging_dict(self, velocity_heatmap_html=True, global_features_html=True,
                          piano_roll_html=True, audio_files=True, sf_paths=None,
@@ -271,9 +263,9 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
                     {
                         "velocity_heatmaps":
                             {
-                            self.set_identifier:
-                                wandb.Html(file_html(
-                                    logging_dict["velocity_heatmaps"], CDN, "vel_heatmap_"+self.set_identifier))
+                                self.set_identifier:
+                                    wandb.Html(file_html(
+                                        logging_dict["velocity_heatmaps"], CDN, "vel_heatmap_" + self.set_identifier))
                             }
                     }
                 )
@@ -285,7 +277,8 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
                             {
                                 self.set_identifier:
                                     wandb.Html(file_html(
-                                        logging_dict["global_feature_pdfs"], CDN, "feature_pdfs_"+self.set_identifier))
+                                        logging_dict["global_feature_pdfs"], CDN,
+                                        "feature_pdfs_" + self.set_identifier))
                             }
                     }
                 )
@@ -312,13 +305,12 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
                             {
                                 self.set_identifier:
                                     wandb.Html(file_html(
-                                        logging_dict["piano_rolls"], CDN, "piano_rolls_"+self.set_identifier))
+                                        logging_dict["piano_rolls"], CDN, "piano_rolls_" + self.set_identifier))
                             }
                     }
                 )
 
         return wandb_media_dict
-
 
     def get_audios(self, sf_paths=None, sf_dict=None, use_specific_samples_at=None):
         """ use_specific_samples_at: must be a list of tuples of (subset_ix, sample_ix) denoting to get
@@ -343,7 +335,8 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
                     sf_path = sf_paths[np.random.randint(0, len(sf_paths))]
                 audios.append(sample_hvo.synthesize(sf_path=sf_path))
                 captions.append("{}_{}_{}.wav".format(
-                    self.set_identifier, sample_hvo.metadata.style_primary, sample_hvo.metadata.master_id.replace("/", "_")
+                    self.set_identifier, sample_hvo.metadata.style_primary,
+                    sample_hvo.metadata.master_id.replace("/", "_")
                 ))
 
         return list(zip(captions, audios))
