@@ -12,7 +12,7 @@ sys.path.insert(1, "../../../BaseGrooveTransformers/")
 sys.path.append('../../../preprocessed_dataset/')
 sys.path.insert(1, "../../../hvo_sequence")
 
-from models.train import initialize_model, calculate_loss, train_loop
+from models.train_encoder import initialize_model, calculate_loss, train_loop
 from Subset_Creators.subsetters import GrooveMidiSubsetter
 from hvo_sequence.drum_mappings import ROLAND_REDUCED_MAPPING
 from utils import get_hvo_idx_for_voice
@@ -142,7 +142,7 @@ for idx in range(eval_pred_hvo_array.shape[0]):  # N
 print("set_pred()", np.all(evaluator._prediction_hvos_array == eval_pred))
 
 # TODO use_hvo_comp in synth
-media = evaluator.get_wandb_logging_media(sf_paths=evaluator.eval_soundfonts, use_sf_dict=True)
+media = evaluator.get_wandb_logging_media(use_sf_dict=True)
 wandb.log(media)
 """
     if i in evaluator.epoch_save_partial or i in evaluator.epoch_save_all:

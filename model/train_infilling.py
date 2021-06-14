@@ -27,8 +27,7 @@ if __name__ == "__main__":
         d_model=128,
         n_heads=8,
         dropout=0.1,
-        num_encoder_layers=1,
-        num_decoder_layers=1,
+        num_encoder_decoder_layers=1,
         learning_rate=1e-3,
         batch_size=64,
         dim_feedforward=1280,
@@ -174,8 +173,7 @@ if __name__ == "__main__":
                 wandb.log(rhythmic_distances, commit=False)
 
             if i in evaluator.epoch_save_all:
-                heatmaps_global_features = evaluator.get_wandb_logging_media(sf_paths=evaluator.eval_soundfonts,
-                                                                             use_custom_sf=True)
+                heatmaps_global_features = evaluator.get_wandb_logging_media(use_sf_dict=True)
                 if len(heatmaps_global_features.keys()) > 0:
                     wandb.log(heatmaps_global_features, commit=False)
 
