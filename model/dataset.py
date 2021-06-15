@@ -75,9 +75,10 @@ class GrooveMidiDatasetInfilling(Dataset):
             if self.max_n_sf is not None:
                 assert (self.max_n_sf <= len(self.sfs_list)), "max_n_sf can not be larger than number of available " \
                                                               "soundfonts"
-        self.save_dataset_path = kwargs.get('save_dataset_path', os.path.join('../dataset', self.dataset_name))
-        self.metadata = pd.read_csv(os.path.join(self.subset_info["pickle_source_path"], self.subset_info["subset"],
-                                                 self.subset_info["metadata_csv_filename"]))
+            self.metadata = pd.read_csv(os.path.join(self.subset_info["pickle_source_path"], self.subset_info["subset"],
+                                                     self.subset_info["metadata_csv_filename"]))
+            self.save_dataset_path = kwargs.get('save_dataset_path', os.path.join('../dataset', self.dataset_name))
+
 
         print('GMD path: ', self.subset_info["pickle_source_path"])
 
@@ -106,6 +107,7 @@ class GrooveMidiDatasetInfilling(Dataset):
                   'max_aug_items': self.max_aug_items,
                   'dataset_name': self.dataset_name,
                   'timestamp': self.timestamp,
+                  'metadata':self.metadata,
                   'length': len(self.processed_inputs)}
 
         # log params to wandb
@@ -217,6 +219,7 @@ class GrooveMidiDatasetInfilling(Dataset):
         self.save_dataset_path = params['save_dataset_path']
         self.sfs_list = params['sfs_list']
         self.subset_info = params['subset_info']
+        self.metadata = params['metadata']
 
         print('Loaded parameters from path: ', params_file)
 
