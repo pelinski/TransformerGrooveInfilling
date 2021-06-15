@@ -88,20 +88,6 @@ class InfillingEvaluator(Evaluator):
 
         self.audio_sample_locations = self.get_sample_indices(n_samples_to_synthesize_visualize_per_subset)
 
-        # log frequency
-        first_epochs_step = 1
-        first_epochs_lim = 10 if self.eps >= 10 else self.eps
-        self.epoch_save_partial = np.arange(first_epochs_lim, step=first_epochs_step)
-        self.epoch_save_all = np.arange(first_epochs_lim, step=first_epochs_step)
-        if first_epochs_lim != self.eps:
-            remaining_epochs_step_partial, remaining_epochs_step_all = 5, 10
-            self.epoch_save_partial = np.append(self.epoch_save_partial,
-                                                np.arange(start=first_epochs_lim, step=remaining_epochs_step_partial,
-                                                          stop=self.eps))
-            self.epoch_save_all = np.append(self.epoch_save_all,
-                                            np.arange(start=first_epochs_lim, step=remaining_epochs_step_all,
-                                                      stop=self.eps))
-
     def get_wandb_logging_media(self, velocity_heatmap_html=True, global_features_html=True,
                                 piano_roll_html=True, audio_files=True,
                                 use_sf_dict=False, sf_paths=[
@@ -171,12 +157,14 @@ class InfillingEvaluator(Evaluator):
         # get gt evaluator
         evaluator_subset = self.get_ground_truth_hvo_sequences()
 
-        # TODO outputs as dict ?
         # preprocess evaluator_subset
-        (self.eval_processed_inputs, self.eval_processed_gt), \
-        (_, _, eval_hvo_sequences_gt), \
-        (self.eval_hvo_index, self.eval_voices_reduced, self.eval_soundfonts) = self.dataset.preprocess_dataset(
-            evaluator_subset)
+        preprocessed_dict = self.dataset.preprocess_dataset(evaluator_subset)
+        self.eval_processed_inputs = preprocessed_dict["processed_inputs"]
+        self.eval_processed_gt = preprocessed_dict["processed_outputs"]
+        eval_hvo_sequences_gt = preprocessed_dict["hvo_sequences_outputs"]
+        self.eval_hvo_index = preprocessed_dict["hvo_index"]
+        self.eval_voices_reduced =  preprocessed_dict["voices_reduced"]
+        self.eval_soundfonts =  preprocessed_dict["soundfonts"]
 
         # get gt
         eval_hvo_array = np.stack([hvo_seq.hvo for hvo_seq in eval_hvo_sequences_gt])

@@ -1,8 +1,3 @@
-import os
-from evaluator import InfillingEvaluator
-from hvo_sequence.drum_mappings import ROLAND_REDUCED_MAPPING
-from Subset_Creators.subsetters import GrooveMidiSubsetter
-from models.train_encoder import initialize_model, calculate_loss, train_loop
 import sys
 import torch
 import wandb
@@ -15,10 +10,18 @@ sys.path.insert(1, "../../BaseGrooveTransformers/")
 sys.path.append('../../preprocessed_dataset/')
 sys.path.insert(1, "../../hvo_sequence")
 
+from models.train import initialize_model, calculate_loss, train_loop
+from Subset_Creators.subsetters import GrooveMidiSubsetter
+from hvo_sequence.drum_mappings import ROLAND_REDUCED_MAPPING
+
+from evaluator import InfillingEvaluator
 # disable wandb for testing
+import os
+
 os.environ['WANDB_MODE'] = 'offline'
 
 if __name__ == "__main__":
+
     hyperparameter_defaults = dict(
         optimizer_algorithm='sgd',
         d_model=128,
@@ -33,8 +36,7 @@ if __name__ == "__main__":
         lr_scheduler_gamma=0.1
     )
 
-    wandb_run = wandb.init(config=hyperparameter_defaults,
-                           project='infilling-encoder')
+    wandb_run = wandb.init(config=hyperparameter_defaults, project='infilling')
 
     params = {
         "model": {
@@ -58,14 +60,15 @@ if __name__ == "__main__":
         },
         "dataset": {
             "subset_info": {
-                "pickle_source_path": '../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.4.5/Processed_On_14_06_2021_at_14_26_hrs',
+                "pickle_source_path": '../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.4.4'
+                                      '/Processed_On_09_06_2021_at_12_41_hrs',
                 "subset": 'GrooveMIDI_processed_train',
                 "metadata_csv_filename": 'metadata.csv',
                 "hvo_pickle_filename": 'hvo_sequence_data.obj',
                 "filters": {
                     "beat_type": ["beat"],
                     "time_signature": ["4-4"],
-                    # "master_id": ["drummer9/session1/8"]
+                    "master_id": ["drummer9/session1/8"]
                 }
             },
             'max_len': 32,
@@ -117,75 +120,67 @@ if __name__ == "__main__":
                                          list_of_filter_dicts_for_subsets=[
                                              params['dataset']['filters']]).create_subsets()
 
-    dataset = GrooveMidiDatasetInfilling(
-        data=subset_list[0], **params['dataset'])
-dataloader = DataLoader(
-    dataset, batch_size=params['training']['batch_size'], shuffle=True)
+    dataset = GrooveMidiDatasetInfilling(data=subset_list[0], **params['dataset'])
+    dataloader = DataLoader(dataset, batch_size=params['training']['batch_size'], shuffle=True)
 
-# instance evaluator and set gt
-evaluator = InfillingEvaluator(
-    pickle_source_path=params["dataset"]["pickle_source_path"],
-    set_subfolder=params["dataset"]["subset"],
-    hvo_pickle_filename=params["dataset"]["hvo_pickle_filename"],
-    max_hvo_shape=(32, 27),
-    n_samples_to_use=params["evaluator"]["n_samples_to_use"],
-    n_samples_to_synthesize_visualize_per_subset=params["evaluator"][
-        "n_samples_to_synthesize_visualize_per_subset"],
-    disable_tqdm=False,
-    analyze_heatmap=True,
-    analyze_global_features=True,
-    dataset=dataset,
-    model=model,
-    n_epochs=wandb.config.epochs)
-evaluator.set_gt()
+    # instance evaluator and set gt
+    evaluator = InfillingEvaluator(
+        pickle_source_path=params["dataset"]["pickle_source_path"],
+        set_subfolder=params["dataset"]["subset"],
+        hvo_pickle_filename=params["dataset"]["hvo_pickle_filename"],
+        max_hvo_shape=(32, 27),
+        n_samples_to_use=params["evaluator"]["n_samples_to_use"],
+        n_samples_to_synthesize_visualize_per_subset=params["evaluator"][
+            "n_samples_to_synthesize_visualize_per_subset"],
+        disable_tqdm=False,
+        analyze_heatmap=True,
+        analyze_global_features=True,
+        dataset=dataset,
+        model=model,
+        n_epochs=wandb.config.epochs)
+    evaluator.set_gt()
 
-# log eval_subset parameters to wandb
-wandb.config.update({"eval_hvo_index": evaluator.eval_hvo_index,
-                     "eval_voices_reduced": evaluator.eval_voices_reduced,
-                     "eval_soundfons": evaluator.eval_soundfonts})
+    # log eval_subset parameters to wandb
+    wandb.config.update({"eval_hvo_index": evaluator.eval_hvo_index,
+                         "eval_voices_reduced": evaluator.eval_voices_reduced,
+                         "eval_soundfons": evaluator.eval_soundfonts})
 
-eps = wandb.config.epochs
+    eps = wandb.config.epochs
 
-try:
-    for i in np.arange(eps):
-        ep += 1
-        save_model = (
-                i in evaluator.epoch_save_partial or i in evaluator.epoch_save_all)
-        print(f"Epoch {ep}\n-------------------------------")
-        train_loop(dataloader=dataloader, groove_transformer=model, opt=optimizer, scheduler=scheduler, epoch=ep,
-                   loss_fn=calculate_loss, bce_fn=BCE_fn, mse_fn=MSE_fn, save=save_model, device=params["model"][
-                'device'])
-        print("-------------------------------\n")
+    try:
+        for i in np.arange(eps):
+            ep += 1
+            save_model = (i in evaluator.epoch_save_partial or i in evaluator.epoch_save_all)
+            print(f"Epoch {ep}\n-------------------------------")
+            train_loop(dataloader=dataloader, groove_transformer=model, opt=optimizer, scheduler=scheduler, epoch=ep,
+                       loss_fn=calculate_loss, bce_fn=BCE_fn, mse_fn=MSE_fn, save=save_model, device=params["model"][
+                    'device'])
+            print("-------------------------------\n")
 
-        # generate evaluator predictions after each epoch
-        evaluator.set_pred()
-        evaluator.identifier = 'Test_Epoch_{}'.format(ep)
+            # generate evaluator predictions after each epoch
+            evaluator.set_pred()
+            evaluator.identifier = 'Test_Epoch_{}'.format(ep)
 
-        if i in evaluator.epoch_save_partial or i in evaluator.epoch_save_all:
-            # get metrics
-            acc_h = evaluator.get_hits_accuracies(
-                drum_mapping=ROLAND_REDUCED_MAPPING)
-            mse_v = evaluator.get_velocity_errors(
-                drum_mapping=ROLAND_REDUCED_MAPPING)
-            mse_o = evaluator.get_micro_timing_errors(
-                drum_mapping=ROLAND_REDUCED_MAPPING)
-            rhythmic_distances = evaluator.get_rhythmic_distances()
+            if i in evaluator.epoch_save_partial or i in evaluator.epoch_save_all:
+                # get metrics
+                acc_h = evaluator.get_hits_accuracies(drum_mapping=ROLAND_REDUCED_MAPPING)
+                mse_v = evaluator.get_velocity_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
+                mse_o = evaluator.get_micro_timing_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
+                rhythmic_distances = evaluator.get_rhythmic_distances()
 
-            # log metrics to wandb
-            wandb.log(acc_h, commit=False)
-            wandb.log(mse_v, commit=False)
-            wandb.log(mse_o, commit=False)
-            wandb.log(rhythmic_distances, commit=False)
+                # log metrics to wandb
+                wandb.log(acc_h, commit=False)
+                wandb.log(mse_v, commit=False)
+                wandb.log(mse_o, commit=False)
+                wandb.log(rhythmic_distances, commit=False)
 
-        if i in evaluator.epoch_save_all:
-            heatmaps_global_features = evaluator.get_wandb_logging_media(
-                use_sf_dict=True)
-            if len(heatmaps_global_features.keys()) > 0:
-                wandb.log(heatmaps_global_features, commit=False)
+            if i in evaluator.epoch_save_all:
+                heatmaps_global_features = evaluator.get_wandb_logging_media(use_sf_dict=True)
+                if len(heatmaps_global_features.keys()) > 0:
+                    wandb.log(heatmaps_global_features, commit=False)
 
-        evaluator.dump(
-            path="misc/evaluator_run_{}_Epoch_{}.Eval".format(wandb_run.name, ep))
-        wandb.log({"epoch": ep})
+            evaluator.dump(path="misc/evaluator_run_{}_Epoch_{}.Eval".format(wandb_run.name, ep))
+            wandb.log({"epoch": ep})
 
-finally:
-    wandb.finish()
+    finally:
+        wandb.finish()
