@@ -208,3 +208,22 @@ def save_parameters_to_pickle(params, params_path=None):
 def save_dict_to_pickle(dict, filename):
     with open(filename, 'wb') as f:
         pickle.dump(dict, f)
+
+
+def get_epoch_log_freq(n_epochs):
+    first_epochs_step = 1
+    first_epochs_lim = 10 if n_epochs >= 10 else n_epochs
+    epoch_save_partial = np.arange(first_epochs_lim, step=first_epochs_step)
+    epoch_save_all = np.arange(first_epochs_lim, step=first_epochs_step)
+    if first_epochs_lim != n_epochs:
+        remaining_epochs_step_partial, remaining_epochs_step_all = 5, 10
+        epoch_save_partial = np.append(epoch_save_partial,
+                                            np.arange(start=first_epochs_lim, step=remaining_epochs_step_partial,
+                                                      stop=n_epochs))
+        epoch_save_all = np.append(epoch_save_all,
+                                        np.arange(start=first_epochs_lim, step=remaining_epochs_step_all,
+                                                  stop=n_epochs))
+
+    return epoch_save_all, epoch_save_partial
+
+

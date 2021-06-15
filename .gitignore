@@ -25,3 +25,6 @@ plots/
 wandb/
 
 notes.txt
+
+#preprocessed_datasets
+preprocessed_infilling_datasets/*/*/*.pickle

@@ -75,14 +75,15 @@ class GrooveMidiDatasetInfilling(Dataset):
             if self.max_n_sf is not None:
                 assert (self.max_n_sf <= len(self.sfs_list)), "max_n_sf can not be larger than number of available " \
                                                               "soundfonts"
-        self.save_dataset_path = kwargs.get('save_dataset_path', os.path.join('../dataset', self.dataset_name))
-        self.metadata = pd.read_csv(os.path.join(self.subset_info["pickle_source_path"], self.subset_info["subset"],
-                                                 self.subset_info["metadata_csv_filename"]))
+            self.metadata = pd.read_csv(os.path.join(self.subset_info["pickle_source_path"], self.subset_info["subset"],
+                                                     self.subset_info["metadata_csv_filename"]))
+            self.save_dataset_path = kwargs.get('save_dataset_path', os.path.join('../dataset', self.dataset_name))
+
 
         # preprocess dataset
-
         preprocessed_dataset = self.load_dataset_from_pickle(
             load_dataset_path) if load_dataset_path else self.preprocess_dataset(data)
+        print('GMD path: ', self.subset_info["pickle_source_path"])
 
         self.processed_inputs = preprocessed_dataset["processed_inputs"]
         self.processed_outputs = preprocessed_dataset["processed_outputs"]
@@ -105,6 +106,7 @@ class GrooveMidiDatasetInfilling(Dataset):
                   'max_aug_items': self.max_aug_items,
                   'dataset_name': self.dataset_name,
                   'timestamp': self.timestamp,
+                  'metadata':self.metadata,
                   'length': len(self.processed_inputs)}
 
         # log params to wandb
@@ -112,7 +114,6 @@ class GrooveMidiDatasetInfilling(Dataset):
             wandb.config.update(params, allow_val_change=True)  # update defaults
 
         # save dataset to pickle file
-        # FIXME avoid overwrite
         if load_dataset_path is None:
             if not os.path.exists(self.save_dataset_path):
                 os.makedirs(self.save_dataset_path)
@@ -122,10 +123,8 @@ class GrooveMidiDatasetInfilling(Dataset):
             dataset_pickle_filename = os.path.join(self.save_dataset_path, self.dataset_name + '_dataset.pickle')
             save_dict_to_pickle(preprocessed_dataset, dataset_pickle_filename)
 
-            # save_parameters_to_pickle(params, params_path=self.save_dataset_path)
-            # with open(pickle_filepath, 'wb') as f:
-            #    print('Saving dataset to dir: ', self.save_dataset_path)
-            #    pickle.dump(preprocessed_dataset, f)
+            print("Saved dataset to path: ", self.save_dataset_path)
+
 
     def preprocess_dataset(self, data):
         # init lists to store hvo sequences and processed io
@@ -219,6 +218,7 @@ class GrooveMidiDatasetInfilling(Dataset):
         self.save_dataset_path = params['save_dataset_path']
         self.sfs_list = params['sfs_list']
         self.subset_info = params['subset_info']
+        self.metadata = params['metadata']
 
         print('Loaded parameters from path: ', params_file)
 
