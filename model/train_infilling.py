@@ -5,22 +5,25 @@ import numpy as np
 from torch.utils.data import DataLoader
 
 import sys
+
 sys.path.insert(1, "../../BaseGrooveTransformers/")
-sys.path.append('../../preprocessed_dataset/')
 sys.path.insert(1, "../../hvo_sequence")
 
 from evaluator import InfillingEvaluator
 from hvo_sequence.drum_mappings import ROLAND_REDUCED_MAPPING
-from Subset_Creators.subsetters import GrooveMidiSubsetter
 from models.train import initialize_model, calculate_loss, train_loop
-from dataset import GrooveMidiDatasetInfilling
 from utils import get_epoch_log_freq
-
+from preprocess_dataset import preprocess_dataset, load_preprocessed_dataset
 
 # disable wandb for testing
-#os.environ['WANDB_MODE'] = 'offline'
-use_evaluator = False
+# os.environ['WANDB_MODE'] = 'offline'
+use_evaluator = True
+encoder_only = False
+# preprocessed_dataset_path = None
+preprocessed_dataset_path = '../dataset/Dataset_15_06_2021_at_18_39_hrs'
 
+project_name = 'infilling-encoder' if encoder_only else 'infilling'
+project_name = 'test_infilling'
 
 hyperparameter_defaults = dict(
     optimizer_algorithm='sgd',
@@ -35,10 +38,8 @@ hyperparameter_defaults = dict(
     lr_scheduler_step_size=30,
     lr_scheduler_gamma=0.1
 )
-encoder_only = True
-project_name = 'infilling-encoder' if encoder_only else 'infilling'
-project_name = 'test_infilling-encoder'
-wandb_run = wandb.init(config=hyperparameter_defaults,project=project_name)
+
+wandb_run = wandb.init(config=hyperparameter_defaults, project=project_name)
 
 params = {
     "model": {
@@ -60,28 +61,6 @@ params = {
         'batch_size': wandb.config.batch_size,
         'lr_scheduler_step_size': wandb.config.lr_scheduler_step_size,
         'lr_scheduler_gamma': wandb.config.lr_scheduler_gamma
-    },
-    "dataset": {
-        "subset_info": {
-            "pickle_source_path": '../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.4.5/Processed_On_14_06_2021_at_14_26_hrs',
-            "subset": 'GrooveMIDI_processed_train',
-            "metadata_csv_filename": 'metadata.csv',
-            "hvo_pickle_filename": 'hvo_sequence_data.obj',
-            "filters": {
-                "beat_type": ["beat"],
-                "time_signature": ["4-4"],
-                "master_id": ["drummer9/session1/8"]
-            }
-        },
-        'max_len': 32,
-        'mso_params': {'sr': 44100, 'n_fft': 1024, 'win_length': 1024, 'hop_length':
-            441, 'n_bins_per_octave': 16, 'n_octaves': 9, 'f_min': 40, 'mean_filter_size': 22},
-        'voices_params': {'voice_idx': [2], 'min_n_voices_to_remove': 1,  # closed hh
-                          'max_n_voices_to_remove': 1, 'prob': [1], 'k': None},
-        'sf_path': ['../soundfonts/filtered_soundfonts/Standard_Drum_Kit.sf2'],
-        'max_n_sf': 1,
-        'max_aug_items': 1,
-        'dataset_name': None
     },
     "evaluator": {"n_samples_to_use": 3,
                   "n_samples_to_synthesize_visualize_per_subset": 3},
@@ -111,26 +90,48 @@ MSE_fn = torch.nn.MSELoss(reduction='none')
 
 model, optimizer, scheduler, ep = initialize_model(params)
 
-# log all params to wandb
-wandb.config.update(params)
 wandb.watch(model)
 
-# load gmd class and dataset
-_, subset_list = GrooveMidiSubsetter(pickle_source_path=params["dataset"]["subset_info"]["pickle_source_path"],
-                                     subset=params["dataset"]["subset_info"]["subset"],
-                                     hvo_pickle_filename=params["dataset"]["subset_info"]["hvo_pickle_filename"],
-                                     list_of_filter_dicts_for_subsets=[
-                                         params['dataset']["subset_info"]['filters']]).create_subsets()
+# load dataset
+if preprocessed_dataset_path:
+    dataset = load_preprocessed_dataset(preprocessed_dataset_path)
 
-dataset = GrooveMidiDatasetInfilling(data=subset_list[0], **params['dataset'])
+else:
+    params["dataset"] = {
+        "subset_info": {
+            "pickle_source_path": '../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.4.5/Processed_On_14_06_2021_at_14_26_hrs',
+            "subset": 'GrooveMIDI_processed_train',
+            "metadata_csv_filename": 'metadata.csv',
+            "hvo_pickle_filename": 'hvo_sequence_data.obj',
+            "filters": {
+                "beat_type": ["beat"],
+                "time_signature": ["4-4"],
+                "master_id": ["drummer9/session1/8"]
+            }
+        },
+        'max_len': 32,
+        'mso_params': {'sr': 44100, 'n_fft': 1024, 'win_length': 1024, 'hop_length':
+            441, 'n_bins_per_octave': 16, 'n_octaves': 9, 'f_min': 40, 'mean_filter_size': 22},
+        'voices_params': {'voice_idx': [2], 'min_n_voices_to_remove': 1,  # closed hh
+                          'max_n_voices_to_remove': 1, 'prob': [1], 'k': None},
+        'sf_path': ['../soundfonts/filtered_soundfonts/Standard_Drum_Kit.sf2'],
+        'max_n_sf': 1,
+        'max_aug_items': 1,
+        'dataset_name': None
+    }
+    dataset = preprocess_dataset(params)
+
 dataloader = DataLoader(dataset, batch_size=params['training']['batch_size'], shuffle=True)
+
+# log all params to wandb
+wandb.config.update(params)
 
 # instance evaluator and set gt
 if use_evaluator:
     evaluator = InfillingEvaluator(
-        pickle_source_path=params["dataset"]["subset_info"]["pickle_source_path"],
-        set_subfolder=params["dataset"]["subset_info"]["subset"],
-        hvo_pickle_filename=params["dataset"]["subset_info"]["hvo_pickle_filename"],
+        pickle_source_path=dataset.subset_info["pickle_source_path"],
+        set_subfolder=dataset.subset_info["subset"],
+        hvo_pickle_filename=dataset.subset_info["hvo_pickle_filename"],
         max_hvo_shape=(32, 27),
         n_samples_to_use=params["evaluator"]["n_samples_to_use"],
         n_samples_to_synthesize_visualize_per_subset=params["evaluator"][
@@ -149,9 +150,9 @@ if use_evaluator:
                          "eval_soundfons": evaluator.eval_soundfonts})
 
 eps = wandb.config.epochs
-epoch_save_all, epoch_save_partial = get_epoch_log_freq(eps)
 
 try:
+    epoch_save_all, epoch_save_partial = get_epoch_log_freq(eps)
     for i in np.arange(eps):
         ep += 1
         save_model = (
