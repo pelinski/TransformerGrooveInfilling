@@ -24,19 +24,20 @@ use_evaluator = False
 
 hyperparameter_defaults = dict(
     optimizer_algorithm='sgd',
-    d_model=128,
-    n_heads=8,
-    dropout=0.1,
+    d_model=32,
+    n_heads=1,
+    dropout=0,
     num_encoder_decoder_layers=1,
     learning_rate=1e-3,
     batch_size=64,
-    dim_feedforward=1280,
+    dim_feedforward=32,
     epochs=1000,
     lr_scheduler_step_size=30,
     lr_scheduler_gamma=0.1
 )
 encoder_only = True
 project_name = 'infilling-encoder' if encoder_only else 'infilling'
+project_name = 'test_infilling-encoder'
 wandb_run = wandb.init(config=hyperparameter_defaults,project=project_name)
 
 params = {
