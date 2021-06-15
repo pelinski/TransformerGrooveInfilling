@@ -18,9 +18,10 @@ from preprocess_infilling_dataset import preprocess_dataset, load_preprocessed_d
 # disable wandb for testing
 # os.environ['WANDB_MODE'] = 'offline'
 use_evaluator = True
-encoder_only = False
+encoder_only = True
 # preprocessed_dataset_path = None
-preprocessed_dataset_path = '../dataset/Dataset_15_06_2021_at_18_39_hrs'
+preprocessed_dataset_path = '../preprocessed_infilling_datasets/0.0.0/Dataset_15_06_2021_at_18_23_hrs'
+#preprocessed_dataset_path = '../dataset/Dataset_15_06_2021_at_18_39_hrs'
 
 project_name = 'infilling-encoder' if encoder_only else 'infilling'
 project_name = 'test_infilling'
