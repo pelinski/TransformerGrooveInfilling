@@ -18,7 +18,7 @@ from utils import get_epoch_log_freq
 
 
 # disable wandb for testing
-os.environ['WANDB_MODE'] = 'offline'
+#os.environ['WANDB_MODE'] = 'offline'
 use_evaluator = False
 
 
@@ -31,7 +31,7 @@ hyperparameter_defaults = dict(
     learning_rate=1e-3,
     batch_size=64,
     dim_feedforward=1280,
-    epochs=100,
+    epochs=1000,
     lr_scheduler_step_size=30,
     lr_scheduler_gamma=0.1
 )
