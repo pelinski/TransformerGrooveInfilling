@@ -13,7 +13,7 @@ from evaluator import InfillingEvaluator
 from hvo_sequence.drum_mappings import ROLAND_REDUCED_MAPPING
 from models.train import initialize_model, calculate_loss, train_loop
 from utils import get_epoch_log_freq
-from preprocess_dataset import preprocess_dataset, load_preprocessed_dataset
+from preprocess_infilling_dataset import preprocess_dataset, load_preprocessed_dataset
 
 # disable wandb for testing
 # os.environ['WANDB_MODE'] = 'offline'
