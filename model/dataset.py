@@ -80,11 +80,10 @@ class GrooveMidiDatasetInfilling(Dataset):
             self.save_dataset_path = kwargs.get('save_dataset_path', os.path.join('../dataset', self.dataset_name))
 
 
-        print('GMD path: ', self.subset_info["pickle_source_path"])
-
         # preprocess dataset
         preprocessed_dataset = self.load_dataset_from_pickle(
             load_dataset_path) if load_dataset_path else self.preprocess_dataset(data)
+        print('GMD path: ', self.subset_info["pickle_source_path"])
 
         self.processed_inputs = preprocessed_dataset["processed_inputs"]
         self.processed_outputs = preprocessed_dataset["processed_outputs"]
