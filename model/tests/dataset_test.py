@@ -1,5 +1,6 @@
 import sys
 import torch
+
 sys.path.insert(1, "../")
 sys.path.append('../../../hvo_sequence/')
 sys.path.append('../../../preprocessed_dataset/')
@@ -31,17 +32,19 @@ if __name__ == "__main__":
             'lr_scheduler_gamma': 0.1
         },
         "dataset": {
-            "pickle_source_path": '../../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.4.5/Processed_On_14_06_2021_at_14_26_hrs',
-            "subset": 'GrooveMIDI_processed_train',
-            "metadata_csv_filename": 'metadata.csv',
-            "hvo_pickle_filename": 'hvo_sequence_data.obj',
-            "filters": {
-                "beat_type": ["beat"],
-                "time_signature": ["4-4"],
-                # "master_id": ["drummer9/session1/8"]
-                "master_id": ["drummer1/session1/201"]
+            "subset_info": {
+                "pickle_source_path": '../../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.4.5/Processed_On_14_06_2021_at_14_26_hrs',
+                "subset": 'GrooveMIDI_processed_train',
+                "metadata_csv_filename": 'metadata.csv',
+                "hvo_pickle_filename": 'hvo_sequence_data.obj',
+                "filters": {
+                    "beat_type": ["beat"],
+                    "time_signature": ["4-4"],
+                    # "master_id": ["drummer9/session1/8"]
+                    "master_id": ["drummer1/session1/201"]
+                }
             },
-            'max_len': 32,
+            'max_seq_len': 32,
             'mso_params': {'sr': 44100, 'n_fft': 1024, 'win_length': 1024, 'hop_length':
                 441, 'n_bins_per_octave': 16, 'n_octaves': 9, 'f_min': 40, 'mean_filter_size': 22},
             'voices_params': {'voice_idx': [2], 'min_n_voices_to_remove': 1,  # closed hh
@@ -60,13 +63,13 @@ if __name__ == "__main__":
         "load_model": None,
     }
 
-    #GMD
+    # GMD
 
-    _, subset_list = GrooveMidiSubsetter(pickle_source_path=params["dataset"]["pickle_source_path"],
-                                         subset=params["dataset"]["subset"],
-                                         hvo_pickle_filename=params["dataset"]["hvo_pickle_filename"],
+    _, subset_list = GrooveMidiSubsetter(pickle_source_path=params["dataset"]["subset_info"]["pickle_source_path"],
+                                         subset=params["dataset"]["subset_info"]["subset"],
+                                         hvo_pickle_filename=params["dataset"]["subset_info"]["hvo_pickle_filename"],
                                          list_of_filter_dicts_for_subsets=[
-                                             params['dataset']['filters']]).create_subsets()
+                                             params['dataset']["subset_info"]['filters']]).create_subsets()
 
     # check that inputs are mso
     check_inputs = False
@@ -81,7 +84,20 @@ if __name__ == "__main__":
         mso = hvo_in_reset.mso(sf_path=gmd.get_soundfont(1))
         print(np.sum(_in.numpy() - mso > 1e-5))
 
-    gmd = GrooveMidiDatasetInfilling(data=subset_list[0], **params['dataset'])
-    print(gmd.__len__(), len(gmd.hvo_sequences))
-    hvo = gmd.get_hvo_sequence(1)
-    print(hvo.get_active_voices())
+    # test preprocessing
+    test_preprocessing = False
+    if test_preprocessing:
+        gmd = GrooveMidiDatasetInfilling(data=subset_list[0], **params['dataset'])
+        print(gmd.__len__(), len(gmd.hvo_sequences))
+        hvo = gmd.get_hvo_sequence(1)
+        print(hvo.get_active_voices())
+        preprocessed_dict = gmd.preprocess_dataset(subset_list[0])
+        assert np.all(preprocessed_dict["processed_inputs"].numpy() == gmd.processed_inputs.numpy())
+
+    # save to pickle file
+    test_save_pickle = True
+    if test_save_pickle:
+        gmd = GrooveMidiDatasetInfilling(data=subset_list[0], **params['dataset'])
+        load_dataset_path = "../dataset/Dataset_15_06_2021_at_15_13_hrs"
+        gmd_loaded = GrooveMidiDatasetInfilling(load_dataset_path=gmd.save_dataset_path)
+        assert np.all(gmd.processed_inputs.numpy() == gmd_loaded.processed_inputs.numpy())

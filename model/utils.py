@@ -2,13 +2,14 @@ import numpy as np
 import itertools
 import random
 import json
+import pickle
 import os
 from copy import deepcopy
 
 
 # hvo preprocess methods
 
-def pad_to_match_max_len(hvo_seq, max_len):
+def pad_to_match_max_seq_len(hvo_seq, max_len):
     pad_count = max(max_len - hvo_seq.hvo.shape[0], 0)
     hvo_seq.hvo = np.pad(hvo_seq.hvo, ((0, pad_count), (0, 0)), 'constant')
     hvo_seq.hvo = hvo_seq.hvo[:max_len, :]  # in case seq exceeds max len
@@ -173,7 +174,7 @@ def save_parameters_to_json(params, params_path=None):
         params_path = os.path.join('../dataset', params["dataset_name"])
     if not os.path.exists(params_path):
         os.makedirs(params_path)
-    params_json = os.path.join(params_path, 'params.json')
+    params_json = os.path.join(params_path, params['dataset_name']+'_params.json')
     with open(params_json, 'w') as f:
         json.dump(params, f, cls=NpEncoder)
 
@@ -192,3 +193,18 @@ class NpEncoder(json.JSONEncoder):
             return obj.tolist()
         else:
             return super(NpEncoder, self).default(obj)
+
+
+def save_parameters_to_pickle(params, params_path=None):
+    if params_path is None:
+        params_path = os.path.join('../dataset', params["dataset_name"])
+    if not os.path.exists(params_path):
+        os.makedirs(params_path)
+    params_pickle = os.path.join(params_path, params['dataset_name']+'_params.pickle')
+    with open(params_pickle, 'wb') as f:
+        pickle.dump(params, f)
+
+
+def save_dict_to_pickle(dict, filename):
+    with open(filename, 'wb') as f:
+        pickle.dump(dict, f)
