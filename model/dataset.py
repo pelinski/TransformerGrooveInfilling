@@ -112,7 +112,6 @@ class GrooveMidiDatasetInfilling(Dataset):
             wandb.config.update(params, allow_val_change=True)  # update defaults
 
         # save dataset to pickle file
-        # FIXME avoid overwrite
         if load_dataset_path is None:
             if not os.path.exists(self.save_dataset_path):
                 os.makedirs(self.save_dataset_path)
@@ -122,10 +121,8 @@ class GrooveMidiDatasetInfilling(Dataset):
             dataset_pickle_filename = os.path.join(self.save_dataset_path, self.dataset_name + '_dataset.pickle')
             save_dict_to_pickle(preprocessed_dataset, dataset_pickle_filename)
 
-            # save_parameters_to_pickle(params, params_path=self.save_dataset_path)
-            # with open(pickle_filepath, 'wb') as f:
-            #    print('Saving dataset to dir: ', self.save_dataset_path)
-            #    pickle.dump(preprocessed_dataset, f)
+            print("Saved dataset to path: ", self.save_dataset_path)
+
 
     def preprocess_dataset(self, data):
         # init lists to store hvo sequences and processed io
