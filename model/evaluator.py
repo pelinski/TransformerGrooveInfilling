@@ -171,12 +171,14 @@ class InfillingEvaluator(Evaluator):
         # get gt evaluator
         evaluator_subset = self.get_ground_truth_hvo_sequences()
 
-        # TODO outputs as dict ?
         # preprocess evaluator_subset
-        (self.eval_processed_inputs, self.eval_processed_gt), \
-        (_, _, eval_hvo_sequences_gt), \
-        (self.eval_hvo_index, self.eval_voices_reduced, self.eval_soundfonts) = self.dataset.preprocess_dataset(
-            evaluator_subset)
+        preprocessed_dict = self.dataset.preprocess_dataset(evaluator_subset)
+        self.eval_processed_inputs = preprocessed_dict["processed_inputs"]
+        self.eval_processed_gt = preprocessed_dict["processed_outputs"]
+        eval_hvo_sequences_gt = preprocessed_dict["hvo_sequences_outputs"]
+        self.eval_hvo_index = preprocessed_dict["hvo_index"]
+        self.eval_voices_reduced =  preprocessed_dict["voices_reduced"]
+        self.eval_soundfonts =  preprocessed_dict["soundfonts"]
 
         # get gt
         eval_hvo_array = np.stack([hvo_seq.hvo for hvo_seq in eval_hvo_sequences_gt])
