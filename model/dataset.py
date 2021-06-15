@@ -79,8 +79,9 @@ class GrooveMidiDatasetInfilling(Dataset):
         self.metadata = pd.read_csv(os.path.join(self.subset_info["pickle_source_path"], self.subset_info["subset"],
                                                  self.subset_info["metadata_csv_filename"]))
 
-        # preprocess dataset
+        print('GMD path: ', self.subset_info["pickle_source_path"])
 
+        # preprocess dataset
         preprocessed_dataset = self.load_dataset_from_pickle(
             load_dataset_path) if load_dataset_path else self.preprocess_dataset(data)
 

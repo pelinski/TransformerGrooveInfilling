@@ -148,7 +148,6 @@ if use_evaluator:
                          "eval_soundfons": evaluator.eval_soundfonts})
 
 eps = wandb.config.epochs
-# loging freq
 epoch_save_all, epoch_save_partial = get_epoch_log_freq(eps)
 
 try:

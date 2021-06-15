@@ -1,8 +1,8 @@
 import sys
+
 sys.path.append('../../preprocessed_dataset/')
 from dataset import GrooveMidiDatasetInfilling
 from Subset_Creators.subsetters import GrooveMidiSubsetter
-
 
 params = {
     "dataset": {
@@ -14,7 +14,7 @@ params = {
             "filters": {
                 "beat_type": ["beat"],
                 "time_signature": ["4-4"],
-                "master_id": ["drummer9/session1/8"]
+                # "master_id": ["drummer9/session1/8"]
             }
         },
         'max_len': 32,
@@ -29,10 +29,6 @@ params = {
     }
 }
 
-
-
-
-
 _, subset_list = GrooveMidiSubsetter(pickle_source_path=params["dataset"]["subset_info"]["pickle_source_path"],
                                      subset=params["dataset"]["subset_info"]["subset"],
                                      hvo_pickle_filename=params["dataset"]["subset_info"]["hvo_pickle_filename"],
@@ -40,4 +36,3 @@ _, subset_list = GrooveMidiSubsetter(pickle_source_path=params["dataset"]["subse
                                          params['dataset']["subset_info"]['filters']]).create_subsets()
 
 dataset = GrooveMidiDatasetInfilling(data=subset_list[0], **params['dataset'])
-
