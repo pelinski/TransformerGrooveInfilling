@@ -95,14 +95,18 @@ if __name__ == "__main__":
         assert np.all(preprocessed_dict["processed_inputs"].numpy() == gmd.processed_inputs.numpy())
 
     # save to pickle file
-    test_save_pickle = False
+    test_save_pickle = True
     if test_save_pickle:
         gmd = GrooveMidiDatasetInfilling(data=subset_list[0], **params['dataset'])
         gmd_loaded = GrooveMidiDatasetInfilling(load_dataset_path=gmd.save_dataset_path)
         assert np.all(gmd.processed_inputs.numpy() == gmd_loaded.processed_inputs.numpy())
+        params = gmd_loaded.get_params()
+        print(params)
+
 
     test_load_pickle = True
     if test_load_pickle:
         load_dataset_path = "../../preprocessed_infilling_datasets/0.0.0/Dataset_15_06_2021_at_18_23_hrs"
         gmd_loaded = GrooveMidiDatasetInfilling(load_dataset_path=load_dataset_path)
         print(gmd_loaded.__len__())
+
