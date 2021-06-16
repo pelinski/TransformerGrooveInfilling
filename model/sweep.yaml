@@ -3,14 +3,6 @@ metric:
   goal: minimize
   name: loss
 parameters:
-  lr_scheduler_step_size:
-    distribution: 'int_uniform'
-    min: 1
-    max: 50
-  lr_scheduler_gamma:
-    distribution: 'uniform'
-    min: 0
-    max: 0.1
   batch_size:
     values: [16, 32, 64, 128, 256, 512]
   d_model:
@@ -38,3 +30,5 @@ parameters:
   epochs:
     value: 100
 program: train_infilling.py
+project: 'train_infilling_sweeps'
+description: 'Full dataset, trained on 100 epochs. Evaluator disabled, model on saving mode'
