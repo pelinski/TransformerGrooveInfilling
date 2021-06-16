@@ -77,17 +77,24 @@ params = {
 }
 
 # load model
-model, optimizer, scheduler, ep = initialize_model(params)
+model, optimizer, ep = initialize_model(params)
 
-# load gmd class and dataset
-_, subset_list = GrooveMidiSubsetter(pickle_source_path=params["dataset"]["subset_info"]["pickle_source_path"],
-                                     subset=params["dataset"]["subset_info"]["subset"],
-                                     hvo_pickle_filename=params["dataset"]["subset_info"]["hvo_pickle_filename"],
-                                     list_of_filter_dicts_for_subsets=[
-                                         params['dataset']["subset_info"]['filters']]).create_subsets()
+_preprocess_dataset = False
+if _preprocess_dataset:
+    _, subset_list = GrooveMidiSubsetter(pickle_source_path=params["dataset"]["subset_info"]["pickle_source_path"],
+                                         subset=params["dataset"]["subset_info"]["subset"],
+                                         hvo_pickle_filename=params["dataset"]["subset_info"]["hvo_pickle_filename"],
+                                         list_of_filter_dicts_for_subsets=[
+                                             params['dataset']["subset_info"]['filters']]).create_subsets()
 
-gmd = GrooveMidiDatasetInfilling(data=subset_list[0], **params['dataset'])
-dataloader = DataLoader(gmd, batch_size=params['training']['batch_size'], shuffle=True)
+    dataset = GrooveMidiDatasetInfilling(data=subset_list[0], **params['dataset'])
+
+else:
+    load_dataset_path = '../dataset/Dataset_16_06_2021_at_11_52_hrs'
+    dataset = GrooveMidiDatasetInfilling(load_dataset_path=load_dataset_path)
+    params["dataset"] = dataset.get_params()
+
+dataloader = DataLoader(dataset, batch_size=params['training']['batch_size'], shuffle=True)
 
 # instance evaluator and set gt
 evaluator = InfillingEvaluator(pickle_source_path=params["dataset"]["subset_info"]["pickle_source_path"],
@@ -100,7 +107,7 @@ evaluator = InfillingEvaluator(pickle_source_path=params["dataset"]["subset_info
                                disable_tqdm=False,
                                analyze_heatmap=True,
                                analyze_global_features=True,
-                               dataset=gmd,
+                               dataset=dataset,
                                model=model,
                                n_epochs=100)
 
@@ -127,7 +134,7 @@ print("set_gt()", np.all(evaluator._gt_hvos_array == eval_hvo_array))
 
 # train for 1 epoch, updates model
 train_loop(dataloader=dataloader, groove_transformer=model, encoder_only=params["model"]["encoder_only"],
-opt = optimizer, scheduler = scheduler, epoch = ep, loss_fn = calculate_loss, bce_fn = torch.nn.BCEWithLogitsLoss(
+opt = optimizer, epoch = ep, loss_fn = calculate_loss, bce_fn = torch.nn.BCEWithLogitsLoss(
     reduction='none'), mse_fn = torch.nn.MSELoss(reduction='none'), save = False, device = params["model"]['device'])
 
 # TEST set_pred() method
@@ -149,16 +156,3 @@ print("set_pred()", np.all(evaluator._prediction_hvos_array == eval_pred))
 # TODO use_hvo_comp in synth
 media = evaluator.get_wandb_logging_media(use_sf_dict=True)
 wandb.log(media)
-
-"""
-    if i in evaluator.epoch_save_partial or i in evaluator.epoch_save_all:
-        # get metrics
-        acc_h = evaluator.get_hits_accuracies(drum_mapping=ROLAND_REDUCED_MAPPING)
-        mse_v = evaluator.get_velocity_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
-        mse_o = evaluator.get_micro_timing_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
-        rhythmic_distances = evaluator.get_rhythmic_distances()
-
-    if i in evaluator.epoch_save_all:
-        heatmaps_global_features = evaluator.get_wandb_logging_media(sf_paths=evaluator.eval_soundfonts,
-                                                                     use_custom_sf=True)
-"""
