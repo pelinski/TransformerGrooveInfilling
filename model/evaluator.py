@@ -82,30 +82,32 @@ class InfillingEvaluator(Evaluator):
 
         # preprocess evaluator_subset
         preprocessed_dict = self.dataset.preprocess_dataset(self._gmd_gt_hvo_sequences)
-        self.eval_processed_inputs = preprocessed_dict["processed_inputs"]
-        self.eval_processed_gt = preprocessed_dict["processed_outputs"]
-        eval_hvo_sequences_gt = preprocessed_dict["hvo_sequences_outputs"]
-        self.eval_hvo_index = preprocessed_dict["hvo_index"]
-        self.eval_voices_reduced = preprocessed_dict["voices_reduced"]
-        self.eval_soundfonts = preprocessed_dict["soundfonts"]
+        self.processed_inputs = preprocessed_dict["processed_inputs"]
+        self.processed_gt = preprocessed_dict["processed_outputs"]
+        self.hvo_sequences_inputs = preprocessed_dict["hvo_sequences_inputs"]
+        hvo_sequences_gt = preprocessed_dict["hvo_sequences_outputs"]
+        self.hvo_index = preprocessed_dict["hvo_index"]
+        self.voices_reduced = preprocessed_dict["voices_reduced"]
+        self.soundfonts = preprocessed_dict["soundfonts"]
 
         # get gt
-        eval_hvo_array = np.stack([hvo_seq.hvo for hvo_seq in eval_hvo_sequences_gt])
+        eval_hvo_array = np.stack([hvo_seq.hvo for hvo_seq in hvo_sequences_gt])
 
         self._gt_hvos_array = eval_hvo_array
-        self._gt_hvo_sequences = eval_hvo_sequences_gt
+        self._gt_hvo_sequences = hvo_sequences_gt
 
         self.gt_SubSet_Evaluator = HVOSeq_SubSet_InfillingEvaluator(
             self._gt_subsets,  # Ground Truth typically
             self._gt_tags,
             "{}_Set_Ground_Truth".format(self._identifier),  # a name for the subset
             disable_tqdm=self.disable_tqdm,
-            group_by_minor_keys=True)
+            group_by_minor_keys=True,
+            is_gt=True)
 
         self.audio_sample_locations = self.get_sample_indices(n_samples_to_synthesize_visualize_per_subset)
 
     def set_pred(self):
-        eval_pred = self.model.predict(self.eval_processed_inputs, use_thres=True, thres=0.5)
+        eval_pred = self.model.predict(self.processed_inputs, use_thres=True, thres=0.5)
 
         eval_pred_hvo_array = np.concatenate(eval_pred, axis=2)
         eval_pred = np.zeros_like(eval_pred_hvo_array)
@@ -114,7 +116,7 @@ class InfillingEvaluator(Evaluator):
         # FIXME avoid for loop
         for idx in range(eval_pred_hvo_array.shape[0]):  # N
             # FIXME works for only one voice
-            h_idx, v_idx, o_idx = get_hvo_idx_for_voice(voice_idx=self.eval_voices_reduced[idx],
+            h_idx, v_idx, o_idx = get_hvo_idx_for_voice(voice_idx=self.voices_reduced[idx],
                                                         n_voices=eval_pred_hvo_array.shape[2] // 3)
             eval_pred[idx, :, h_idx] = eval_pred_hvo_array[idx][:, h_idx]
             eval_pred[idx, :, v_idx] = eval_pred_hvo_array[idx][:, v_idx]
@@ -133,19 +135,28 @@ class InfillingEvaluator(Evaluator):
             self._prediction_tags,
             "{}_Set_Predictions".format(self._identifier),  # a name for the subset
             disable_tqdm=self.disable_tqdm,
-            group_by_minor_keys=True)
+            group_by_minor_keys=True,
+            is_gt=False)
 
         sf_dict = {}
         for key in self.audio_sample_locations.keys():
             sf_dict[key] = []
             for idx in self.audio_sample_locations[key]:
-                sf_dict[key].append(self.eval_soundfonts[self._subset_hvo_array_index[key][idx]])
-
+                sf_dict[key].append(self.soundfonts[self._subset_hvo_array_index[key][idx]])
         self.sf_dict = sf_dict
+
+        hvo_comp_dict = {}
+        for key in self.audio_sample_locations.keys():
+            hvo_comp_dict[key] = []
+            for idx in self.audio_sample_locations[key]:
+                hvo_comp_dict[key].append(self.hvo_sequences_inputs[self._subset_hvo_array_index[key][idx]])
+        self.hvo_comp_dict = hvo_comp_dict
 
         # set soundfonts in subset classes
         self.gt_SubSet_Evaluator.sf_dict = self.sf_dict
         self.prediction_SubSet_Evaluator.sf_dict = self.sf_dict
+        self.gt_SubSet_Evaluator.hvo_comp_dict = self.hvo_comp_dict
+        self.prediction_SubSet_Evaluator.hvo_comp_dict = self.hvo_comp_dict
 
     def get_gmd_ground_truth_hvo_sequences(self):  # for testing
         return copy.deepcopy(self._gmd_gt_hvo_sequences)
@@ -163,7 +174,9 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
             group_by_minor_keys=True,
             analyze_heatmap=True,
             analyze_global_features=True,
-            sf_dict={}
+            sf_dict={},
+            hvo_comp_dict={},
+            is_gt=False
     ):
         super(HVOSeq_SubSet_InfillingEvaluator, self).__init__(set_subsets,
                                                                set_tags,
@@ -176,6 +189,8 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
                                                                analyze_global_features)
 
         self.sf_dict = sf_dict
+        self.hvo_comp_dict = hvo_comp_dict
+        self.is_gt = is_gt
 
     def get_audios(self, _, use_specific_samples_at=None):
         """ use_specific_samples_at: must be a list of tuples of (subset_ix, sample_ix) denoting to get
@@ -183,13 +198,15 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
 
         self._sampled_hvos = self.get_hvo_samples_located_at(use_specific_samples_at)
 
-        audios = []
-        captions = []
+        audios, captions = [], []
 
         for key in tqdm(self._sampled_hvos.keys(),
                         desc='Synthesizing samples - {} '.format(self.set_identifier),
                         disable=self.disable_tqdm):
             for idx, sample_hvo in enumerate(self._sampled_hvos[key]):
+                if not self.is_gt:
+                    hvo_comp = self.hvo_comp_dict[key][idx]
+                    sample_hvo.hvo = sample_hvo.hvo + hvo_comp.hvo
                 sf_path = self.sf_dict[key][idx]  # force usage of sf_dict
                 audios.append(sample_hvo.synthesize(sf_path=sf_path))
                 captions.append("{}_{}_{}.wav".format(
