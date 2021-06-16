@@ -1,7 +1,7 @@
 import sys
 import numpy as np
 from tqdm import tqdm
-import wandb
+import copy
 
 sys.path.insert(1, "../../GrooveEvaluator")
 from GrooveEvaluator.evaluator import Evaluator, HVOSeq_SubSet_Evaluator
@@ -78,6 +78,22 @@ class InfillingEvaluator(Evaluator):
                 self._prediction_hvo_seq_templates.append(sample_hvo.copy_empty())
 
         self._gt_hvos_array = np.stack(self._gt_hvos_array)
+        self._gt_gmd_hvo_sequences = self._gt_hvo_sequences
+
+        # preprocess evaluator_subset
+        preprocessed_dict = self.dataset.preprocess_dataset(self._gt_hvo_sequences)
+        self.eval_processed_inputs = preprocessed_dict["processed_inputs"]
+        self.eval_processed_gt = preprocessed_dict["processed_outputs"]
+        eval_hvo_sequences_gt = preprocessed_dict["hvo_sequences_outputs"]
+        self.eval_hvo_index = preprocessed_dict["hvo_index"]
+        self.eval_voices_reduced = preprocessed_dict["voices_reduced"]
+        self.eval_soundfonts = preprocessed_dict["soundfonts"]
+
+        # get gt
+        eval_hvo_array = np.stack([hvo_seq.hvo for hvo_seq in eval_hvo_sequences_gt])
+
+        self._gt_hvos_array = eval_hvo_array
+        self._gt_hvo_sequences = eval_hvo_sequences_gt
 
         self.gt_SubSet_Evaluator = HVOSeq_SubSet_InfillingEvaluator(
             self._gt_subsets,  # Ground Truth typically
@@ -87,25 +103,6 @@ class InfillingEvaluator(Evaluator):
             group_by_minor_keys=True)
 
         self.audio_sample_locations = self.get_sample_indices(n_samples_to_synthesize_visualize_per_subset)
-
-    def set_gt(self):
-        # get gt evaluator
-        evaluator_subset = self.get_ground_truth_hvo_sequences()
-
-        # preprocess evaluator_subset
-        preprocessed_dict = self.dataset.preprocess_dataset(evaluator_subset)
-        self.eval_processed_inputs = preprocessed_dict["processed_inputs"]
-        self.eval_processed_gt = preprocessed_dict["processed_outputs"]
-        eval_hvo_sequences_gt = preprocessed_dict["hvo_sequences_outputs"]
-        self.eval_hvo_index = preprocessed_dict["hvo_index"]
-        self.eval_voices_reduced =  preprocessed_dict["voices_reduced"]
-        self.eval_soundfonts =  preprocessed_dict["soundfonts"]
-
-        # get gt
-        eval_hvo_array = np.stack([hvo_seq.hvo for hvo_seq in eval_hvo_sequences_gt])
-
-        self._gt_hvos_array = eval_hvo_array
-        self._gt_hvo_sequences = eval_hvo_sequences_gt
 
     def set_pred(self):
         eval_pred = self.model.predict(self.eval_processed_inputs, use_thres=True, thres=0.5)
@@ -150,6 +147,10 @@ class InfillingEvaluator(Evaluator):
         #set soundfonts in subset classes
         self.gt_SubSet_Evaluator.sf_dict = self.sf_dict
         self.prediction_SubSet_Evaluator.sf_dict = self.sf_dict
+
+    def get_gmd_ground_truth_hvo_sequences(self): # for testing
+        return copy.deepcopy(self._gt_gmd_hvo_sequences)
+
 
 
 
