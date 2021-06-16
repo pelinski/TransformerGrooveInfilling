@@ -1,79 +1,180 @@
-import sys
+import os
 import torch
+import wandb
+import numpy as np
+from torch.utils.data import DataLoader
 
-from dataset import GrooveMidiDataset
-sys.path.append("../../BaseGrooveTransformers/models/")
-from train import initialize_model, load_dataset, calculate_loss, train_loop
+import sys
 
-if __name__ == "__main__":
+sys.path.insert(1, "../../BaseGrooveTransformers/")
+sys.path.insert(1, "../../hvo_sequence")
 
-    save_info = {
-        'checkpoint_path': '../train_results/',
-        'checkpoint_save_str': '../train_results/transformer_groove_infilling-epoch-{}',
-        'df_path': '../train_results/losses_df/'
-    }
+from evaluator import InfillingEvaluator
+from hvo_sequence.drum_mappings import ROLAND_REDUCED_MAPPING
+from models.train import initialize_model, calculate_loss, train_loop
+from utils import get_epoch_log_freq
+from preprocess_infilling_dataset import preprocess_dataset, load_preprocessed_dataset
 
-    filters = {
-        "beat_type": ["beat"],
-        "time_signature": ["4-4"],
-        "master_id": ["drummer9/session1/8"]
-    }
+use_wandb = True
+use_evaluator = False
+encoder_only = True
+# preprocessed_dataset_path = None
+# preprocessed_dataset_path = '../dataset/Dataset_15_06_2021_at_18_39_hrs'
+preprocessed_dataset_path = '../preprocessed_infilling_datasets/0.0.0/Dataset_15_06_2021_at_18_23_hrs'  # full dataset
 
-    subset_info = {
-        "pickle_source_path": '../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.4.2'
-                              '/Processed_On_17_05_2021_at_22_32_hrs',
-        "subset": 'GrooveMIDI_processed_train',
-        "metadata_csv_filename": 'metadata.csv',
-        "hvo_pickle_filename": 'hvo_sequence_data.obj',
-        "filters": filters
-    }
+# wandb settings
+os.environ['WANDB_MODE'] = 'online' if use_wandb else 'offline'
+project_name = 'infilling-encoder' if encoder_only else 'infilling'
 
-    # TRANSFORMER MODEL PARAMETERS
-    model_parameters = {
-        'd_model': 128,
-        'n_heads': 8,
-        'dim_feedforward': 1280,
-        'dropout': 0.1,
-        'num_encoder_layers': 1,
-        'num_decoder_layers': 1,
+hyperparameter_defaults = dict(
+    optimizer_algorithm='sgd',
+    d_model=32,
+    n_heads=1,
+    dropout=0,
+    num_encoder_decoder_layers=1,
+    learning_rate=1e-3,
+    batch_size=64,
+    dim_feedforward=32,
+    epochs=1000,
+    #    lr_scheduler_step_size=30,
+    #    lr_scheduler_gamma=0.1
+)
+
+wandb_run = wandb.init(config=hyperparameter_defaults, project=project_name)
+
+params = {
+    "model": {
+        "encoder_only": encoder_only,
+        'optimizer': wandb.config.optimizer_algorithm,
+        'd_model': wandb.config.d_model,
+        'n_heads': wandb.config.n_heads,
+        'dim_feedforward': wandb.config.dim_feedforward,
+        'dropout': wandb.config.dropout,
+        'num_encoder_layers': wandb.config.num_encoder_decoder_layers,
+        'num_decoder_layers': wandb.config.num_encoder_decoder_layers,
         'max_len': 32,
         'embedding_size_src': 16,  # mso
         'embedding_size_tgt': 27,  # hvo
         'device': 'cuda' if torch.cuda.is_available() else 'cpu'
-    }
+    },
+    "training": {
+        'learning_rate': wandb.config.learning_rate,
+        'batch_size': wandb.config.batch_size,
+        #        'lr_scheduler_step_size': wandb.config.lr_scheduler_step_size,
+        #        'lr_scheduler_gamma': wandb.config.lr_scheduler_gamma
+    },
+    "evaluator": {"n_samples_to_use": 3,
+                  "n_samples_to_synthesize_visualize_per_subset": 3},
+    "cp_paths": {
+        'checkpoint_path': '../train_results/',
+        'checkpoint_save_str': '../train_results/transformer_groove_infilling-epoch-{}'
+    },
+    "load_model": None,
+}
 
-    # TRAINING PARAMETERS
-    training_parameters = {
-        'learning_rate': 1e-3,
-        'batch_size': 64
-    }
+BCE_fn = torch.nn.BCEWithLogitsLoss(reduction='none')
+MSE_fn = torch.nn.MSELoss(reduction='none')
 
-    # PYTORCH LOSS FUNCTIONS
-    BCE_fn = torch.nn.BCEWithLogitsLoss(reduction='none')
-    MSE_fn = torch.nn.MSELoss(reduction='none')
+model, optimizer, ep = initialize_model(params)
 
-    model, optimizer, ep = initialize_model(model_parameters, training_parameters, save_info,
-                                            load_from_checkpoint=False)
-    dataset_parameters = {
+wandb.watch(model)
+
+# load dataset
+if preprocessed_dataset_path:
+    dataset = load_preprocessed_dataset(preprocessed_dataset_path)
+
+else:
+    params["dataset"] = {
+        "subset_info": {
+            "pickle_source_path": '../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.4.5/Processed_On_14_06_2021_at_14_26_hrs',
+            "subset": 'GrooveMIDI_processed_train',
+            "metadata_csv_filename": 'metadata.csv',
+            "hvo_pickle_filename": 'hvo_sequence_data.obj',
+            "filters": {
+                "beat_type": ["beat"],
+                "time_signature": ["4-4"],
+                "master_id": ["drummer9/session1/8"]
+            }
+        },
         'max_len': 32,
-        'mso_parameters': {'sr': 44100, 'n_fft': 1024, 'win_length': 1024, 'hop_length':
+        'mso_params': {'sr': 44100, 'n_fft': 1024, 'win_length': 1024, 'hop_length':
             441, 'n_bins_per_octave': 16, 'n_octaves': 9, 'f_min': 40, 'mean_filter_size': 22},
-        'voices_parameters': {'voice_idx': [2], 'min_n_voices_to_remove': 1,    # closed hh
-                              'max_n_voices_to_remove': 1, 'prob': [1], 'k': None},
-        'sf_path': '../soundfonts/filtered_soundfonts/Standard_Drum_Kit.sf2',
+        'voices_params': {'voice_idx': [2], 'min_n_voices_to_remove': 1,  # closed hh
+                          'max_n_voices_to_remove': 1, 'prob': [1], 'k': None},
+        'sf_path': ['../soundfonts/filtered_soundfonts/Standard_Drum_Kit.sf2'],
         'max_n_sf': 1,
         'max_aug_items': 1,
         'dataset_name': None
     }
+    dataset = preprocess_dataset(params)
 
-    dataloader = load_dataset(GrooveMidiDataset, subset_info, filters, training_parameters['batch_size'], dataset_parameters)
+dataloader = DataLoader(dataset, batch_size=params['training']['batch_size'], shuffle=True)
 
-    epoch_save_div = 100
+# log all params to wandb
+wandb.config.update(params)
 
-    while True:
+# instance evaluator and set gt
+if use_evaluator:
+    evaluator = InfillingEvaluator(
+        pickle_source_path=dataset.subset_info["pickle_source_path"],
+        set_subfolder=dataset.subset_info["subset"],
+        hvo_pickle_filename=dataset.subset_info["hvo_pickle_filename"],
+        max_hvo_shape=(32, 27),
+        n_samples_to_use=params["evaluator"]["n_samples_to_use"],
+        n_samples_to_synthesize_visualize_per_subset=params["evaluator"][
+            "n_samples_to_synthesize_visualize_per_subset"],
+        disable_tqdm=False,
+        analyze_heatmap=True,
+        analyze_global_features=True,
+        dataset=dataset,
+        model=model,
+        n_epochs=wandb.config.epochs)
+    evaluator.set_gt()
+
+    # log eval_subset parameters to wandb
+    wandb.config.update({"eval_hvo_index": evaluator.eval_hvo_index,
+                         "eval_voices_reduced": evaluator.eval_voices_reduced,
+                         "eval_soundfons": evaluator.eval_soundfonts})
+
+eps = wandb.config.epochs
+
+try:
+    epoch_save_all, epoch_save_partial = get_epoch_log_freq(eps)
+    for i in np.arange(eps):
         ep += 1
+        save_model = (
+                i in epoch_save_partial or i in epoch_save_all)
         print(f"Epoch {ep}\n-------------------------------")
-        train_loop(dataloader=dataloader, groove_transformer=model, opt=optimizer, epoch=ep,
-                   loss_fn=calculate_loss, bce_fn=BCE_fn, mse_fn=MSE_fn, save_epoch=epoch_save_div, cp_info=save_info,
-                   device=model_parameters['device'])
+        train_loop(dataloader=dataloader, groove_transformer=model, encoder_only=params["model"][
+            "encoder_only"], opt=optimizer, epoch=ep, loss_fn=calculate_loss, bce_fn=BCE_fn,
+                   mse_fn=MSE_fn, save=save_model, device=params["model"]['device'])
         print("-------------------------------\n")
+        if use_evaluator:
+            # generate evaluator predictions after each epoch
+            evaluator.set_pred()
+            evaluator.identifier = 'Test_Epoch_{}'.format(ep)
+
+            if i in epoch_save_partial or i in epoch_save_all:
+                # get metrics
+                acc_h = evaluator.get_hits_accuracies(drum_mapping=ROLAND_REDUCED_MAPPING)
+                mse_v = evaluator.get_velocity_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
+                mse_o = evaluator.get_micro_timing_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
+                rhythmic_distances = evaluator.get_rhythmic_distances()
+
+                # log metrics to wandb
+                wandb.log(acc_h, commit=False)
+                wandb.log(mse_v, commit=False)
+                wandb.log(mse_o, commit=False)
+                wandb.log(rhythmic_distances, commit=False)
+
+            if i in epoch_save_all:
+                heatmaps_global_features = evaluator.get_wandb_logging_media(use_sf_dict=True)
+                if len(heatmaps_global_features.keys()) > 0:
+                    wandb.log(heatmaps_global_features, commit=False)
+
+            evaluator.dump(
+                path="misc/evaluator_run_{}_Epoch_{}.Eval".format(wandb_run.name, ep))
+        wandb.log({"epoch": ep})
+
+finally:
+    wandb.finish()

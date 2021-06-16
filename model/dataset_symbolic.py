@@ -5,12 +5,15 @@ import os
 import numpy as np
 import json
 from datetime import datetime
+from tqdm import tqdm
+import wandb
 
-from _utils import get_voice_combinations, NpEncoder
+from utils import get_voice_combinations, NpEncoder
+
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-
+# FIXME
 class GrooveMidiDatasetSymbolic(Dataset):
     def __init__(self,
                  subset,
@@ -64,8 +67,7 @@ class GrooveMidiDatasetSymbolic(Dataset):
         self.hvo_index = []
         self.voices_reduced = []
 
-
-        for hvo_idx, hvo_seq in enumerate(subset):  # only one subset because only one set of filters
+        for hvo_idx, hvo_seq in enumerate(tqdm(subset)):  # only one subset because only one set of filters
             if len(hvo_seq.time_signatures) == 1:  # ignore if time_signature change happens
 
                 all_zeros = not np.any(hvo_seq.hvo.flatten())
@@ -103,7 +105,7 @@ class GrooveMidiDatasetSymbolic(Dataset):
                     v_params["prob"] = voices_parameters["prob"][:len(_voice_idx)]
 
                     # get voices and sf combinations
-                    #FIXME what if only one voice?
+                    # FIXME what if only one voice?
                     v_comb = get_voice_combinations(**voices_parameters)
                     # for every sf and voice combination
                     for v_idx in v_comb:
@@ -144,6 +146,9 @@ class GrooveMidiDatasetSymbolic(Dataset):
                 "voices_reduced": self.voices_reduced,
             }
         }
+
+        if wandb.ensure_configured(): # if running experiment file with wandb.init()
+            wandb.config.update(parameters, allow_val_change=True) # update defaults
 
         # save parameters
         parameters_path = os.path.join('../result', dataset_name)
