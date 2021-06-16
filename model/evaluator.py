@@ -68,20 +68,20 @@ class InfillingEvaluator(Evaluator):
 
         # _gt_hvos_array_tags --> ground truth tags for each
         # _gt_hvos_arrayS --> a numpy array containing all samples in hvo format
-        self._gt_hvo_sequences = []
-        self._gt_hvos_array_tags, self._gt_hvos_array, self._prediction_hvo_seq_templates = [], [], []
+        self._gmd_gt_hvo_sequences = []
+        self._gt_hvos_array_tags, self._gmd_gt_hvos_array, self._prediction_hvo_seq_templates = [], [], []
         for subset_ix, tag in enumerate(self._gt_tags):
             for sample_ix, sample_hvo in enumerate(self._gt_subsets[subset_ix]):
-                self._gt_hvo_sequences.append(sample_hvo)
+                self._gmd_gt_hvo_sequences.append(sample_hvo)
                 self._gt_hvos_array_tags.append(tag)
-                self._gt_hvos_array.append(sample_hvo.get("hvo"))
+                self._gmd_gt_hvos_array.append(sample_hvo.get("hvo"))
                 self._prediction_hvo_seq_templates.append(sample_hvo.copy_empty())
 
-        self._gt_hvos_array = np.stack(self._gt_hvos_array)
-        self._gt_gmd_hvo_sequences = self._gt_hvo_sequences
+        self._gmd_gt_hvos_array = np.stack(self._gmd_gt_hvos_array)
+        self._gmd_gt_hvo_sequences = self._gmd_gt_hvo_sequences
 
         # preprocess evaluator_subset
-        preprocessed_dict = self.dataset.preprocess_dataset(self._gt_hvo_sequences)
+        preprocessed_dict = self.dataset.preprocess_dataset(self._gmd_gt_hvo_sequences)
         self.eval_processed_inputs = preprocessed_dict["processed_inputs"]
         self.eval_processed_gt = preprocessed_dict["processed_outputs"]
         eval_hvo_sequences_gt = preprocessed_dict["hvo_sequences_outputs"]
@@ -149,7 +149,7 @@ class InfillingEvaluator(Evaluator):
         self.prediction_SubSet_Evaluator.sf_dict = self.sf_dict
 
     def get_gmd_ground_truth_hvo_sequences(self): # for testing
-        return copy.deepcopy(self._gt_gmd_hvo_sequences)
+        return copy.deepcopy(self._gmd_gt_hvo_sequences)
 
 
 
