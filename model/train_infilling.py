@@ -15,16 +15,16 @@ from models.train import initialize_model, calculate_loss, train_loop
 from utils import get_epoch_log_freq
 from preprocess_infilling_dataset import preprocess_dataset, load_preprocessed_dataset
 
-# disable wandb for testing
-# os.environ['WANDB_MODE'] = 'offline'
-use_evaluator = True
+use_wandb = True
+use_evaluator = False
 encoder_only = True
 # preprocessed_dataset_path = None
-preprocessed_dataset_path = '../preprocessed_infilling_datasets/0.0.0/Dataset_15_06_2021_at_18_23_hrs'
-#preprocessed_dataset_path = '../dataset/Dataset_15_06_2021_at_18_39_hrs'
+# preprocessed_dataset_path = '../dataset/Dataset_15_06_2021_at_18_39_hrs'
+preprocessed_dataset_path = '../preprocessed_infilling_datasets/0.0.0/Dataset_15_06_2021_at_18_23_hrs'  # full dataset
 
+# wandb settings
+os.environ['WANDB_MODE'] = 'online' if use_wandb else 'offline'
 project_name = 'infilling-encoder' if encoder_only else 'infilling'
-project_name = 'test_infilling'
 
 hyperparameter_defaults = dict(
     optimizer_algorithm='sgd',
@@ -36,8 +36,8 @@ hyperparameter_defaults = dict(
     batch_size=64,
     dim_feedforward=32,
     epochs=1000,
-    lr_scheduler_step_size=30,
-    lr_scheduler_gamma=0.1
+    #    lr_scheduler_step_size=30,
+    #    lr_scheduler_gamma=0.1
 )
 
 wandb_run = wandb.init(config=hyperparameter_defaults, project=project_name)
@@ -60,8 +60,8 @@ params = {
     "training": {
         'learning_rate': wandb.config.learning_rate,
         'batch_size': wandb.config.batch_size,
-        'lr_scheduler_step_size': wandb.config.lr_scheduler_step_size,
-        'lr_scheduler_gamma': wandb.config.lr_scheduler_gamma
+        #        'lr_scheduler_step_size': wandb.config.lr_scheduler_step_size,
+        #        'lr_scheduler_gamma': wandb.config.lr_scheduler_gamma
     },
     "evaluator": {"n_samples_to_use": 3,
                   "n_samples_to_synthesize_visualize_per_subset": 3},
@@ -70,20 +70,6 @@ params = {
         'checkpoint_save_str': '../train_results/transformer_groove_infilling-epoch-{}'
     },
     "load_model": None,
-
-    # load_model options
-    # "load_model": {
-    #    "location": "local",
-    #    "dir": "./wandb/run-20210609_162149-1tsi1g1n/files/saved_models/",
-    #    "file_pattern": "transformer_run_{}_Epoch_{}.Model"
-    # }
-    # "load_model": {
-    #    "location": "wandb",
-    #    "dir": "marinaniet0/tap2drum/1tsi1g1n/",
-    #    "file_pattern": "saved_models/transformer_run_{}_Epoch_{}.Model",
-    #    "epoch": 51,
-    #    "run": "1tsi1g1n"
-    # }
 }
 
 BCE_fn = torch.nn.BCEWithLogitsLoss(reduction='none')
