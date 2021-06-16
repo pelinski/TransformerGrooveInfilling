@@ -113,9 +113,9 @@ evaluator = InfillingEvaluator(pickle_source_path=params["dataset"]["subset_info
                                n_epochs=100)
 
 # TEST set_gt() method
-pre_gt = evaluator.get_ground_truth_hvo_sequences()  # gt without infilling processing
+pre_gt = evaluator.get_gmd_ground_truth_hvo_sequences()  # gt without infilling processing
 # FIXME gt should also have the sf at synthesis
-evaluator.set_gt()
+#evaluator.set_gt()
 preprocessed_dataset = evaluator.dataset.preprocess_dataset(pre_gt)
 gt_eval_processed_inputs = preprocessed_dataset["processed_inputs"]
 gt_eval_processed_gt = preprocessed_dataset["hvo_sequences"]
