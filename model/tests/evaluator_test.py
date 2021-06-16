@@ -94,6 +94,7 @@ else:
     dataset = GrooveMidiDatasetInfilling(load_dataset_path=load_dataset_path)
     params["dataset"] = dataset.get_params()
 
+print(dataset.__len__())
 dataloader = DataLoader(dataset, batch_size=params['training']['batch_size'], shuffle=True)
 
 # instance evaluator and set gt
@@ -112,11 +113,9 @@ evaluator = InfillingEvaluator(pickle_source_path=params["dataset"]["subset_info
                                n_epochs=100)
 
 # TEST set_gt() method
-pre_gt = evaluator.get_ground_truth_hvo_sequences()  # gt without processing
+pre_gt = evaluator.get_ground_truth_hvo_sequences()  # gt without infilling processing
 # FIXME gt should also have the sf at synthesis
 evaluator.set_gt()
-# post_gt = evaluator.get_ground_truth_hvo_sequences()  # gt after processing
-
 preprocessed_dataset = evaluator.dataset.preprocess_dataset(pre_gt)
 gt_eval_processed_inputs = preprocessed_dataset["processed_inputs"]
 gt_eval_processed_gt = preprocessed_dataset["hvo_sequences"]
@@ -129,8 +128,6 @@ gt_eval_soundfonts = preprocessed_dataset["soundfonts"]
 eval_hvo_array = np.stack([hvo_seq.hvo for hvo_seq in eval_hvo_sequences_gt])
 
 print("set_gt()", np.all(evaluator._gt_hvos_array == eval_hvo_array))
-# post_gt_eval_hvo_array = np.stack([hvo_seq.hvo for hvo_seq in post_gt])
-# assert np.all(evaluator._gt_hvos_array == post_gt_eval_hvo_array)
 
 # train for 1 epoch, updates model
 train_loop(dataloader=dataloader, groove_transformer=model, encoder_only=params["model"]["encoder_only"],
@@ -154,5 +151,5 @@ for idx in range(eval_pred_hvo_array.shape[0]):  # N
 print("set_pred()", np.all(evaluator._prediction_hvos_array == eval_pred))
 
 # TODO use_hvo_comp in synth
-media = evaluator.get_wandb_logging_media(use_sf_dict=True)
+media = evaluator.get_wandb_logging_media()
 wandb.log(media)
