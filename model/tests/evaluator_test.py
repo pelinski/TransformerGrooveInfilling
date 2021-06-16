@@ -20,7 +20,8 @@ from utils import get_hvo_idx_for_voice
 from evaluator import InfillingEvaluator
 import os
 
-os.environ['WANDB_MODE'] = 'offline'
+use_wand = True
+os.environ['WANDB_MODE'] = 'online' if use_wand else 'offline'
 
 wandb.init()
 params = {
@@ -114,8 +115,7 @@ evaluator = InfillingEvaluator(pickle_source_path=params["dataset"]["subset_info
 
 # TEST set_gt() method
 pre_gt = evaluator.get_gmd_ground_truth_hvo_sequences()  # gt without infilling processing
-# FIXME gt should also have the sf at synthesis
-#evaluator.set_gt()
+
 preprocessed_dataset = evaluator.dataset.preprocess_dataset(pre_gt)
 gt_eval_processed_inputs = preprocessed_dataset["processed_inputs"]
 gt_eval_processed_gt = preprocessed_dataset["hvo_sequences"]
