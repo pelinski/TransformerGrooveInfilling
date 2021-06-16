@@ -89,7 +89,7 @@ params = {
 BCE_fn = torch.nn.BCEWithLogitsLoss(reduction='none')
 MSE_fn = torch.nn.MSELoss(reduction='none')
 
-model, optimizer, scheduler, ep = initialize_model(params)
+model, optimizer, ep = initialize_model(params)
 
 wandb.watch(model)
 
@@ -160,7 +160,7 @@ try:
                 i in epoch_save_partial or i in epoch_save_all)
         print(f"Epoch {ep}\n-------------------------------")
         train_loop(dataloader=dataloader, groove_transformer=model, encoder_only=params["model"][
-            "encoder_only"], opt=optimizer, scheduler=scheduler, epoch=ep, loss_fn=calculate_loss, bce_fn=BCE_fn,
+            "encoder_only"], opt=optimizer, epoch=ep, loss_fn=calculate_loss, bce_fn=BCE_fn,
                    mse_fn=MSE_fn, save=save_model, device=params["model"]['device'])
         print("-------------------------------\n")
         if use_evaluator:
