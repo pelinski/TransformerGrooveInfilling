@@ -47,6 +47,8 @@ class GrooveMidiDatasetInfilling(Dataset):
         @param max_aug_items:       Maximum number of synthesized examples per example in subset
         @param dataset_name:        Dataset name (for experiment tracking)
         """
+        self.__version = "0.0.1"
+
         # get params
         if load_dataset_path:
             self.dataset_name = load_dataset_path.split('/')[-1] if load_dataset_path.split('/')[-1] else \
@@ -95,19 +97,7 @@ class GrooveMidiDatasetInfilling(Dataset):
         self.soundfonts = preprocessed_dataset["soundfonts"]
 
         # dataset params dict
-        params = {"subset_info": {**self.subset_info},
-                  'max_seq_len': self.max_seq_len,
-                  'mso_params': self.mso_params,
-                  'voices_params': self.voices_params,
-                  'sf_path': self.sf_path,
-                  'max_n_sf': self.max_n_sf,
-                  'sfs_list': self.sfs_list,
-                  'save_dataset_path': self.save_dataset_path,
-                  'max_aug_items': self.max_aug_items,
-                  'dataset_name': self.dataset_name,
-                  'timestamp': self.timestamp,
-                  'metadata':self.metadata,
-                  'length': len(self.processed_inputs)}
+        params = self.get_params()
 
         # log params to wandb
         if wandb.ensure_configured():  # if running experiment file with wandb.init()
@@ -243,6 +233,22 @@ class GrooveMidiDatasetInfilling(Dataset):
 
     def get_voices_idx(self, idx):
         return self.voices_reduced[idx]
+
+    def get_params(self):
+        return {"subset_info": {**self.subset_info},
+                  'max_seq_len': self.max_seq_len,
+                  'mso_params': self.mso_params,
+                  'voices_params': self.voices_params,
+                  'sf_path': self.sf_path,
+                  'max_n_sf': self.max_n_sf,
+                  'sfs_list': self.sfs_list,
+                  'save_dataset_path': self.save_dataset_path,
+                  'max_aug_items': self.max_aug_items,
+                  'dataset_name': self.dataset_name,
+                  'timestamp': self.timestamp,
+                  'metadata':self.metadata,
+                  'length': len(self.processed_inputs)}
+
 
     # dataset methods
 
