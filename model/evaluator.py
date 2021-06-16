@@ -120,7 +120,6 @@ class InfillingEvaluator(Evaluator):
             eval_pred[idx, :, v_idx] = eval_pred_hvo_array[idx][:, v_idx]
             eval_pred[idx, :, o_idx] = eval_pred_hvo_array[idx][:, o_idx]
 
-
         self._prediction_hvos_array = eval_pred
         self._prediction_tags, self._prediction_subsets, self._subset_hvo_array_index = \
             _convert_hvos_array_to_subsets(
@@ -144,14 +143,12 @@ class InfillingEvaluator(Evaluator):
 
         self.sf_dict = sf_dict
 
-        #set soundfonts in subset classes
+        # set soundfonts in subset classes
         self.gt_SubSet_Evaluator.sf_dict = self.sf_dict
         self.prediction_SubSet_Evaluator.sf_dict = self.sf_dict
 
-    def get_gmd_ground_truth_hvo_sequences(self): # for testing
+    def get_gmd_ground_truth_hvo_sequences(self):  # for testing
         return copy.deepcopy(self._gmd_gt_hvo_sequences)
-
-
 
 
 class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
@@ -166,7 +163,7 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
             group_by_minor_keys=True,
             analyze_heatmap=True,
             analyze_global_features=True,
-            sf_dict = {}
+            sf_dict={}
     ):
         super(HVOSeq_SubSet_InfillingEvaluator, self).__init__(set_subsets,
                                                                set_tags,
@@ -193,7 +190,7 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
                         desc='Synthesizing samples - {} '.format(self.set_identifier),
                         disable=self.disable_tqdm):
             for idx, sample_hvo in enumerate(self._sampled_hvos[key]):
-                sf_path = self.sf_dict[key][idx]    # force usage of sf_dict
+                sf_path = self.sf_dict[key][idx]  # force usage of sf_dict
                 audios.append(sample_hvo.synthesize(sf_path=sf_path))
                 captions.append("{}_{}_{}.wav".format(
                     self.set_identifier, sample_hvo.metadata.style_primary,
