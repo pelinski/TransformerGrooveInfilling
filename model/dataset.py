@@ -47,7 +47,7 @@ class GrooveMidiDatasetInfilling(Dataset):
         @param max_aug_items:       Maximum number of synthesized examples per example in subset
         @param dataset_name:        Dataset name (for experiment tracking)
         """
-        self.__version = "0.0.1"
+        self.__version = "0.0.2"
 
         # get params
         if load_dataset_path:
@@ -217,6 +217,17 @@ class GrooveMidiDatasetInfilling(Dataset):
             preprocessed_dataset = pickle.load(f)
 
         print('Loaded dataset from path: ', pickle_file)
+
+        self.processed_inputs = preprocessed_dataset["processed_inputs"]
+        self.processed_outputs = preprocessed_dataset["processed_outputs"]
+        self.hvo_sequences = preprocessed_dataset["hvo_sequences"]
+        self.hvo_sequences_inputs = preprocessed_dataset["hvo_sequences_inputs"]
+        self.hvo_sequences_outputs = preprocessed_dataset["hvo_sequences_outputs"]
+        self.hvo_index = preprocessed_dataset["hvo_index"]
+        self.voices_reduced = preprocessed_dataset["voices_reduced"]
+        self.soundfonts = preprocessed_dataset["soundfonts"]
+
+        print(str(self.__len__()) + ' items')
 
         return preprocessed_dataset
 
