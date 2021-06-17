@@ -14,7 +14,7 @@ from models.train import initialize_model, calculate_loss, train_loop
 from utils import get_epoch_log_freq
 from preprocess_infilling_dataset import preprocess_dataset, load_preprocessed_dataset
 
-# =================== settings ===================================== #
+# ================================= SETTINGS ==================================================== #
 preprocessed_dataset_path = '../preprocessed_infilling_datasets/0.0.0/Dataset_15_06_2021_at_18_23_hrs'  # train ds
 
 use_wandb = True
@@ -26,7 +26,7 @@ load_dataset = True if preprocessed_dataset_path else False
 os.environ['WANDB_MODE'] = 'online' if use_wandb else 'offline'
 project_name = 'infilling-encoder' if encoder_only else 'infilling'
 
-# =================================================================== #
+# ============================================================================================== #
 
 
 hyperparameter_defaults = dict(
@@ -170,8 +170,7 @@ try:
                 wandb.log(mse_o, commit=False)
                 # wandb.log(rhythmic_distances, commit=False)
 
-                evaluator.dump(
-                    path="misc/evaluator_run_{}_Epoch_{}.Eval".format(wandb_run.name, ep))
+                evaluator.dump(path="misc/evaluator_run_{}_Epoch_{}.Eval".format(wandb_run.name, ep))
 
             if i in epoch_save_all:
                 heatmaps_global_features = evaluator.get_wandb_logging_media()
