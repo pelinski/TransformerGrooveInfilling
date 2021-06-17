@@ -83,7 +83,7 @@ wandb.watch(model)
 if preprocessed_dataset_path:
     dataset = load_preprocessed_dataset(preprocessed_dataset_path)
 
-else:   # small subset
+else:  # small subset
     params["dataset"] = {
         "subset_info": {
             "pickle_source_path": '../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.4.5/Processed_On_14_06_2021_at_14_26_hrs',
@@ -165,13 +165,13 @@ try:
                 wandb.log(mse_o, commit=False)
                 wandb.log(rhythmic_distances, commit=False)
 
+                evaluator.dump(
+                    path="misc/evaluator_run_{}_Epoch_{}.Eval".format(wandb_run.name, ep))
+
             if i in epoch_save_all:
                 heatmaps_global_features = evaluator.get_wandb_logging_media(use_sf_dict=True)
                 if len(heatmaps_global_features.keys()) > 0:
                     wandb.log(heatmaps_global_features, commit=False)
-
-            evaluator.dump(
-                path="misc/evaluator_run_{}_Epoch_{}.Eval".format(wandb_run.name, ep))
 
         wandb.log({"epoch": ep})
 
