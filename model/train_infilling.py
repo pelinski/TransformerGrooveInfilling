@@ -17,6 +17,7 @@ from preprocess_infilling_dataset import preprocess_dataset, load_preprocessed_d
 # ================================= SETTINGS ==================================================== #
 preprocessed_dataset_path = '../preprocessed_infilling_datasets/train/0.0.1/Dataset_17_06_2021_at_17_20_hrs'  # train ds
 #preprocessed_dataset_path = '../dataset/Dataset_17_06_2021_at_18_13_hrs' # test symbolic
+#preprocessed_dataset_path = './dataset/Dataset_17_06_2021_at_19_09_hrs' # test infilling
 symbolic = False
 use_wandb = True
 use_evaluator = True
@@ -39,7 +40,7 @@ hyperparameter_defaults = dict(
     learning_rate=1e-3,
     batch_size=64,
     dim_feedforward=32,
-    epochs=4,
+    epochs=10,
     #    lr_scheduler_step_size=30,
     #    lr_scheduler_gamma=0.1
 )
@@ -142,7 +143,8 @@ if use_evaluator:
 eps = wandb.config.epochs
 
 try:
-    epoch_save_all, epoch_save_partial = get_epoch_log_freq(eps)
+    #epoch_save_all, epoch_save_partial = get_epoch_log_freq(eps)
+    epoch_save_all, epoch_save_partial = [wandb.config.epochs - 1],[]
 
     for i in range(eps):
         ep += 1
@@ -153,7 +155,6 @@ try:
                    mse_fn=MSE_fn, save=save_model, device=params["model"]['device'])
         print("-------------------------------\n")
         if use_evaluator:
-            print("use_eval_i", i)
             if i in epoch_save_partial or i in epoch_save_all:
                 evaluator.set_pred()
                 evaluator.identifier = 'Test_Epoch_{}'.format(ep)
@@ -162,13 +163,13 @@ try:
                 acc_h = evaluator.get_hits_accuracies(drum_mapping=ROLAND_REDUCED_MAPPING)
                 mse_v = evaluator.get_velocity_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
                 mse_o = evaluator.get_micro_timing_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
-                rhythmic_distances = evaluator.get_rhythmic_distances()
+                #rhythmic_distances = evaluator.get_rhythmic_distances()
 
                 # log metrics to wandb
                 wandb.log(acc_h, commit=False)
                 wandb.log(mse_v, commit=False)
                 wandb.log(mse_o, commit=False)
-                wandb.log(rhythmic_distances, commit=False)
+                #wandb.log(rhythmic_distances, commit=False)
 
                 evaluator.dump(path="misc/evaluator_run_{}_Epoch_{}.Eval".format(wandb_run.name, ep))
 
