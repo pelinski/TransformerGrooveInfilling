@@ -27,4 +27,4 @@ wandb/
 notes.txt
 
 #preprocessed_datasets
-preprocessed_infilling_datasets/*/*/*.pickle
+preprocessed_infilling_datasets/*/*/*/*.pickle
