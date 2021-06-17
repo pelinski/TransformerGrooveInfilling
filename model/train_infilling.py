@@ -142,8 +142,7 @@ if use_evaluator:
 eps = wandb.config.epochs
 
 try:
-    # epoch_save_all, epoch_save_partial = get_epoch_log_freq(eps)
-    epoch_save_all, epoch_save_partial = [wandb.config.epochs - 1], []  # last epoch idx
+    epoch_save_all, epoch_save_partial = get_epoch_log_freq(eps)
 
     for i in range(eps):
         ep += 1
@@ -163,13 +162,13 @@ try:
                 acc_h = evaluator.get_hits_accuracies(drum_mapping=ROLAND_REDUCED_MAPPING)
                 mse_v = evaluator.get_velocity_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
                 mse_o = evaluator.get_micro_timing_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
-                # rhythmic_distances = evaluator.get_rhythmic_distances()
+                rhythmic_distances = evaluator.get_rhythmic_distances()
 
                 # log metrics to wandb
                 wandb.log(acc_h, commit=False)
                 wandb.log(mse_v, commit=False)
                 wandb.log(mse_o, commit=False)
-                # wandb.log(rhythmic_distances, commit=False)
+                wandb.log(rhythmic_distances, commit=False)
 
                 evaluator.dump(path="misc/evaluator_run_{}_Epoch_{}.Eval".format(wandb_run.name, ep))
 
