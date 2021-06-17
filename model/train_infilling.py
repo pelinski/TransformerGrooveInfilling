@@ -66,8 +66,8 @@ params = {
         #        'lr_scheduler_step_size': wandb.config.lr_scheduler_step_size,
         #        'lr_scheduler_gamma': wandb.config.lr_scheduler_gamma
     },
-    "evaluator": {"n_samples_to_use": 5,
-                  "n_samples_to_synthesize_visualize_per_subset": 3},
+    "evaluator": {"n_samples_to_use": 2048,
+                  "n_samples_to_synthesize_visualize_per_subset": 10},
     "cp_paths": {
         'checkpoint_path': '../train_results/',
         'checkpoint_save_str': '../train_results/transformer_groove_infilling-epoch-{}'
