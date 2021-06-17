@@ -78,7 +78,6 @@ class InfillingEvaluator(Evaluator):
                 self._prediction_hvo_seq_templates.append(sample_hvo.copy_empty())
 
         self._gmd_gt_hvos_array = np.stack(self._gmd_gt_hvos_array)
-        self._gmd_gt_hvo_sequences = self._gmd_gt_hvo_sequences
 
         # preprocess evaluator_subset
         preprocessed_dict = self.dataset.preprocess_dataset(self._gmd_gt_hvo_sequences)
