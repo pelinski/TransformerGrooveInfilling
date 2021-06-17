@@ -264,11 +264,11 @@ class GrooveMidiDatasetInfillingSymbolic(GrooveMidiDatasetInfilling):
         super(GrooveMidiDatasetInfillingSymbolic, self).__init__(data=data,
                                                                  load_dataset_path=load_dataset_path,
                                                                  **kwargs)
-        # delete audio attrs
-        del self.mso_params
-        del self.sfs_list
-        del self.sf_path
-        del self.max_n_sf
+        # audio attrs
+        self.mso_params = {}
+        self.sfs_list = []
+        self.sf_path = []
+        self.max_n_sf = None
 
         self.__version__ = '0.0.0'
 
