@@ -15,8 +15,9 @@ from utils import get_epoch_log_freq
 from preprocess_infilling_dataset import preprocess_dataset, load_preprocessed_dataset
 
 # ================================= SETTINGS ==================================================== #
-preprocessed_dataset_path = '../preprocessed_infilling_datasets/0.0.0/Dataset_15_06_2021_at_18_23_hrs'  # train ds
-
+preprocessed_dataset_path = '../preprocessed_infilling_datasets/0.0.1/Dataset_17_06_2021_at_17_20_hrs'  # train ds
+#preprocessed_dataset_path = '../dataset/Dataset_17_06_2021_at_18_13_hrs' # test symbolic
+symbolic = False
 use_wandb = True
 use_evaluator = True
 encoder_only = True
@@ -84,7 +85,7 @@ wandb.watch(model)
 
 # load dataset
 if load_dataset:
-    dataset = load_preprocessed_dataset(preprocessed_dataset_path)
+    dataset = load_preprocessed_dataset(preprocessed_dataset_path, symbolic=symbolic)
 
 else:  # small subset
     params["dataset"] = {
