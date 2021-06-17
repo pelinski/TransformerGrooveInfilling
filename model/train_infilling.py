@@ -1,7 +1,6 @@
 import os
 import torch
 import wandb
-import numpy as np
 from torch.utils.data import DataLoader
 
 import sys
@@ -15,16 +14,20 @@ from models.train import initialize_model, calculate_loss, train_loop
 from utils import get_epoch_log_freq
 from preprocess_infilling_dataset import preprocess_dataset, load_preprocessed_dataset
 
+# =================== settings ===================================== #
+preprocessed_dataset_path = '../preprocessed_infilling_datasets/0.0.0/Dataset_15_06_2021_at_18_23_hrs'  # train ds
+
 use_wandb = True
 use_evaluator = True
 encoder_only = True
-# preprocessed_dataset_path = None
-# preprocessed_dataset_path = '../dataset/Dataset_15_06_2021_at_18_39_hrs'
-preprocessed_dataset_path = '../preprocessed_infilling_datasets/0.0.0/Dataset_15_06_2021_at_18_23_hrs'  # full dataset
+load_dataset = True if preprocessed_dataset_path else False
 
-# wandb settings
+# wandb
 os.environ['WANDB_MODE'] = 'online' if use_wandb else 'offline'
 project_name = 'infilling-encoder' if encoder_only else 'infilling'
+
+# =================================================================== #
+
 
 hyperparameter_defaults = dict(
     optimizer_algorithm='sgd',
@@ -35,7 +38,7 @@ hyperparameter_defaults = dict(
     learning_rate=1e-3,
     batch_size=64,
     dim_feedforward=32,
-    epochs=1000,
+    epochs=4,
     #    lr_scheduler_step_size=30,
     #    lr_scheduler_gamma=0.1
 )
@@ -63,7 +66,7 @@ params = {
         #        'lr_scheduler_step_size': wandb.config.lr_scheduler_step_size,
         #        'lr_scheduler_gamma': wandb.config.lr_scheduler_gamma
     },
-    "evaluator": {"n_samples_to_use": 3,
+    "evaluator": {"n_samples_to_use": 5,
                   "n_samples_to_synthesize_visualize_per_subset": 3},
     "cp_paths": {
         'checkpoint_path': '../train_results/',
@@ -80,7 +83,7 @@ model, optimizer, ep = initialize_model(params)
 wandb.watch(model)
 
 # load dataset
-if preprocessed_dataset_path:
+if load_dataset:
     dataset = load_preprocessed_dataset(preprocessed_dataset_path)
 
 else:  # small subset
@@ -138,8 +141,10 @@ if use_evaluator:
 eps = wandb.config.epochs
 
 try:
-    epoch_save_all, epoch_save_partial = get_epoch_log_freq(eps)
-    for i in np.arange(eps):
+    # epoch_save_all, epoch_save_partial = get_epoch_log_freq(eps)
+    epoch_save_all, epoch_save_partial = [wandb.config.epochs - 1], []  # last epoch idx
+
+    for i in range(eps):
         ep += 1
         save_model = (i in epoch_save_partial or i in epoch_save_all)
         print(f"Epoch {ep}\n-------------------------------")
@@ -148,6 +153,7 @@ try:
                    mse_fn=MSE_fn, save=save_model, device=params["model"]['device'])
         print("-------------------------------\n")
         if use_evaluator:
+            print("use_eval_i", i)
             if i in epoch_save_partial or i in epoch_save_all:
                 evaluator.set_pred()
                 evaluator.identifier = 'Test_Epoch_{}'.format(ep)
@@ -156,13 +162,13 @@ try:
                 acc_h = evaluator.get_hits_accuracies(drum_mapping=ROLAND_REDUCED_MAPPING)
                 mse_v = evaluator.get_velocity_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
                 mse_o = evaluator.get_micro_timing_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
-                rhythmic_distances = evaluator.get_rhythmic_distances()
+                # rhythmic_distances = evaluator.get_rhythmic_distances()
 
                 # log metrics to wandb
                 wandb.log(acc_h, commit=False)
                 wandb.log(mse_v, commit=False)
                 wandb.log(mse_o, commit=False)
-                wandb.log(rhythmic_distances, commit=False)
+                # wandb.log(rhythmic_distances, commit=False)
 
                 evaluator.dump(
                     path="misc/evaluator_run_{}_Epoch_{}.Eval".format(wandb_run.name, ep))
