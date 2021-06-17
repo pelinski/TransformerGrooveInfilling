@@ -16,7 +16,7 @@ from utils import get_epoch_log_freq
 from preprocess_infilling_dataset import preprocess_dataset, load_preprocessed_dataset
 
 use_wandb = True
-use_evaluator = False
+use_evaluator = True
 encoder_only = True
 # preprocessed_dataset_path = None
 # preprocessed_dataset_path = '../dataset/Dataset_15_06_2021_at_18_39_hrs'
@@ -83,7 +83,7 @@ wandb.watch(model)
 if preprocessed_dataset_path:
     dataset = load_preprocessed_dataset(preprocessed_dataset_path)
 
-else:
+else:   # small subset
     params["dataset"] = {
         "subset_info": {
             "pickle_source_path": '../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.4.5/Processed_On_14_06_2021_at_14_26_hrs',
@@ -142,19 +142,17 @@ try:
     epoch_save_all, epoch_save_partial = get_epoch_log_freq(eps)
     for i in np.arange(eps):
         ep += 1
-        save_model = (
-                i in epoch_save_partial or i in epoch_save_all)
+        save_model = (i in epoch_save_partial or i in epoch_save_all)
         print(f"Epoch {ep}\n-------------------------------")
         train_loop(dataloader=dataloader, groove_transformer=model, encoder_only=params["model"][
             "encoder_only"], opt=optimizer, epoch=ep, loss_fn=calculate_loss, bce_fn=BCE_fn,
                    mse_fn=MSE_fn, save=save_model, device=params["model"]['device'])
         print("-------------------------------\n")
         if use_evaluator:
-            # generate evaluator predictions after each epoch
-            evaluator.set_pred()
-            evaluator.identifier = 'Test_Epoch_{}'.format(ep)
-
             if i in epoch_save_partial or i in epoch_save_all:
+                evaluator.set_pred()
+                evaluator.identifier = 'Test_Epoch_{}'.format(ep)
+
                 # get metrics
                 acc_h = evaluator.get_hits_accuracies(drum_mapping=ROLAND_REDUCED_MAPPING)
                 mse_v = evaluator.get_velocity_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
@@ -174,6 +172,7 @@ try:
 
             evaluator.dump(
                 path="misc/evaluator_run_{}_Epoch_{}.Eval".format(wandb_run.name, ep))
+
         wandb.log({"epoch": ep})
 
 finally:
