@@ -129,12 +129,11 @@ if use_evaluator:
         dataset=dataset,
         model=model,
         n_epochs=wandb.config.epochs)
-    evaluator.set_gt()
 
     # log eval_subset parameters to wandb
-    wandb.config.update({"eval_hvo_index": evaluator.eval_hvo_index,
-                         "eval_voices_reduced": evaluator.eval_voices_reduced,
-                         "eval_soundfons": evaluator.eval_soundfonts})
+    wandb.config.update({"eval_hvo_index": evaluator.hvo_index,
+                         "eval_voices_reduced": evaluator.voices_reduced,
+                         "eval_soundfons": evaluator.soundfonts})
 
 eps = wandb.config.epochs
 
@@ -169,7 +168,7 @@ try:
                     path="misc/evaluator_run_{}_Epoch_{}.Eval".format(wandb_run.name, ep))
 
             if i in epoch_save_all:
-                heatmaps_global_features = evaluator.get_wandb_logging_media(use_sf_dict=True)
+                heatmaps_global_features = evaluator.get_wandb_logging_media()
                 if len(heatmaps_global_features.keys()) > 0:
                     wandb.log(heatmaps_global_features, commit=False)
 
