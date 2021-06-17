@@ -5,7 +5,7 @@ sys.path.insert(1, "../")
 sys.path.append('../../../hvo_sequence/')
 sys.path.append('../../../preprocessed_dataset/')
 
-from dataset import GrooveMidiDatasetInfilling
+from dataset import GrooveMidiDatasetInfilling, GrooveMidiDatasetInfillingSymbolic
 from Subset_Creators.subsetters import GrooveMidiSubsetter
 import numpy as np
 
@@ -95,7 +95,7 @@ if __name__ == "__main__":
         assert np.all(preprocessed_dict["processed_inputs"].numpy() == gmd.processed_inputs.numpy())
 
     # save to pickle file
-    test_save_pickle = True
+    test_save_pickle = False
     if test_save_pickle:
         gmd = GrooveMidiDatasetInfilling(data=subset_list[0], **params['dataset'])
         gmd_loaded = GrooveMidiDatasetInfilling(load_dataset_path=gmd.save_dataset_path)
@@ -103,10 +103,15 @@ if __name__ == "__main__":
         params = gmd_loaded.get_params()
         print(params)
 
-
-    test_load_pickle = True
+    # load from pickle file
+    test_load_pickle = False
     if test_load_pickle:
         load_dataset_path = "../../preprocessed_infilling_datasets/0.0.0/Dataset_15_06_2021_at_18_23_hrs"
         gmd_loaded = GrooveMidiDatasetInfilling(load_dataset_path=load_dataset_path)
         print(gmd_loaded.__len__())
 
+
+    test_dataset_symbolic = True
+    if test_dataset_symbolic:
+        gmds = GrooveMidiDatasetInfillingSymbolic(data=subset_list[0], **params['dataset'])
+        gmds.processed_inputs

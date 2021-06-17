@@ -1,22 +1,27 @@
 import sys
 
 sys.path.append('../../preprocessed_dataset/')
-from dataset import GrooveMidiDatasetInfilling
+from dataset import GrooveMidiDatasetInfilling, GrooveMidiDatasetInfillingSymbolic
 from Subset_Creators.subsetters import GrooveMidiSubsetter
 
-def preprocess_dataset(params):
+
+def preprocess_dataset(params, symbolic=False):
     _, subset_list = GrooveMidiSubsetter(pickle_source_path=params["dataset"]["subset_info"]["pickle_source_path"],
                                          subset=params["dataset"]["subset_info"]["subset"],
                                          hvo_pickle_filename=params["dataset"]["subset_info"]["hvo_pickle_filename"],
                                          list_of_filter_dicts_for_subsets=[
                                              params['dataset']["subset_info"]['filters']]).create_subsets()
 
-    dataset = GrooveMidiDatasetInfilling(data=subset_list[0], **params['dataset'])
+    dataset = GrooveMidiDatasetInfilling(data=subset_list[0], **params['dataset']) if not symbolic else \
+        GrooveMidiDatasetInfillingSymbolic(data=subset_list[0], **params['dataset'])
 
     return dataset
 
-def load_preprocessed_dataset(load_dataset_path):
-    dataset = GrooveMidiDatasetInfilling(load_dataset_path=load_dataset_path)
+
+def load_preprocessed_dataset(load_dataset_path, symbolic=False):
+    dataset = GrooveMidiDatasetInfilling(load_dataset_path=load_dataset_path) if not symbolic else \
+        GrooveMidiDatasetInfillingSymbolic(load_dataset_path=load_dataset_path)
+
     return dataset
 
 
@@ -31,6 +36,7 @@ if __name__ == "__main__":
                 "filters": {
                     "beat_type": ["beat"],
                     "time_signature": ["4-4"],
+                  #  "master_id": ["drummer1/session1/201"] rapid testing
                 }
             },
             'max_len': 32,
@@ -45,5 +51,4 @@ if __name__ == "__main__":
         }
     }
 
-    dataset = preprocess_dataset(params)
-
+    dataset = preprocess_dataset(params,symbolic=False)

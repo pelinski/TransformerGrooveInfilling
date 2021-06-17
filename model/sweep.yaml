@@ -28,7 +28,7 @@ parameters:
     min: 1
     max: 8
   epochs:
-    value: 500
+    value: 100
 program: train_infilling.py
 project: 'train_infilling_sweeps'
-description: 'Full dataset, trained on 500 epochs. Evaluator disabled, model on saving mode'
+description: 'Full dataset, trained on 100 epochs. Evaluator enabled only on last epoch, model on saving mode'

@@ -9,7 +9,7 @@ import wandb
 import pickle
 
 from utils import get_sf_list, add_metadata_to_hvo_seq, pad_to_match_max_seq_len, get_voice_idx_for_item, \
-    get_sf_v_combinations, save_dict_to_pickle
+    get_sf_v_combinations, get_voice_combinations, save_dict_to_pickle
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -81,7 +81,6 @@ class GrooveMidiDatasetInfilling(Dataset):
                                                      self.subset_info["metadata_csv_filename"]))
             self.save_dataset_path = kwargs.get('save_dataset_path', os.path.join('../dataset', self.dataset_name))
 
-
         # preprocess dataset
         preprocessed_dataset = self.load_dataset_from_pickle(
             load_dataset_path) if load_dataset_path else self.preprocess_dataset(data)
@@ -114,7 +113,6 @@ class GrooveMidiDatasetInfilling(Dataset):
             save_dict_to_pickle(preprocessed_dataset, dataset_pickle_filename)
 
             print("Saved dataset to path: ", self.save_dataset_path)
-
 
     def preprocess_dataset(self, data):
         # init lists to store hvo sequences and processed io
@@ -236,19 +234,18 @@ class GrooveMidiDatasetInfilling(Dataset):
 
     def get_params(self):
         return {"subset_info": {**self.subset_info},
-                  'max_seq_len': self.max_seq_len,
-                  'mso_params': self.mso_params,
-                  'voices_params': self.voices_params,
-                  'sf_path': self.sf_path,
-                  'max_n_sf': self.max_n_sf,
-                  'sfs_list': self.sfs_list,
-                  'save_dataset_path': self.save_dataset_path,
-                  'max_aug_items': self.max_aug_items,
-                  'dataset_name': self.dataset_name,
-                  'timestamp': self.timestamp,
-                  'metadata':self.metadata,
-                  'length': len(self.processed_inputs)}
-
+                'max_seq_len': self.max_seq_len,
+                'mso_params': self.mso_params,
+                'voices_params': self.voices_params,
+                'sf_path': self.sf_path,
+                'max_n_sf': self.max_n_sf,
+                'sfs_list': self.sfs_list,
+                'save_dataset_path': self.save_dataset_path,
+                'max_aug_items': self.max_aug_items,
+                'dataset_name': self.dataset_name,
+                'timestamp': self.timestamp,
+                'metadata': self.metadata,
+                'length': len(self.processed_inputs)}
 
     # dataset methods
 
@@ -257,3 +254,94 @@ class GrooveMidiDatasetInfilling(Dataset):
 
     def __getitem__(self, idx):
         return self.processed_inputs[idx], self.processed_outputs[idx], idx
+
+
+class GrooveMidiDatasetInfillingSymbolic(GrooveMidiDatasetInfilling):
+    def __init__(self,
+                 data=None,
+                 load_dataset_path=None,
+                 **kwargs):
+        super(GrooveMidiDatasetInfillingSymbolic, self).__init__(data=data,
+                                                                 load_dataset_path=load_dataset_path,
+                                                                 **kwargs)
+        # audio attrs
+        self.mso_params = {}
+        self.sfs_list = []
+        self.sf_path = []
+        self.max_n_sf = None
+
+        self.__version__ = '0.0.0'
+
+    # override preprocessing dataset method
+    # keep unused audio attrs (sfs) for simplicity
+    def preprocess_dataset(self, data):
+        # init lists to store hvo sequences and processed io
+        hvo_sequences = []
+        hvo_sequences_inputs, hvo_sequences_outputs = [], []
+        processed_inputs, processed_outputs = [], []
+
+        # init list with configurations
+        hvo_index, voices_reduced, soundfonts = [], [], []
+
+        for hvo_idx, hvo_seq in enumerate(tqdm(data)):  # only one subset because only one set of filters
+            if len(hvo_seq.time_signatures) == 1:  # ignore if time_signature change happens
+
+                all_zeros = not np.any(hvo_seq.hvo.flatten())
+
+                if not all_zeros:  # ignore silent patterns
+
+                    # add metadata to hvo_seq scores
+                    add_metadata_to_hvo_seq(hvo_seq, hvo_idx, self.metadata)
+
+                    # pad with zeros to match max_len
+                    hvo_seq = pad_to_match_max_seq_len(hvo_seq, self.max_seq_len)
+
+                    # append hvo_seq to hvo_sequences list
+                    hvo_sequences.append(hvo_seq)
+
+                    # remove voices in voice_idx not present in item
+                    _voice_idx, _voices_params = get_voice_idx_for_item(hvo_seq, self.voices_params)
+                    if len(_voice_idx) == 0: continue  # if there are no voices to remove, continue
+
+                    # get voices and sf combinations
+                    #f_v_comb = get_sf_v_combinations(_voices_params, self.max_aug_items, self.max_n_sf, self.sfs_list)
+                    v_comb = get_voice_combinations(**_voices_params)
+
+                    # for every sf and voice combination
+                    for v_idx in v_comb:
+
+                        # reset voices in hvo
+                        hvo_seq_in, hvo_seq_out = hvo_seq.reset_voices(voice_idx=v_idx)
+                        # if the resulting hvos are 0, skip
+                        if not np.any(hvo_seq_in.hvo.flatten()): continue
+                        if not np.any(hvo_seq_out.hvo.flatten()): continue
+
+                        hvo_sequences_inputs.append(hvo_seq_in)
+                        hvo_sequences_outputs.append(hvo_seq_out)
+
+                        # store hvo, v_idx and sf
+                        hvo_index.append(hvo_idx)
+                        voices_reduced.append(v_idx)
+
+                        # processed inputs
+                        processed_inputs.append(hvo_seq_in.hvo)
+
+                        # processed outputs complementary hvo_seq with reset voices
+                        processed_outputs.append(hvo_seq_out.hvo)
+
+        # convert inputs and outputs to torch tensors
+        processed_inputs = torch.Tensor(processed_inputs).to(device=device)
+        processed_outputs = torch.Tensor(processed_outputs).to(device=device)
+
+        preprocessed_dict = {
+            "processed_inputs": processed_inputs,
+            "processed_outputs": processed_outputs,
+            "hvo_sequences": hvo_sequences,
+            "hvo_sequences_inputs": hvo_sequences_inputs,
+            "hvo_sequences_outputs": hvo_sequences_outputs,
+            "hvo_index": hvo_index,
+            "voices_reduced": voices_reduced,
+            "soundfonts": soundfonts
+        }
+
+        return preprocessed_dict
