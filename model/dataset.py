@@ -77,10 +77,11 @@ class GrooveMidiDatasetInfilling(Dataset):
             if self.max_n_sf is not None:
                 assert (self.max_n_sf <= len(self.sfs_list)), "max_n_sf can not be larger than number of available " \
                                                               "soundfonts"
-            self.metadata = pd.read_csv(os.path.join(self.subset_info["pickle_source_path"], self.subset_info["subset"],
-                                                     self.subset_info["metadata_csv_filename"]))
+
             self.save_dataset_path = kwargs.get('save_dataset_path', os.path.join('../dataset', self.dataset_name))
 
+        self.metadata = pd.read_csv(os.path.join(self.subset_info["pickle_source_path"], self.subset_info["subset"],
+                                                 self.subset_info["metadata_csv_filename"]))
         # preprocess dataset
         preprocessed_dataset = self.load_dataset_from_pickle(
             load_dataset_path) if load_dataset_path else self.preprocess_dataset(data)
