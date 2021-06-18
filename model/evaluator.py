@@ -108,7 +108,7 @@ class InfillingEvaluator(Evaluator):
     def set_pred(self):
         eval_pred = self.model.predict(self.processed_inputs, use_thres=True, thres=0.5)
 
-        eval_pred_hvo_array = np.concatenate(eval_pred, axis=2)
+        eval_pred_hvo_array = np.concatenate(eval_pred.cpu(), axis=2)
         eval_pred = np.zeros_like(eval_pred_hvo_array)
         # sets all voices different from voices_reduced to 0
         # sync between hits and vels+offs is done when converted to hvo sequence
