@@ -150,6 +150,5 @@ for idx in range(eval_pred_hvo_array.shape[0]):  # N
 
 print("set_pred()", np.all(evaluator._prediction_hvos_array == eval_pred))
 
-# TODO use_hvo_comp in synth
 media = evaluator.get_wandb_logging_media()
 wandb.log(media)
