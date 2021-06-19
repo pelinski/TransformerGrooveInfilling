@@ -43,7 +43,7 @@ hyperparameter_defaults = dict(
     learning_rate=1e-3,
     batch_size=64,
     dim_feedforward=32,
-    epochs=5,
+    epochs=5
     #    lr_scheduler_step_size=30,
     #    lr_scheduler_gamma=0.1
 )
@@ -71,8 +71,8 @@ params = {
         #        'lr_scheduler_step_size': wandb.config.lr_scheduler_step_size,
         #        'lr_scheduler_gamma': wandb.config.lr_scheduler_gamma
     },
-    "evaluator": {"n_samples_to_use": 10,  # 2048
-                  "n_samples_to_synthesize_visualize_per_subset": 4},  # 10
+    "evaluator": {"n_samples_to_use": 2048,  # 2048
+                  "n_samples_to_synthesize_visualize_per_subset": 10},  # 10
     "cp_paths": {
         'checkpoint_path': '../train_results/',
         'checkpoint_save_str': '../train_results/transformer_groove_infilling-epoch-{}'
