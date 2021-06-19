@@ -15,7 +15,9 @@ from utils import get_epoch_log_freq
 from preprocess_infilling_dataset import preprocess_dataset, load_preprocessed_dataset
 
 # ================================= SETTINGS ==================================================== #
-preprocessed_dataset_path = '../preprocessed_infilling_datasets/train/0.0.1/Dataset_17_06_2021_at_17_20_hrs'  # train ds
+preprocessed_dataset_path_train = '../preprocessed_infilling_datasets/train/0.0.2/Dataset_19_06_2021_at_16_29_hrs'  #
+# train ds
+preprocessed_dataset_path_test = '../preprocessed_infilling_datasets/test/0.0.2/Dataset_19_06_2021_at_16_20_hrs'
 # preprocessed_dataset_path = '../dataset/Dataset_17_06_2021_at_18_13_hrs' # test symbolic
 # preprocessed_dataset_path = './dataset/Dataset_17_06_2021_at_19_09_hrs' # test infilling
 
@@ -23,9 +25,7 @@ settings = {
     'symbolic': False,
     'encoder_only': True,
     'log_to_wandb': True,
-    'use_evaluator': True,
-    'load_dataset': True if preprocessed_dataset_path else False,
-}
+    'use_evaluator': True}
 
 # wandb
 os.environ['WANDB_MODE'] = 'online' if settings['log_to_wandb'] else 'offline'
@@ -88,45 +88,21 @@ model, optimizer, ep = initialize_model(params)
 wandb.watch(model)
 
 # load dataset
-if settings['load_dataset']:
-    dataset = load_preprocessed_dataset(preprocessed_dataset_path, symbolic=settings['symbolic'])
+dataset_train = load_preprocessed_dataset(preprocessed_dataset_path_train, symbolic=settings['symbolic'])
+dataloader_train = DataLoader(dataset_train, batch_size=params['training']['batch_size'], shuffle=True)
 
-else:  # small subset
-    params["dataset"] = {
-        "subset_info": {
-            "pickle_source_path": '../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.4.5/Processed_On_14_06_2021_at_14_26_hrs',
-            "subset": 'GrooveMIDI_processed_train',
-            "metadata_csv_filename": 'metadata.csv',
-            "hvo_pickle_filename": 'hvo_sequence_data.obj',
-            "filters": {
-                "beat_type": ["beat"],
-                "time_signature": ["4-4"],
-                "master_id": ["drummer9/session1/8"]
-            }
-        },
-        'max_len': 32,
-        'mso_params': {'sr': 44100, 'n_fft': 1024, 'win_length': 1024, 'hop_length':
-            441, 'n_bins_per_octave': 16, 'n_octaves': 9, 'f_min': 40, 'mean_filter_size': 22},
-        'voices_params': {'voice_idx': [2], 'min_n_voices_to_remove': 1,  # closed hh
-                          'max_n_voices_to_remove': 1, 'prob': [1], 'k': None},
-        'sf_path': ['../soundfonts/filtered_soundfonts/Standard_Drum_Kit.sf2'],
-        'max_n_sf': 1,
-        'max_aug_items': 1,
-        'dataset_name': None
-    }
-    dataset = preprocess_dataset(params)
+dataset_test = load_preprocessed_dataset(preprocessed_dataset_path_test, symbolic=settings['symbolic'])
 
-dataloader = DataLoader(dataset, batch_size=params['training']['batch_size'], shuffle=True)
 
 # log all params to wandb
 wandb.config.update(params)
 
 # instance evaluator and set gt
 if settings['use_evaluator']:
-    evaluator = InfillingEvaluator(
-        pickle_source_path=dataset.subset_info["pickle_source_path"],
-        set_subfolder=dataset.subset_info["subset"],
-        hvo_pickle_filename=dataset.subset_info["hvo_pickle_filename"],
+    evaluator_train = InfillingEvaluator(
+        pickle_source_path=dataset_train.subset_info["pickle_source_path"],
+        set_subfolder=dataset_train.subset_info["subset"],
+        hvo_pickle_filename=dataset_train.subset_info["hvo_pickle_filename"],
         max_hvo_shape=(32, 27),
         n_samples_to_use=params["evaluator"]["n_samples_to_use"],
         n_samples_to_synthesize_visualize_per_subset=params["evaluator"][
@@ -134,14 +110,32 @@ if settings['use_evaluator']:
         disable_tqdm=False,
         analyze_heatmap=True,
         analyze_global_features=True,
-        dataset=dataset,
+        dataset=dataset_train,
+        model=model,
+        n_epochs=wandb.config.epochs)
+
+    evaluator_test = InfillingEvaluator(
+        pickle_source_path=dataset_test.subset_info["pickle_source_path"],
+        set_subfolder=dataset_test.subset_info["subset"],
+        hvo_pickle_filename=dataset_test.subset_info["hvo_pickle_filename"],
+        max_hvo_shape=(32, 27),
+        n_samples_to_use=params["evaluator"]["n_samples_to_use"],
+        n_samples_to_synthesize_visualize_per_subset=params["evaluator"][
+            "n_samples_to_synthesize_visualize_per_subset"],
+        disable_tqdm=False,
+        analyze_heatmap=True,
+        analyze_global_features=True,
+        dataset=dataset_test,
         model=model,
         n_epochs=wandb.config.epochs)
 
     # log eval_subset parameters to wandb
-    wandb.config.update({"eval_hvo_index": evaluator.hvo_index,
-                         "eval_voices_reduced": evaluator.voices_reduced,
-                         "eval_soundfons": evaluator.soundfonts})
+    wandb.config.update({"train_hvo_index": evaluator_train.hvo_index,
+                         "train_voices_reduced": evaluator_train.voices_reduced,
+                         "train_soundfons": evaluator_train.soundfonts,
+                         "test_hvo_index": evaluator_test.hvo_index,
+                         "test_voices_reduced": evaluator_test.voices_reduced,
+                         "test_soundfons": evaluator_test.soundfonts})
 
 eps = wandb.config.epochs
 
@@ -153,33 +147,49 @@ try:
         ep += 1
         save_model = (i in epoch_save_partial or i in epoch_save_all)
         print(f"Epoch {ep}\n-------------------------------")
-        train_loop(dataloader=dataloader, groove_transformer=model, encoder_only=params["model"][
+        train_loop(dataloader=dataloader_train, groove_transformer=model, encoder_only=params["model"][
             "encoder_only"], opt=optimizer, epoch=ep, loss_fn=calculate_loss, bce_fn=BCE_fn,
                    mse_fn=MSE_fn, save=save_model, device=params["model"]['device'])
         print("-------------------------------\n")
         if settings['use_evaluator']:
             if i in epoch_save_partial or i in epoch_save_all:
-                evaluator.set_pred()
-                evaluator.identifier = 'Test_Epoch_{}'.format(ep)
+                # set predictions with updated model
+                evaluator_train.set_pred()
+                evaluator_test.set_pred()
+
+                # set identifier
+                evaluator_train.identifier = 'Train_Epoch_{}'.format(ep)
+                evaluator_test.identifier = 'Test_Epoch_{}'.format(ep)
 
                 # get metrics
-                acc_h = evaluator.get_hits_accuracies(drum_mapping=ROLAND_REDUCED_MAPPING)
-                mse_v = evaluator.get_velocity_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
-                mse_o = evaluator.get_micro_timing_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
-                # rhythmic_distances = evaluator.get_rhythmic_distances()
+                train_acc_h = evaluator_train.get_hits_accuracies(drum_mapping=ROLAND_REDUCED_MAPPING)
+                train_mse_v = evaluator_train.get_velocity_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
+                train_mse_o = evaluator_train.get_micro_timing_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
+                test_acc_h = evaluator_test.get_hits_accuracies(drum_mapping=ROLAND_REDUCED_MAPPING)
+                test_mse_v = evaluator_test.get_velocity_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
+                test_mse_o = evaluator_test.get_micro_timing_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
+                # rhythmic_distances = evaluator_train.get_rhythmic_distances()
 
                 # log metrics to wandb
-                wandb.log(acc_h, commit=False)
-                wandb.log(mse_v, commit=False)
-                wandb.log(mse_o, commit=False)
+                wandb.log(train_acc_h, commit=False)
+                wandb.log(train_mse_v, commit=False)
+                wandb.log(train_mse_o, commit=False)
+                wandb.log(test_acc_h, commit=False)
+                wandb.log(test_mse_v, commit=False)
+                wandb.log(test_mse_o, commit=False)
                 # wandb.log(rhythmic_distances, commit=False)
 
-                evaluator.dump(path="misc/evaluator_run_{}_Epoch_{}.Eval".format(wandb_run.name, ep))
+                # dump evaluator
+                evaluator_train.dump(path="evaluator/evaluator_train_run_{}_Epoch_{}.Eval".format(wandb_run.name, ep))
+                evaluator_test.dump(path="evaluator/evaluator_test_run_{}_Epoch_{}.Eval".format(wandb_run.name, ep))
 
             if i in epoch_save_all:
-                heatmaps_global_features = evaluator.get_wandb_logging_media()
-                if len(heatmaps_global_features.keys()) > 0:
-                    wandb.log(heatmaps_global_features, commit=False)
+                heatmaps_global_features_train = evaluator_train.get_wandb_logging_media()
+                if len(heatmaps_global_features_train.keys()) > 0:
+                    wandb.log(heatmaps_global_features_train, commit=False)
+                heatmaps_global_features_test = evaluator_test.get_wandb_logging_media()
+                if len(heatmaps_global_features_test.keys()) > 0:
+                    wandb.log(heatmaps_global_features_test, commit=False)
 
         wandb.log({"epoch": ep})
 
