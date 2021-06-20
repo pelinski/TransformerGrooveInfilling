@@ -38,7 +38,7 @@ hyperparameter_defaults = dict(
     batch_size=64,
     dim_feedforward=32,
     epochs=5,
-    evaluator=True,
+    use_evaluator=True,
     encoder_only=True,
     symbolic=False
     #    lr_scheduler_step_size=30,
@@ -95,7 +95,7 @@ dataset_test = load_preprocessed_dataset(preprocessed_dataset_path_test, symboli
 wandb.config.update(params)
 
 # instance evaluator and set gt
-if wandb.config.evaluator:
+if wandb.config.use_evaluator:
     evaluator_train = InfillingEvaluator(
         pickle_source_path=dataset_train.subset_info["pickle_source_path"],
         set_subfolder=dataset_train.subset_info["subset"],
@@ -149,7 +149,7 @@ for i in range(eps):
         "encoder_only"], opt=optimizer, epoch=ep, loss_fn=calculate_loss, bce_fn=BCE_fn,
                mse_fn=MSE_fn, save=save_model, device=params["model"]['device'])
     print("-------------------------------\n")
-    if wandb.config.evaluator:
+    if wandb.config.use_evaluator:
         if i in epoch_save_partial or i in epoch_save_all:
             # Train set evaluator
             evaluator_train.identifier = 'Train_Epoch_{}'.format(ep)
