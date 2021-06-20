@@ -22,14 +22,8 @@ preprocessed_dataset_path_test = '../preprocessed_infilling_datasets/test/0.0.2/
 # preprocessed_dataset_path = './dataset/Dataset_17_06_2021_at_19_09_hrs' # test infilling
 
 settings = {
-    'symbolic': False,
-    'encoder_only': True,
-    'log_to_wandb': True,
-    'use_evaluator': True}
-
-# wandb
+    'log_to_wandb': True}
 os.environ['WANDB_MODE'] = 'online' if settings['log_to_wandb'] else 'offline'
-project_name = 'infilling-encoder' if settings['encoder_only'] else 'infilling'
 
 # ============================================================================================== #
 
@@ -43,16 +37,19 @@ hyperparameter_defaults = dict(
     learning_rate=1e-3,
     batch_size=64,
     dim_feedforward=32,
-    epochs=5
+    epochs=5,
+    evaluator=True,
+    encoder_only=True,
+    symbolic=False
     #    lr_scheduler_step_size=30,
     #    lr_scheduler_gamma=0.1
 )
-
+project_name = 'infilling-encoder' if hyperparameter_defaults['encoder_only'] else 'infilling'
 wandb_run = wandb.init(config=hyperparameter_defaults, project=project_name)
 
 params = {
     "model": {
-        "encoder_only": settings['encoder_only'],
+        "encoder_only": wandb.config.encoder_only,
         'optimizer': wandb.config.optimizer_algorithm,
         'd_model': wandb.config.d_model,
         'n_heads': wandb.config.n_heads,
@@ -88,10 +85,10 @@ model, optimizer, ep = initialize_model(params)
 wandb.watch(model)
 
 # load dataset
-dataset_train = load_preprocessed_dataset(preprocessed_dataset_path_train, symbolic=settings['symbolic'])
+dataset_train = load_preprocessed_dataset(preprocessed_dataset_path_train, symbolic=wandb.config.symbolic)
 dataloader_train = DataLoader(dataset_train, batch_size=params['training']['batch_size'], shuffle=True)
 
-dataset_test = load_preprocessed_dataset(preprocessed_dataset_path_test, symbolic=settings['symbolic'])
+dataset_test = load_preprocessed_dataset(preprocessed_dataset_path_test, symbolic=wandb.config.symbolic)
 
 
 # log all params to wandb
@@ -152,7 +149,7 @@ for i in range(eps):
         "encoder_only"], opt=optimizer, epoch=ep, loss_fn=calculate_loss, bce_fn=BCE_fn,
                mse_fn=MSE_fn, save=save_model, device=params["model"]['device'])
     print("-------------------------------\n")
-    if settings['use_evaluator']:
+    if wandb.config.evaluator:
         if i in epoch_save_partial or i in epoch_save_all:
             # Train set evaluator
             evaluator_train.identifier = 'Train_Epoch_{}'.format(ep)

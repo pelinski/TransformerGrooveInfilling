@@ -29,6 +29,8 @@ parameters:
     max: 12
   epochs:
     value: 100
+  evaluator:
+    value: True
 program: train_infilling.py
 project: 'train_infilling_sweeps'
 description: 'Full dataset, trained on 100 epochs. Test and train evaluator enabled only on last epoch, model on saving mode. 6 to
