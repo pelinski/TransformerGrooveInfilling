@@ -95,7 +95,7 @@ dataset_test = load_preprocessed_dataset(preprocessed_dataset_path_test, symboli
 wandb.config.update(params)
 
 # instance evaluator and set gt
-if settings['use_evaluator']:
+if wandb.config.evaluator:
     evaluator_train = InfillingEvaluator(
         pickle_source_path=dataset_train.subset_info["pickle_source_path"],
         set_subfolder=dataset_train.subset_info["subset"],
