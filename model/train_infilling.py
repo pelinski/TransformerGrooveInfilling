@@ -107,6 +107,7 @@ if settings['use_evaluator']:
         n_samples_to_use=params["evaluator"]["n_samples_to_use"],
         n_samples_to_synthesize_visualize_per_subset=params["evaluator"][
             "n_samples_to_synthesize_visualize_per_subset"],
+        _identifier='Train_Set',
         disable_tqdm=False,
         analyze_heatmap=True,
         analyze_global_features=True,
@@ -122,6 +123,7 @@ if settings['use_evaluator']:
         n_samples_to_use=params["evaluator"]["n_samples_to_use"],
         n_samples_to_synthesize_visualize_per_subset=params["evaluator"][
             "n_samples_to_synthesize_visualize_per_subset"],
+        _identifier='Test_Set',
         disable_tqdm=False,
         analyze_heatmap=True,
         analyze_global_features=True,
@@ -139,59 +141,54 @@ if settings['use_evaluator']:
 
 eps = wandb.config.epochs
 
-try:
-    # epoch_save_all, epoch_save_partial = get_epoch_log_freq(eps)
-    epoch_save_all, epoch_save_partial = [eps - 1], []
+# epoch_save_all, epoch_save_partial = get_epoch_log_freq(eps)
+epoch_save_all, epoch_save_partial = [eps - 1], []
 
-    for i in range(eps):
-        ep += 1
-        save_model = (i in epoch_save_partial or i in epoch_save_all)
-        print(f"Epoch {ep}\n-------------------------------")
-        train_loop(dataloader=dataloader_train, groove_transformer=model, encoder_only=params["model"][
-            "encoder_only"], opt=optimizer, epoch=ep, loss_fn=calculate_loss, bce_fn=BCE_fn,
-                   mse_fn=MSE_fn, save=save_model, device=params["model"]['device'])
-        print("-------------------------------\n")
-        if settings['use_evaluator']:
-            if i in epoch_save_partial or i in epoch_save_all:
-                # set predictions with updated model
-                evaluator_train.set_pred()
-                evaluator_test.set_pred()
-
-                # set identifier
-                evaluator_train.identifier = 'Train_Epoch_{}'.format(ep)
-                evaluator_test.identifier = 'Test_Epoch_{}'.format(ep)
-
-                # get metrics
-                train_acc_h = evaluator_train.get_hits_accuracies(drum_mapping=ROLAND_REDUCED_MAPPING)
-                train_mse_v = evaluator_train.get_velocity_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
-                train_mse_o = evaluator_train.get_micro_timing_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
-                test_acc_h = evaluator_test.get_hits_accuracies(drum_mapping=ROLAND_REDUCED_MAPPING)
-                test_mse_v = evaluator_test.get_velocity_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
-                test_mse_o = evaluator_test.get_micro_timing_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
-                # rhythmic_distances = evaluator_train.get_rhythmic_distances()
-
-                # log metrics to wandb
-                wandb.log(train_acc_h, commit=False)
-                wandb.log(train_mse_v, commit=False)
-                wandb.log(train_mse_o, commit=False)
-                wandb.log(test_acc_h, commit=False)
-                wandb.log(test_mse_v, commit=False)
-                wandb.log(test_mse_o, commit=False)
-                # wandb.log(rhythmic_distances, commit=False)
-
-                # dump evaluator
-                evaluator_train.dump(path="evaluator/evaluator_train_run_{}_Epoch_{}.Eval".format(wandb_run.name, ep))
-                evaluator_test.dump(path="evaluator/evaluator_test_run_{}_Epoch_{}.Eval".format(wandb_run.name, ep))
-
+for i in range(eps):
+    ep += 1
+    save_model = (i in epoch_save_partial or i in epoch_save_all)
+    print(f"Epoch {ep}\n-------------------------------")
+    train_loop(dataloader=dataloader_train, groove_transformer=model, encoder_only=params["model"][
+        "encoder_only"], opt=optimizer, epoch=ep, loss_fn=calculate_loss, bce_fn=BCE_fn,
+               mse_fn=MSE_fn, save=save_model, device=params["model"]['device'])
+    print("-------------------------------\n")
+    if settings['use_evaluator']:
+        if i in epoch_save_partial or i in epoch_save_all:
+            # Train set evaluator
+            evaluator_train.identifier = 'Train_Epoch_{}'.format(ep)
+            evaluator_train.set_pred()
+            train_acc_h = evaluator_train.get_hits_accuracies(drum_mapping=ROLAND_REDUCED_MAPPING)
+            train_mse_v = evaluator_train.get_velocity_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
+            train_mse_o = evaluator_train.get_micro_timing_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
+            wandb.log(train_acc_h, commit=False)
+            wandb.log(train_mse_v, commit=False)
+            wandb.log(train_mse_o, commit=False)
             if i in epoch_save_all:
                 heatmaps_global_features_train = evaluator_train.get_wandb_logging_media()
                 if len(heatmaps_global_features_train.keys()) > 0:
                     wandb.log(heatmaps_global_features_train, commit=False)
+            evaluator_train.dump(path="evaluator/evaluator_train_run_{}_Epoch_{}.Eval".format(wandb_run.name, ep))
+
+            # Test set evaluator
+            evaluator_test.identifier = 'Test_Epoch_{}'.format(ep)
+            evaluator_test.set_pred()
+            test_acc_h = evaluator_test.get_hits_accuracies(drum_mapping=ROLAND_REDUCED_MAPPING)
+            test_mse_v = evaluator_test.get_velocity_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
+            test_mse_o = evaluator_test.get_micro_timing_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
+            wandb.log(test_acc_h, commit=False)
+            wandb.log(test_mse_v, commit=False)
+            wandb.log(test_mse_o, commit=False)
+
+            if i in epoch_save_all:
                 heatmaps_global_features_test = evaluator_test.get_wandb_logging_media()
                 if len(heatmaps_global_features_test.keys()) > 0:
                     wandb.log(heatmaps_global_features_test, commit=False)
 
-        wandb.log({"epoch": ep})
+            evaluator_test.dump(path="evaluator/evaluator_test_run_{}_Epoch_{}.Eval".format(wandb_run.name, ep))
 
-finally:
-    wandb.finish()
+            # rhythmic_distances = evaluator_train.get_rhythmic_distances()
+            # wandb.log(rhythmic_distances, commit=False)
+
+    wandb.log({"epoch": ep})
+
+wandb.finish()
