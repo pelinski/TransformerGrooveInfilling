@@ -15,14 +15,12 @@ from utils import get_epoch_log_freq
 from preprocess_infilling_dataset import preprocess_dataset, load_preprocessed_dataset
 
 # ================================= SETTINGS ==================================================== #
-preprocessed_dataset_path_train = '../preprocessed_infilling_datasets/train/0.0.2/Dataset_19_06_2021_at_16_29_hrs'  #
-# train ds
-preprocessed_dataset_path_test = '../preprocessed_infilling_datasets/test/0.0.2/Dataset_19_06_2021_at_16_20_hrs'
+preprocessed_dataset_path_train = '../preprocessed_infilling_datasets/train/0.1.0/Dataset_21_06_2021_at_20_59_hrs'
+preprocessed_dataset_path_test = '../preprocessed_infilling_datasets/test/0.1.0/Dataset_21_06_2021_at_22_02_hrs'
 # preprocessed_dataset_path = '../dataset/Dataset_17_06_2021_at_18_13_hrs' # test symbolic
 # preprocessed_dataset_path = './dataset/Dataset_17_06_2021_at_19_09_hrs' # test infilling
 
-settings = {
-    'log_to_wandb': True}
+settings = {'log_to_wandb': True}
 os.environ['WANDB_MODE'] = 'online' if settings['log_to_wandb'] else 'offline'
 
 # ============================================================================================== #
@@ -37,7 +35,7 @@ hyperparameter_defaults = dict(
     learning_rate=1e-3,
     batch_size=64,
     dim_feedforward=32,
-    epochs=5,
+    epochs=1,
     use_evaluator=1,
     encoder_only=1,
     symbolic=0

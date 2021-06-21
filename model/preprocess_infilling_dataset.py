@@ -12,17 +12,17 @@ def preprocess_dataset(params, symbolic=False):
                                          list_of_filter_dicts_for_subsets=[
                                              params['dataset']["subset_info"]['filters']]).create_subsets()
 
-    dataset = GrooveMidiDatasetInfilling(data=subset_list[0], **params['dataset']) if not symbolic else \
+    _dataset = GrooveMidiDatasetInfilling(data=subset_list[0], **params['dataset']) if not symbolic else \
         GrooveMidiDatasetInfillingSymbolic(data=subset_list[0], **params['dataset'])
 
-    return dataset
+    return _dataset
 
 
 def load_preprocessed_dataset(load_dataset_path, symbolic=False):
-    dataset = GrooveMidiDatasetInfilling(load_dataset_path=load_dataset_path) if not symbolic else \
+    _dataset = GrooveMidiDatasetInfilling(load_dataset_path=load_dataset_path) if not symbolic else \
         GrooveMidiDatasetInfillingSymbolic(load_dataset_path=load_dataset_path)
 
-    return dataset
+    return _dataset
 
 
 if __name__ == "__main__":
@@ -30,7 +30,7 @@ if __name__ == "__main__":
         "dataset": {
             "subset_info": {
                 "pickle_source_path": '../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.4.5/Processed_On_14_06_2021_at_14_26_hrs',
-                "subset": 'GrooveMIDI_processed_train',
+                "subset": 'GrooveMIDI_processed_test',
                 "metadata_csv_filename": 'metadata.csv',
                 "hvo_pickle_filename": 'hvo_sequence_data.obj',
                 "filters": {
@@ -50,5 +50,5 @@ if __name__ == "__main__":
             'dataset_name': None
         }
     }
-
-    dataset = preprocess_dataset(params,symbolic=False)
+    print(params["dataset"]["subset_info"])
+    preprocess_dataset(params,symbolic=False)
