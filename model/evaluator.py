@@ -27,6 +27,8 @@ class InfillingEvaluator(Evaluator):
                  model=None,
                  n_epochs=None):
 
+        self.__version = "0.1.0"
+
         self.sf_dict = {}
 
         # common filters
@@ -54,20 +56,6 @@ class InfillingEvaluator(Evaluator):
         self.model = model
         self.eps = n_epochs
 
-        # Create subsets of data
-        gt_subsetter_sampler = subsetters.GrooveMidiSubsetterAndSampler(
-            pickle_source_path=pickle_source_path, subset=set_subfolder, hvo_pickle_filename=hvo_pickle_filename,
-            list_of_filter_dicts_for_subsets=list_of_filter_dicts_for_subsets,
-            number_of_samples=n_samples_to_use,
-            max_hvo_shape=max_hvo_shape,
-            #at_least_one_hit_in_voices=dataset.voices_params["voice_idx"]
-            )
-
-        # _gt_tags --> ground truth tags for each subset in _gt_subsets
-        self._gt_tags, self._gt_subsets = gt_subsetter_sampler.get_subsets()
-
-        # _gt_hvos_array_tags --> ground truth tags for each
-        # _gt_hvos_arrayS --> a numpy array containing all samples in hvo format
         self._gmd_gt_hvo_sequences = []
         self._gt_hvos_array_tags, self._gmd_gt_hvos_array, self._prediction_hvo_seq_templates = [], [], []
         for subset_ix, tag in enumerate(self._gt_tags):
@@ -84,17 +72,36 @@ class InfillingEvaluator(Evaluator):
         self.processed_inputs = preprocessed_dict["processed_inputs"]
         self.processed_gt = preprocessed_dict["processed_outputs"]
         self.hvo_sequences_inputs = preprocessed_dict["hvo_sequences_inputs"]
-        hvo_sequences_gt = preprocessed_dict["hvo_sequences_outputs"]
         self.hvo_index = preprocessed_dict["hvo_index"]
         self.voices_reduced = preprocessed_dict["voices_reduced"]
         self.soundfonts = preprocessed_dict["soundfonts"]
 
-        # get gt
-        eval_hvo_array = np.stack([hvo_seq.hvo for hvo_seq in hvo_sequences_gt])
+        self.unused_items = preprocessed_dict["unused_items"]
+        self._gt_hvo_sequences = preprocessed_dict["hvo_sequences_outputs"]
+        self._gt_hvos_array = np.stack([hvo_seq.hvo for hvo_seq in self._gt_hvo_sequences])
 
-        self._gt_hvos_array = eval_hvo_array
-        self._gt_hvo_sequences = hvo_sequences_gt
+        # remove items from _gt that are unused
+        tags = list(set(self._gt_hvos_array_tags))
+        hvo_index_dict = {tag: [] for tag in tags}
 
+        for i in range(self._gmd_gt_hvos_array.shape[0]):
+            hvo_index_dict[self._gt_hvos_array_tags[i]].append(i)
+
+        for subset_idx, subset in enumerate(self._gt_tags):
+            items_to_remove = np.where(np.isin(hvo_index_dict[subset], self.unused_items))[0]
+            self._gt_subsets[subset_idx] = np.delete(self._gt_subsets[subset_idx], items_to_remove).tolist()
+            if len(self._gt_subsets[subset_idx]) == 0:
+                self._gt_tags[subset_idx] = None
+
+        self._gt_subsets = list(filter(None, self._gt_subsets))
+        self._gt_tags = list(filter(None, self._gt_tags))
+
+        self._gt_hvos_array_tags = np.delete(self._gt_hvos_array_tags, self.unused_items).tolist()
+        self._gmd_gt_hvos_array = np.delete(self._gmd_gt_hvos_array, self.unused_items, axis=0)
+        self._gmd_gt_hvo_sequences = np.delete(self._gmd_gt_hvo_sequences, self.unused_items).tolist()
+        self._prediction_hvo_seq_templates = np.delete(self._prediction_hvo_seq_templates, self.unused_items).tolist()
+
+        # gt subset evaluator
         self.gt_SubSet_Evaluator = HVOSeq_SubSet_InfillingEvaluator(
             self._gt_subsets,  # Ground Truth typically
             self._gt_tags,
