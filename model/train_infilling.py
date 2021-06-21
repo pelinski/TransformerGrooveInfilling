@@ -188,6 +188,4 @@ for i in range(eps):
 
     wandb.log({"epoch": ep})
 
-print(wandb.config)
-
 wandb.finish()
