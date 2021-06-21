@@ -47,7 +47,7 @@ class GrooveMidiDatasetInfilling(Dataset):
         @param max_aug_items:       Maximum number of synthesized examples per example in subset
         @param dataset_name:        Dataset name (for experiment tracking)
         """
-        self.__version = "0.0.2"
+        self.__version = "0.1.0"
 
         # get params
         if load_dataset_path:
@@ -95,6 +95,7 @@ class GrooveMidiDatasetInfilling(Dataset):
         self.hvo_index = preprocessed_dataset["hvo_index"]
         self.voices_reduced = preprocessed_dataset["voices_reduced"]
         self.soundfonts = preprocessed_dataset["soundfonts"]
+        self.unused_items = preprocessed_dataset["unused_items"]
 
         # dataset params dict
         params = self.get_params()
@@ -120,6 +121,7 @@ class GrooveMidiDatasetInfilling(Dataset):
         hvo_sequences = []
         hvo_sequences_inputs, hvo_sequences_outputs = [], []
         processed_inputs, processed_outputs = [], []
+        unused_items = []
 
         # init list with configurations
         hvo_index, voices_reduced, soundfonts = [], [], []
@@ -142,7 +144,9 @@ class GrooveMidiDatasetInfilling(Dataset):
 
                     # remove voices in voice_idx not present in item
                     _voice_idx, _voices_params = get_voice_idx_for_item(hvo_seq, self.voices_params)
-                    if len(_voice_idx) == 0: continue  # if there are no voices to remove, continue
+                    if len(_voice_idx) == 0:
+                        unused_items.append(hvo_idx)
+                        continue  # if there are no voices to remove, continue
 
                     # get voices and sf combinations
                     sf_v_comb = get_sf_v_combinations(_voices_params, self.max_aug_items, self.max_n_sf, self.sfs_list)
@@ -153,8 +157,9 @@ class GrooveMidiDatasetInfilling(Dataset):
                         # reset voices in hvo
                         hvo_seq_in, hvo_seq_out = hvo_seq.reset_voices(voice_idx=v_idx)
                         # if the resulting hvos are 0, skip
-                        if not np.any(hvo_seq_in.hvo.flatten()): continue
-                        if not np.any(hvo_seq_out.hvo.flatten()): continue
+                        if not np.any(hvo_seq_in.hvo.flatten()) or not np.any(hvo_seq_out.hvo.flatten()):
+                            unused_items.append(hvo_idx)
+                            continue
 
                         hvo_sequences_inputs.append(hvo_seq_in)
                         hvo_sequences_outputs.append(hvo_seq_out)
@@ -183,7 +188,8 @@ class GrooveMidiDatasetInfilling(Dataset):
             "hvo_sequences_outputs": hvo_sequences_outputs,
             "hvo_index": hvo_index,
             "voices_reduced": voices_reduced,
-            "soundfonts": soundfonts
+            "soundfonts": soundfonts,
+            "unused_items": unused_items
         }
 
         return preprocessed_dict
@@ -227,6 +233,7 @@ class GrooveMidiDatasetInfilling(Dataset):
         self.hvo_index = preprocessed_dataset["hvo_index"]
         self.voices_reduced = preprocessed_dataset["voices_reduced"]
         self.soundfonts = preprocessed_dataset["soundfonts"]
+        self.unused_items = preprocessed_dataset["unused_items"]
 
         print(str(self.__len__()) + ' items')
 
@@ -282,7 +289,7 @@ class GrooveMidiDatasetInfillingSymbolic(GrooveMidiDatasetInfilling):
         self.sf_path = []
         self.max_n_sf = None
 
-        self.__version__ = '0.0.0'
+        self.__version__ = '0.1.0'
 
     # override preprocessing dataset method
     # keep unused audio attrs (sfs) for simplicity
@@ -294,6 +301,7 @@ class GrooveMidiDatasetInfillingSymbolic(GrooveMidiDatasetInfilling):
 
         # init list with configurations
         hvo_index, voices_reduced, soundfonts = [], [], []
+        unused_items = []
 
         for hvo_idx, hvo_seq in enumerate(tqdm(data)):  # only one subset because only one set of filters
             if len(hvo_seq.time_signatures) == 1:  # ignore if time_signature change happens
@@ -313,7 +321,9 @@ class GrooveMidiDatasetInfillingSymbolic(GrooveMidiDatasetInfilling):
 
                     # remove voices in voice_idx not present in item
                     _voice_idx, _voices_params = get_voice_idx_for_item(hvo_seq, self.voices_params)
-                    if len(_voice_idx) == 0: continue  # if there are no voices to remove, continue
+                    if len(_voice_idx) == 0:
+                        unused_items.append(hvo_idx)
+                        continue  # if there are no voices to remove, continue
 
                     # get voices and sf combinations
                     #f_v_comb = get_sf_v_combinations(_voices_params, self.max_aug_items, self.max_n_sf, self.sfs_list)
@@ -325,8 +335,9 @@ class GrooveMidiDatasetInfillingSymbolic(GrooveMidiDatasetInfilling):
                         # reset voices in hvo
                         hvo_seq_in, hvo_seq_out = hvo_seq.reset_voices(voice_idx=v_idx)
                         # if the resulting hvos are 0, skip
-                        if not np.any(hvo_seq_in.hvo.flatten()): continue
-                        if not np.any(hvo_seq_out.hvo.flatten()): continue
+                        if not np.any(hvo_seq_in.hvo.flatten()) or not np.any(hvo_seq_out.hvo.flatten()):
+                            unused_items.append(hvo_idx)
+                            continue
 
                         hvo_sequences_inputs.append(hvo_seq_in)
                         hvo_sequences_outputs.append(hvo_seq_out)
@@ -353,7 +364,8 @@ class GrooveMidiDatasetInfillingSymbolic(GrooveMidiDatasetInfilling):
             "hvo_sequences_outputs": hvo_sequences_outputs,
             "hvo_index": hvo_index,
             "voices_reduced": voices_reduced,
-            "soundfonts": soundfonts
+            "soundfonts": soundfonts,
+            "unused_items" : unused_items
         }
 
         return preprocessed_dict
