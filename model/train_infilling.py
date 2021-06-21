@@ -12,7 +12,8 @@ from evaluator import InfillingEvaluator
 from hvo_sequence.drum_mappings import ROLAND_REDUCED_MAPPING
 from models.train import initialize_model, calculate_loss, train_loop
 from utils import get_epoch_log_freq
-from preprocess_infilling_dataset import preprocess_dataset, load_preprocessed_dataset
+from preprocess_infilling_dataset import load_preprocessed_dataset
+from tqdm import tqdm
 
 # ================================= SETTINGS ==================================================== #
 preprocessed_dataset_path_train = '../preprocessed_infilling_datasets/train/0.1.0/Dataset_21_06_2021_at_20_59_hrs'
@@ -35,7 +36,7 @@ hyperparameter_defaults = dict(
     learning_rate=1e-3,
     batch_size=64,
     dim_feedforward=32,
-    epochs=1,
+    epochs=5,
     use_evaluator=1,
     encoder_only=1,
     symbolic=0
@@ -66,7 +67,7 @@ params = {
         #        'lr_scheduler_step_size': wandb.config.lr_scheduler_step_size,
         #        'lr_scheduler_gamma': wandb.config.lr_scheduler_gamma
     },
-    "evaluator": {"n_samples_to_use": 2048,  # 2048
+    "evaluator": {"n_samples_to_use": 11,  # 2048
                   "n_samples_to_synthesize_visualize_per_subset": 10},  # 10
     "cp_paths": {
         'checkpoint_path': '../train_results/',
@@ -138,7 +139,7 @@ eps = wandb.config.epochs
 
 # epoch_save_all, epoch_save_partial = get_epoch_log_freq(eps)
 epoch_save_all, epoch_save_partial = [eps - 1], []
-
+print('Training...')
 for i in range(eps):
     ep += 1
     save_model = (i in epoch_save_partial or i in epoch_save_all)
