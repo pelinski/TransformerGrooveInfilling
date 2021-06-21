@@ -25,10 +25,17 @@ parameters:
     values: [ 1, 2, 4, 8, 16]
   num_encoder_decoder_layers:
     distribution: 'int_uniform'
-    min: 1
-    max: 8
+    min: 6
+    max: 12
   epochs:
     value: 100
+  use_evaluator:
+    value: 1
+  encoder_only:
+    value: 1
+  symbolic:
+    value: 0
 program: train_infilling.py
 project: 'train_infilling_sweeps'
-description: 'Full dataset, trained on 100 epochs. Evaluator enabled only on last epoch, model on saving mode'
+description: 'Full dataset, trained on 100 epochs. Test and train evaluator enabled only on last epoch, model on saving mode. 6 to
+12 enc_dec_layers'
