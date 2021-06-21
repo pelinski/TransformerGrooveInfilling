@@ -60,8 +60,8 @@ class InfillingEvaluator(Evaluator):
             list_of_filter_dicts_for_subsets=list_of_filter_dicts_for_subsets,
             number_of_samples=n_samples_to_use,
             max_hvo_shape=max_hvo_shape,
-            at_least_one_hit_in_voices=dataset.voices_params["voice_idx"]
-        )
+            #at_least_one_hit_in_voices=dataset.voices_params["voice_idx"]
+            )
 
         # _gt_tags --> ground truth tags for each subset in _gt_subsets
         self._gt_tags, self._gt_subsets = gt_subsetter_sampler.get_subsets()
