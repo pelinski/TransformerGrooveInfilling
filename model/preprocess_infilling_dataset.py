@@ -12,17 +12,17 @@ def preprocess_dataset(params, symbolic=False):
                                          list_of_filter_dicts_for_subsets=[
                                              params['dataset']["subset_info"]['filters']]).create_subsets()
 
-    dataset = GrooveMidiDatasetInfilling(data=subset_list[0], **params['dataset']) if not symbolic else \
+    _dataset = GrooveMidiDatasetInfilling(data=subset_list[0], **params['dataset']) if not symbolic else \
         GrooveMidiDatasetInfillingSymbolic(data=subset_list[0], **params['dataset'])
 
-    return dataset
+    return _dataset
 
 
 def load_preprocessed_dataset(load_dataset_path, symbolic=False):
-    dataset = GrooveMidiDatasetInfilling(load_dataset_path=load_dataset_path) if not symbolic else \
+    _dataset = GrooveMidiDatasetInfilling(load_dataset_path=load_dataset_path) if not symbolic else \
         GrooveMidiDatasetInfillingSymbolic(load_dataset_path=load_dataset_path)
 
-    return dataset
+    return _dataset
 
 
 if __name__ == "__main__":
@@ -51,4 +51,4 @@ if __name__ == "__main__":
         }
     }
 
-    dataset = preprocess_dataset(params,symbolic=False)
+    preprocess_dataset(params,symbolic=False)
