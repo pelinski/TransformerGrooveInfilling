@@ -27,6 +27,8 @@ class InfillingEvaluator(Evaluator):
                  model=None,
                  n_epochs=None):
 
+        # TODO version not compatible with data aug (more than 1sf, 1voice)
+
         self.__version = "0.1.0"
 
         self.sf_dict = {}
