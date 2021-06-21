@@ -38,9 +38,9 @@ hyperparameter_defaults = dict(
     batch_size=64,
     dim_feedforward=32,
     epochs=5,
-    use_evaluator=True,
-    encoder_only=True,
-    symbolic=False
+    use_evaluator=1,
+    encoder_only=1,
+    symbolic=0
     #    lr_scheduler_step_size=30,
     #    lr_scheduler_gamma=0.1
 )
@@ -187,5 +187,7 @@ for i in range(eps):
             # wandb.log(rhythmic_distances, commit=False)
 
     wandb.log({"epoch": ep})
+
+print(wandb.config)
 
 wandb.finish()
