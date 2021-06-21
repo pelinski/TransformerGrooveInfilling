@@ -126,7 +126,13 @@ class GrooveMidiDatasetInfilling(Dataset):
         # init list with configurations
         hvo_index, voices_reduced, soundfonts = [], [], []
 
-        for hvo_idx, hvo_seq in enumerate(tqdm(data)):  # only one subset because only one set of filters
+        for hvo_idx, hvo_seq in enumerate(tqdm(data,
+                                               desc='Preprocessing dataset {}'.format(self.subset_info["subset"]))):
+            # only
+            # one
+            # subset because
+            # only one set of
+            # filters
             if len(hvo_seq.time_signatures) == 1:  # ignore if time_signature change happens
 
                 all_zeros = not np.any(hvo_seq.hvo.flatten())
@@ -303,7 +309,8 @@ class GrooveMidiDatasetInfillingSymbolic(GrooveMidiDatasetInfilling):
         hvo_index, voices_reduced, soundfonts = [], [], []
         unused_items = []
 
-        for hvo_idx, hvo_seq in enumerate(tqdm(data)):  # only one subset because only one set of filters
+        for hvo_idx, hvo_seq in enumerate(tqdm(data,
+                                               desc='Preprocessing dataset {}'.format(self.subset_info["subset"]))):
             if len(hvo_seq.time_signatures) == 1:  # ignore if time_signature change happens
 
                 all_zeros = not np.any(hvo_seq.hvo.flatten())
@@ -326,7 +333,7 @@ class GrooveMidiDatasetInfillingSymbolic(GrooveMidiDatasetInfilling):
                         continue  # if there are no voices to remove, continue
 
                     # get voices and sf combinations
-                    #f_v_comb = get_sf_v_combinations(_voices_params, self.max_aug_items, self.max_n_sf, self.sfs_list)
+                    # f_v_comb = get_sf_v_combinations(_voices_params, self.max_aug_items, self.max_n_sf, self.sfs_list)
                     v_comb = get_voice_combinations(**_voices_params)
 
                     # for every sf and voice combination
@@ -365,7 +372,7 @@ class GrooveMidiDatasetInfillingSymbolic(GrooveMidiDatasetInfilling):
             "hvo_index": hvo_index,
             "voices_reduced": voices_reduced,
             "soundfonts": soundfonts,
-            "unused_items" : unused_items
+            "unused_items": unused_items
         }
 
         return preprocessed_dict
