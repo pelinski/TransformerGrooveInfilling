@@ -13,11 +13,10 @@ from hvo_sequence.drum_mappings import ROLAND_REDUCED_MAPPING
 from models.train import initialize_model, calculate_loss, train_loop
 from utils import get_epoch_log_freq
 from preprocess_infilling_dataset import load_preprocessed_dataset
-from tqdm import tqdm
 
 # ================================= SETTINGS ==================================================== #
-preprocessed_dataset_path_train = '../preprocessed_infilling_datasets/train/0.1.0/Dataset_21_06_2021_at_20_59_hrs'
-preprocessed_dataset_path_test = '../preprocessed_infilling_datasets/test/0.1.0/Dataset_21_06_2021_at_22_02_hrs'
+preprocessed_dataset_path_train = '../preprocessed_infilling_datasets/exp1/train/0.1.0/Dataset_21_06_2021_at_20_59_hrs'
+preprocessed_dataset_path_test = '../preprocessed_infilling_datasets/exp1/test/0.1.0/Dataset_21_06_2021_at_22_02_hrs'
 # preprocessed_dataset_path = '../dataset/Dataset_17_06_2021_at_18_13_hrs' # test symbolic
 # preprocessed_dataset_path = './dataset/Dataset_17_06_2021_at_19_09_hrs' # test infilling
 
