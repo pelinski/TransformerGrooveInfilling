@@ -2,6 +2,7 @@ import sys
 
 sys.path.append('../../preprocessed_dataset/')
 from dataset import GrooveMidiDatasetInfilling, GrooveMidiDatasetInfillingSymbolic
+from utils import save_parameters_to_json
 from Subset_Creators.subsetters import GrooveMidiSubsetter
 
 
@@ -30,7 +31,7 @@ if __name__ == "__main__":
         "dataset": {
             "subset_info": {
                 "pickle_source_path": '../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.4.5/Processed_On_14_06_2021_at_14_26_hrs',
-                "subset": 'GrooveMIDI_processed_test',
+                "subset": 'GrooveMIDI_processed_validation',
                 "metadata_csv_filename": 'metadata.csv',
                 "hvo_pickle_filename": 'hvo_sequence_data.obj',
                 "filters": {
@@ -51,4 +52,5 @@ if __name__ == "__main__":
         }
     }
     print(params["dataset"]["subset_info"])
+    #save_parameters_to_json(params["dataset"], params_path='./') #experiment parameters
     preprocess_dataset(params,symbolic=False)
