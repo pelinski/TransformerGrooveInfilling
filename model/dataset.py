@@ -7,6 +7,7 @@ from datetime import datetime
 from tqdm import tqdm
 import wandb
 import pickle
+import glob
 
 from utils import get_sf_list, add_metadata_to_hvo_seq, pad_to_match_max_seq_len, get_voice_idx_for_item, \
     get_sf_v_combinations, get_voice_combinations, save_dict_to_pickle
@@ -47,7 +48,7 @@ class GrooveMidiDatasetInfilling(Dataset):
         @param max_aug_items:       Maximum number of synthesized examples per example in subset
         @param dataset_name:        Dataset name (for experiment tracking)
         """
-        self.__version = "0.1.0"
+        self.__version = "0.1.1"
 
         # get params
         if load_dataset_path:
@@ -203,7 +204,8 @@ class GrooveMidiDatasetInfilling(Dataset):
     # load from pickle
 
     def load_params_from_pickle(self, dataset_path):
-        params_file = os.path.join(dataset_path, self.dataset_name + '_params.pickle')
+        params_file = os.path.join(dataset_path, list(filter(lambda x: x.endswith('_params.pickle'), os.listdir(
+            dataset_path)))[0])
 
         with open(params_file, 'rb') as f:
             params = pickle.load(f)
@@ -224,7 +226,8 @@ class GrooveMidiDatasetInfilling(Dataset):
         print('Loaded parameters from path: ', params_file)
 
     def load_dataset_from_pickle(self, dataset_path):
-        pickle_file = os.path.join(dataset_path, self.dataset_name + '_dataset.pickle')
+        pickle_file = os.path.join(dataset_path, list(filter(lambda x: x.endswith('_dataset.pickle'), os.listdir(
+            dataset_path)))[0])
 
         with open(pickle_file, 'rb') as f:
             preprocessed_dataset = pickle.load(f)
