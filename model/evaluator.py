@@ -57,13 +57,12 @@ class InfillingEvaluator(Evaluator):
         self.eps = n_epochs
 
         self._gmd_gt_hvo_sequences = []
-        self._gt_hvos_array_tags, self._gmd_gt_hvos_array, self._prediction_hvo_seq_templates = [], [], []
+        self._gt_hvos_array_tags, self._gmd_gt_hvos_array = [], []
         for subset_ix, tag in enumerate(self._gt_tags):
             for sample_ix, sample_hvo in enumerate(self._gt_subsets[subset_ix]):
                 self._gmd_gt_hvo_sequences.append(sample_hvo)
                 self._gt_hvos_array_tags.append(tag)
                 self._gmd_gt_hvos_array.append(sample_hvo.get("hvo"))
-                self._prediction_hvo_seq_templates.append(sample_hvo.copy_empty())
 
         self._gmd_gt_hvos_array = np.stack(self._gmd_gt_hvos_array)
 
@@ -102,15 +101,13 @@ class InfillingEvaluator(Evaluator):
         self._gt_hvos_array_tags = np.delete(self._gt_hvos_array_tags, self.unused_items).tolist()
         self._gmd_gt_hvos_array = np.delete(self._gmd_gt_hvos_array, self.unused_items, axis=0)
         self._gmd_gt_hvo_sequences = np.delete(self._gmd_gt_hvo_sequences, self.unused_items).tolist()
-        self._prediction_hvo_seq_templates = np.delete(self._prediction_hvo_seq_templates, self.unused_items).tolist()
 
-        _gt_hvos_array_tags, _prediction_hvo_seq_templates = [], []
+        _gt_hvos_array_tags = []
         for idx in self.hvo_index:
             _gt_hvos_array_tags.append(self._gt_hvos_array_tags[idx])
-            _prediction_hvo_seq_templates.append(self._prediction_hvo_seq_templates[idx])
 
         self._gt_hvos_array_tags = _gt_hvos_array_tags
-        self._prediction_hvo_seq_templates = _prediction_hvo_seq_templates
+
 
         hvo_index_dict_gt = {tag: [] for tag in tags}
         for i in range(self._gt_hvos_array.shape[0]):
