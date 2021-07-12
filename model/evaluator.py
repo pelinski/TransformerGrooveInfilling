@@ -7,8 +7,7 @@ sys.path.insert(1, "../../GrooveEvaluator")
 from GrooveEvaluator.evaluator import Evaluator, HVOSeq_SubSet_Evaluator
 
 sys.path.insert(1, "../preprocessed_dataset/")
-from Subset_Creators import subsetters
-from utils import get_hvo_idx_for_voice, _convert_hvos_array_to_subsets
+from utils import get_hvo_idxs_for_voice, _convert_hvos_array_to_subsets
 
 
 class InfillingEvaluator(Evaluator):
@@ -135,16 +134,15 @@ class InfillingEvaluator(Evaluator):
         eval_pred = np.zeros_like(eval_pred_hvo_array)
         # sets all voices different from voices_reduced to 0
         # sync between hits and vels+offs is done when converted to hvo sequence
-        # FIXME avoid for loop
+
         for idx in range(eval_pred_hvo_array.shape[0]):  # N
             if isinstance(self.voices_reduced[idx], int):
                 self.voices_reduced[idx] = [self.voices_reduced[idx]]
-            h_idx, v_idx, o_idx = get_hvo_idx_for_voice(voice_idx=list(self.voices_reduced[idx]),
+            h_idx, v_idx, o_idx = get_hvo_idxs_for_voice(voice_idx=list(self.voices_reduced[idx]),
                                                         n_voices=eval_pred_hvo_array.shape[2] // 3)
-            #FIXME oneliner
-            eval_pred[idx, :, h_idx] = eval_pred_hvo_array[idx, :, h_idx]
-            eval_pred[idx, :, v_idx] = eval_pred_hvo_array[idx, :, v_idx]
-            eval_pred[idx, :, o_idx] = eval_pred_hvo_array[idx, :, o_idx]
+
+            eval_pred[idx, :, h_idx+v_idx+o_idx] = eval_pred_hvo_array[idx, :, h_idx+v_idx+o_idx]
+
 
         self._prediction_hvos_array = eval_pred
         self._prediction_tags, self._prediction_subsets, self._subset_hvo_array_index = \
