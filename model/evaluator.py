@@ -162,19 +162,14 @@ class InfillingEvaluator(Evaluator):
             group_by_minor_keys=True,
             is_gt=False)
 
-        # FIXME only one loop
-        sf_dict = {}
+        sf_dict, hvo_comp_dict = {}, {}
         for key in self.audio_sample_locations.keys():
             sf_dict[key] = []
-            for idx in self.audio_sample_locations[key]:
-                sf_dict[key].append(self.soundfonts[self._subset_hvo_array_index[key][idx]])
-        self.sf_dict = sf_dict
-
-        hvo_comp_dict = {}
-        for key in self.audio_sample_locations.keys():
             hvo_comp_dict[key] = []
             for idx in self.audio_sample_locations[key]:
+                sf_dict[key].append(self.soundfonts[self._subset_hvo_array_index[key][idx]])
                 hvo_comp_dict[key].append(self.hvo_sequences_inputs[self._subset_hvo_array_index[key][idx]])
+        self.sf_dict = sf_dict
         self.hvo_comp_dict = hvo_comp_dict
 
         # set soundfonts in subset classes and hvo comp to render non-removed voices in get_audio
