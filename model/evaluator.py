@@ -27,7 +27,7 @@ class InfillingEvaluator(Evaluator):
                  model=None,
                  n_epochs=None):
 
-        self.__version = "0.2.0"
+        self.__version = "0.2.1"
 
         self.sf_dict = {}
 
@@ -78,11 +78,6 @@ class InfillingEvaluator(Evaluator):
         self._gt_hvo_sequences = preprocessed_dict["hvo_sequences_outputs"]
         self._gt_hvos_array = np.stack([hvo_seq.hvo for hvo_seq in self._gt_hvo_sequences])
 
-        # remove items from _gt that are unused
-        self._gt_hvos_array_tags = np.delete(self._gt_hvos_array_tags, self.unused_items).tolist()
-        self._gmd_gt_hvos_array = np.delete(self._gmd_gt_hvos_array, self.unused_items, axis=0)
-        self._gmd_gt_hvo_sequences = np.delete(self._gmd_gt_hvo_sequences, self.unused_items).tolist()
-
         tags = list(set(self._gt_hvos_array_tags))
         hvo_index_dict = {tag: [] for tag in tags}
 
@@ -97,13 +92,16 @@ class InfillingEvaluator(Evaluator):
                 self._gt_tags[subset_idx] = None
         self._gt_tags = list(filter(None, self._gt_tags))
 
+        # remove items from _gt that are unused
+        self._gmd_gt_hvos_array = np.delete(self._gmd_gt_hvos_array, self.unused_items, axis=0)
+        self._gmd_gt_hvo_sequences = np.delete(self._gmd_gt_hvo_sequences, self.unused_items).tolist()
+
         # add augmented items
         _gt_hvos_array_tags = []
         for idx in self.hvo_index:
             _gt_hvos_array_tags.append(self._gt_hvos_array_tags[idx])
         self._gt_hvos_array_tags = _gt_hvos_array_tags
 
-        # set _gt_subsets with augmented items
         hvo_index_dict_gt = {tag: [] for tag in tags}
         for i in range(self._gt_hvos_array.shape[0]):
             hvo_index_dict_gt[self._gt_hvos_array_tags[i]].append(i)
@@ -139,8 +137,11 @@ class InfillingEvaluator(Evaluator):
         # sync between hits and vels+offs is done when converted to hvo sequence
         # FIXME avoid for loop
         for idx in range(eval_pred_hvo_array.shape[0]):  # N
+            if isinstance(self.voices_reduced[idx], int):
+                self.voices_reduced[idx] = [self.voices_reduced[idx]]
             h_idx, v_idx, o_idx = get_hvo_idx_for_voice(voice_idx=list(self.voices_reduced[idx]),
                                                         n_voices=eval_pred_hvo_array.shape[2] // 3)
+            #FIXME oneliner
             eval_pred[idx, :, h_idx] = eval_pred_hvo_array[idx, :, h_idx]
             eval_pred[idx, :, v_idx] = eval_pred_hvo_array[idx, :, v_idx]
             eval_pred[idx, :, o_idx] = eval_pred_hvo_array[idx, :, o_idx]
@@ -161,6 +162,7 @@ class InfillingEvaluator(Evaluator):
             group_by_minor_keys=True,
             is_gt=False)
 
+        # FIXME only one loop
         sf_dict = {}
         for key in self.audio_sample_locations.keys():
             sf_dict[key] = []
@@ -175,7 +177,7 @@ class InfillingEvaluator(Evaluator):
                 hvo_comp_dict[key].append(self.hvo_sequences_inputs[self._subset_hvo_array_index[key][idx]])
         self.hvo_comp_dict = hvo_comp_dict
 
-        # set soundfonts in subset classes
+        # set soundfonts in subset classes and hvo comp to render non-removed voices in get_audio
         self.gt_SubSet_Evaluator.sf_dict = self.sf_dict
         self.prediction_SubSet_Evaluator.sf_dict = self.sf_dict
         self.gt_SubSet_Evaluator.hvo_comp_dict = self.hvo_comp_dict
