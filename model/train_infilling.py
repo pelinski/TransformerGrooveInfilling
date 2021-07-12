@@ -15,12 +15,13 @@ from utils import get_epoch_log_freq
 from preprocess_infilling_dataset import load_preprocessed_dataset
 
 # ================================= SETTINGS ==================================================== #
-preprocessed_dataset_path_train = '../preprocessed_infilling_datasets/exp1/train/0.1.0/Dataset_21_06_2021_at_20_59_hrs'
-preprocessed_dataset_path_test = '../preprocessed_infilling_datasets/exp1/test/0.1.0/Dataset_21_06_2021_at_22_02_hrs'
+preprocessed_dataset_path_train = '../preprocessed_infilling_datasets/exp2/test/0.1.0/'
+#preprocessed_dataset_path_train = '../preprocessed_infilling_datasets/exp1/train/0.1.0/Dataset_21_06_2021_at_20_59_hrs'
+#preprocessed_dataset_path_test = '../preprocessed_infilling_datasets/exp1/test/0.1.0/Dataset_21_06_2021_at_22_02_hrs'
 # preprocessed_dataset_path = '../dataset/Dataset_17_06_2021_at_18_13_hrs' # test symbolic
 # preprocessed_dataset_path = './dataset/Dataset_17_06_2021_at_19_09_hrs' # test infilling
 
-settings = {'log_to_wandb': True}
+settings = {'log_to_wandb': False}
 os.environ['WANDB_MODE'] = 'online' if settings['log_to_wandb'] else 'offline'
 
 # ============================================================================================== #
@@ -86,7 +87,7 @@ wandb.watch(model)
 dataset_train = load_preprocessed_dataset(preprocessed_dataset_path_train, symbolic=wandb.config.symbolic)
 dataloader_train = DataLoader(dataset_train, batch_size=params['training']['batch_size'], shuffle=True)
 
-dataset_test = load_preprocessed_dataset(preprocessed_dataset_path_test, symbolic=wandb.config.symbolic)
+# dataset_test = load_preprocessed_dataset(preprocessed_dataset_path_test, symbolic=wandb.config.symbolic)
 
 
 # log all params to wandb
@@ -109,7 +110,7 @@ if wandb.config.use_evaluator:
         dataset=dataset_train,
         model=model,
         n_epochs=wandb.config.epochs)
-
+    """
     evaluator_test = InfillingEvaluator(
         pickle_source_path=dataset_test.subset_info["pickle_source_path"],
         set_subfolder=dataset_test.subset_info["subset"],
@@ -125,14 +126,16 @@ if wandb.config.use_evaluator:
         dataset=dataset_test,
         model=model,
         n_epochs=wandb.config.epochs)
+    """
 
     # log eval_subset parameters to wandb
     wandb.config.update({"train_hvo_index": evaluator_train.hvo_index,
                          "train_voices_reduced": evaluator_train.voices_reduced,
                          "train_soundfons": evaluator_train.soundfonts,
-                         "test_hvo_index": evaluator_test.hvo_index,
-                         "test_voices_reduced": evaluator_test.voices_reduced,
-                         "test_soundfons": evaluator_test.soundfonts})
+#                         "test_hvo_index": evaluator_test.hvo_index,
+#                         "test_voices_reduced": evaluator_test.voices_reduced,
+#                         "test_soundfons": evaluator_test.soundfonts
+                                                  })
 
 eps = wandb.config.epochs
 
@@ -159,11 +162,12 @@ for i in range(eps):
             wandb.log(train_mse_v, commit=False)
             wandb.log(train_mse_o, commit=False)
             if i in epoch_save_all:
-                heatmaps_global_features_train = evaluator_train.get_wandb_logging_media()
+                heatmaps_global_features_train = evaluator_train.get_wandb_logging_media(global_features_html=False)
                 if len(heatmaps_global_features_train.keys()) > 0:
                     wandb.log(heatmaps_global_features_train, commit=False)
             evaluator_train.dump(path="evaluator/evaluator_train_run_{}_Epoch_{}.Eval".format(wandb_run.name, ep))
 
+            """
             # Test set evaluator
             evaluator_test._identifier = 'Test_Epoch_{}'.format(ep)
             evaluator_test.set_pred()
@@ -175,11 +179,13 @@ for i in range(eps):
             wandb.log(test_mse_o, commit=False)
 
             if i in epoch_save_all:
-                heatmaps_global_features_test = evaluator_test.get_wandb_logging_media()
+                heatmaps_global_features_test = evaluator_test.get_wandb_logging_media(global_features_html=False)
                 if len(heatmaps_global_features_test.keys()) > 0:
                     wandb.log(heatmaps_global_features_test, commit=False)
 
             evaluator_test.dump(path="evaluator/evaluator_test_run_{}_Epoch_{}.Eval".format(wandb_run.name, ep))
+            
+            """
 
             # rhythmic_distances = evaluator_train.get_rhythmic_distances()
             # wandb.log(rhythmic_distances, commit=False)
