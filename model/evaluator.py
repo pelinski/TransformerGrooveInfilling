@@ -27,9 +27,7 @@ class InfillingEvaluator(Evaluator):
                  model=None,
                  n_epochs=None):
 
-        # TODO version not compatible with data aug (more than 1sf, 1voice)
-
-        self.__version = "0.1.0"
+        self.__version = "0.2.0"
 
         self.sf_dict = {}
 
@@ -89,6 +87,8 @@ class InfillingEvaluator(Evaluator):
         for i in range(self._gmd_gt_hvos_array.shape[0]):
             hvo_index_dict[self._gt_hvos_array_tags[i]].append(i)
 
+
+        # FIXME use oonly one loop
         for subset_idx, subset in enumerate(self._gt_tags):
             items_to_remove = np.where(np.isin(hvo_index_dict[subset], self.unused_items))[0]
             self._gt_subsets[subset_idx] = np.delete(self._gt_subsets[subset_idx], items_to_remove).tolist()
@@ -98,10 +98,35 @@ class InfillingEvaluator(Evaluator):
         self._gt_subsets = list(filter(None, self._gt_subsets))
         self._gt_tags = list(filter(None, self._gt_tags))
 
+
         self._gt_hvos_array_tags = np.delete(self._gt_hvos_array_tags, self.unused_items).tolist()
         self._gmd_gt_hvos_array = np.delete(self._gmd_gt_hvos_array, self.unused_items, axis=0)
         self._gmd_gt_hvo_sequences = np.delete(self._gmd_gt_hvo_sequences, self.unused_items).tolist()
         self._prediction_hvo_seq_templates = np.delete(self._prediction_hvo_seq_templates, self.unused_items).tolist()
+
+        _gt_hvos_array_tags, _prediction_hvo_seq_templates = [], []
+        for idx in self.hvo_index:
+            _gt_hvos_array_tags.append(self._gt_hvos_array_tags[idx])
+            _prediction_hvo_seq_templates.append(self._prediction_hvo_seq_templates[idx])
+
+        self._gt_hvos_array_tags = _gt_hvos_array_tags
+        self._prediction_hvo_seq_templates = _prediction_hvo_seq_templates
+
+        hvo_index_dict_gt = {tag: [] for tag in tags}
+        for i in range(self._gt_hvos_array.shape[0]):
+            hvo_index_dict_gt[self._gt_hvos_array_tags[i]].append(i)
+
+        _gt_subsets = [[] for _ in self._gt_tags]
+        for subset_idx, subset in enumerate(self._gt_tags):
+            idxs = hvo_index_dict_gt[subset]
+            for idx in hvo_index_dict_gt[subset]:
+                _gt_subsets[subset_idx].append(self._gt_hvo_sequences[idx])
+        self._gt_subsets = _gt_subsets
+
+        self._prediction_hvo_seq_templates = []
+        for subset_ix, tag in enumerate(self._gt_tags):
+            for sample_ix, sample_hvo in enumerate(self._gt_subsets[subset_ix]):
+                self._prediction_hvo_seq_templates.append(sample_hvo.copy_empty())
 
         # gt subset evaluator
         self.gt_SubSet_Evaluator = HVOSeq_SubSet_InfillingEvaluator(
@@ -123,12 +148,11 @@ class InfillingEvaluator(Evaluator):
         # sync between hits and vels+offs is done when converted to hvo sequence
         # FIXME avoid for loop
         for idx in range(eval_pred_hvo_array.shape[0]):  # N
-            # FIXME works for only one voice
-            h_idx, v_idx, o_idx = get_hvo_idx_for_voice(voice_idx=self.voices_reduced[idx],
+            h_idx, v_idx, o_idx = get_hvo_idx_for_voice(voice_idx=list(self.voices_reduced[idx]),
                                                         n_voices=eval_pred_hvo_array.shape[2] // 3)
-            eval_pred[idx, :, h_idx] = eval_pred_hvo_array[idx][:, h_idx]
-            eval_pred[idx, :, v_idx] = eval_pred_hvo_array[idx][:, v_idx]
-            eval_pred[idx, :, o_idx] = eval_pred_hvo_array[idx][:, o_idx]
+            eval_pred[idx, :, h_idx] = eval_pred_hvo_array[idx, :, h_idx]
+            eval_pred[idx, :, v_idx] = eval_pred_hvo_array[idx, :, v_idx]
+            eval_pred[idx, :, o_idx] = eval_pred_hvo_array[idx, :, o_idx]
 
         self._prediction_hvos_array = eval_pred
         self._prediction_tags, self._prediction_subsets, self._subset_hvo_array_index = \
