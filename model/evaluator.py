@@ -74,48 +74,42 @@ class InfillingEvaluator(Evaluator):
         self.hvo_index = preprocessed_dict["hvo_index"]
         self.voices_reduced = preprocessed_dict["voices_reduced"]
         self.soundfonts = preprocessed_dict["soundfonts"]
-
         self.unused_items = preprocessed_dict["unused_items"]
         self._gt_hvo_sequences = preprocessed_dict["hvo_sequences_outputs"]
         self._gt_hvos_array = np.stack([hvo_seq.hvo for hvo_seq in self._gt_hvo_sequences])
 
         # remove items from _gt that are unused
+        self._gt_hvos_array_tags = np.delete(self._gt_hvos_array_tags, self.unused_items).tolist()
+        self._gmd_gt_hvos_array = np.delete(self._gmd_gt_hvos_array, self.unused_items, axis=0)
+        self._gmd_gt_hvo_sequences = np.delete(self._gmd_gt_hvo_sequences, self.unused_items).tolist()
+
         tags = list(set(self._gt_hvos_array_tags))
         hvo_index_dict = {tag: [] for tag in tags}
 
         for i in range(self._gmd_gt_hvos_array.shape[0]):
             hvo_index_dict[self._gt_hvos_array_tags[i]].append(i)
 
-
-        # FIXME use oonly one loop
+        # clean unused items (solves out of range index in sfs)
         for subset_idx, subset in enumerate(self._gt_tags):
             items_to_remove = np.where(np.isin(hvo_index_dict[subset], self.unused_items))[0]
             self._gt_subsets[subset_idx] = np.delete(self._gt_subsets[subset_idx], items_to_remove).tolist()
             if len(self._gt_subsets[subset_idx]) == 0:
                 self._gt_tags[subset_idx] = None
-
-        self._gt_subsets = list(filter(None, self._gt_subsets))
         self._gt_tags = list(filter(None, self._gt_tags))
 
-
-        self._gt_hvos_array_tags = np.delete(self._gt_hvos_array_tags, self.unused_items).tolist()
-        self._gmd_gt_hvos_array = np.delete(self._gmd_gt_hvos_array, self.unused_items, axis=0)
-        self._gmd_gt_hvo_sequences = np.delete(self._gmd_gt_hvo_sequences, self.unused_items).tolist()
-
+        # add augmented items
         _gt_hvos_array_tags = []
         for idx in self.hvo_index:
             _gt_hvos_array_tags.append(self._gt_hvos_array_tags[idx])
-
         self._gt_hvos_array_tags = _gt_hvos_array_tags
 
-
+        # set _gt_subsets with augmented items
         hvo_index_dict_gt = {tag: [] for tag in tags}
         for i in range(self._gt_hvos_array.shape[0]):
             hvo_index_dict_gt[self._gt_hvos_array_tags[i]].append(i)
 
         _gt_subsets = [[] for _ in self._gt_tags]
         for subset_idx, subset in enumerate(self._gt_tags):
-            idxs = hvo_index_dict_gt[subset]
             for idx in hvo_index_dict_gt[subset]:
                 _gt_subsets[subset_idx].append(self._gt_hvo_sequences[idx])
         self._gt_subsets = _gt_subsets
