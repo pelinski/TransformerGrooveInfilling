@@ -30,8 +30,8 @@ def get_sf_list(sf_path):
 
 def get_hvo_idx_for_voice(voice_idx, n_voices):
     h_idx = voice_idx
-    v_idx = voice_idx + n_voices
-    o_idx = voice_idx + 2 * n_voices
+    v_idx = [_ + n_voices for _ in voice_idx]
+    o_idx = [_ + 2 * n_voices for _ in voice_idx]
 
     return h_idx, v_idx, o_idx
 
