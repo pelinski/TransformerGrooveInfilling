@@ -15,9 +15,9 @@ from utils import get_epoch_log_freq
 from preprocess_infilling_dataset import load_preprocessed_dataset
 
 # ================================= SETTINGS ==================================================== #
-preprocessed_dataset_path_train = '../preprocessed_infilling_datasets/exp2/test/0.1.0/'
-#preprocessed_dataset_path_train = '../preprocessed_infilling_datasets/exp1/train/0.1.0/Dataset_21_06_2021_at_20_59_hrs'
-#preprocessed_dataset_path_test = '../preprocessed_infilling_datasets/exp1/test/0.1.0/Dataset_21_06_2021_at_22_02_hrs'
+preprocessed_dataset_path_train = '../preprocessed_infilling_datasets/InfillingClosedHH/test/0.1.0/'
+#preprocessed_dataset_path_train = '../preprocessed_infilling_datasets/InfillingClosedHH/train/0.1.0/Dataset_21_06_2021_at_20_59_hrs'
+#preprocessed_dataset_path_test = '../preprocessed_infilling_datasets/InfillingClosedHH/test/0.1.0/Dataset_21_06_2021_at_22_02_hrs'
 # preprocessed_dataset_path = '../dataset/Dataset_17_06_2021_at_18_13_hrs' # test symbolic
 # preprocessed_dataset_path = './dataset/Dataset_17_06_2021_at_19_09_hrs' # test infilling
 
@@ -39,7 +39,7 @@ hyperparameter_defaults = dict(
     epochs=5,
     use_evaluator=1,
     encoder_only=1,
-    symbolic=0
+    exp='InfillingClosedHH'
     #    lr_scheduler_step_size=30,
     #    lr_scheduler_gamma=0.1
 )
@@ -48,6 +48,7 @@ wandb_run = wandb.init(config=hyperparameter_defaults, project=project_name)
 
 params = {
     "model": {
+        'exp': wandb.config.exp,
         "encoder_only": wandb.config.encoder_only,
         'optimizer': wandb.config.optimizer_algorithm,
         'd_model': wandb.config.d_model,
@@ -84,7 +85,7 @@ model, optimizer, ep = initialize_model(params)
 wandb.watch(model)
 
 # load dataset
-dataset_train = load_preprocessed_dataset(preprocessed_dataset_path_train, symbolic=wandb.config.symbolic)
+dataset_train = load_preprocessed_dataset(preprocessed_dataset_path_train, exp=wandb.config.exp)
 dataloader_train = DataLoader(dataset_train, batch_size=params['training']['batch_size'], shuffle=True)
 
 # dataset_test = load_preprocessed_dataset(preprocessed_dataset_path_test, symbolic=wandb.config.symbolic)
