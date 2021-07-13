@@ -70,7 +70,7 @@ if __name__ == "__main__":
                                          hvo_pickle_filename=params["dataset"]["subset_info"]["hvo_pickle_filename"],
                                          list_of_filter_dicts_for_subsets=[
                                              params['dataset']["subset_info"]['filters']]).create_subsets()
-
+    print(params["dataset"])
     # check that inputs are mso
     check_inputs = False
     if check_inputs:
@@ -100,13 +100,12 @@ if __name__ == "__main__":
         gmd = GrooveMidiDatasetInfilling(data=subset_list[0], **params['dataset'])
         gmd_loaded = GrooveMidiDatasetInfilling(load_dataset_path=gmd.save_dataset_path)
         assert np.all(gmd.processed_inputs.numpy() == gmd_loaded.processed_inputs.numpy())
-        params = gmd_loaded.get_params()
-        print(params)
+        print( gmd_loaded.get_params())
 
     # load from pickle file
     test_load_pickle = False
     if test_load_pickle:
-        load_dataset_path = "../../preprocessed_infilling_datasets/0.0.0/Dataset_15_06_2021_at_18_23_hrs"
+        load_dataset_path = "../../preprocessed_infilling_datasets/InfillingClosedHH/test/0.1.0"
         gmd_loaded = GrooveMidiDatasetInfilling(load_dataset_path=load_dataset_path)
         print(gmd_loaded.__len__())
 
@@ -117,5 +116,6 @@ if __name__ == "__main__":
 
     test_dataset_random = True
     if test_dataset_random:
-        gmds = GrooveMidiDatasetInfillingRandom(data=subset_list[0], **params['dataset'])
+        gmds = GrooveMidiDatasetInfillingRandom(data=subset_list[0], **params['dataset'], thres_range =(0.4,0.6))
+        print(gmds.get_params())
 
