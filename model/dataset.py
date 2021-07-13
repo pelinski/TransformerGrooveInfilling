@@ -1,3 +1,5 @@
+import copy
+
 import torch
 from torch.utils.data import Dataset
 import pandas as pd
@@ -7,13 +9,11 @@ from datetime import datetime
 from tqdm import tqdm
 import wandb
 import pickle
-import glob
-
+import random
 from utils import get_sf_list, add_metadata_to_hvo_seq, pad_to_match_max_seq_len, get_voice_idx_for_item, \
     get_sf_v_combinations, get_voice_combinations, save_dict_to_pickle
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 
 class GrooveMidiDatasetInfilling(Dataset):
     def __init__(self,
@@ -130,7 +130,7 @@ class GrooveMidiDatasetInfilling(Dataset):
         for hvo_idx, hvo_seq in enumerate(tqdm(data,
                                                desc='Preprocessing dataset {}'.format(self.subset_info["subset"]))):
 
-            all_zeros = not np.any(hvo_seq.hvo.flatten()) # silent patterns
+            all_zeros = not np.any(hvo_seq.hvo.flatten())  # silent patterns
 
             if len(hvo_seq.time_signatures) == 1 and not all_zeros:  # ignore if time_signature change happens
 
@@ -369,5 +369,113 @@ class GrooveMidiDatasetInfillingSymbolic(GrooveMidiDatasetInfilling):
             "soundfonts": soundfonts,
             "unused_items": unused_items
         }
+
+        return preprocessed_dict
+
+
+class GrooveMidiDatasetInfillingRandom(GrooveMidiDatasetInfilling):
+    def __init__(self,
+                 data=None,
+                 load_dataset_path=None,
+                 **kwargs):
+        super(GrooveMidiDatasetInfillingRandom, self).__init__(data=data,
+                                                                 load_dataset_path=load_dataset_path,
+                                                                 **kwargs)
+        # voices attrs
+        self.voices_params = {}
+
+        self.__version__ = '0.0.0'
+
+    # override preprocessing dataset method
+    def preprocess_dataset(self, data):
+        # init lists to store hvo sequences and processed io
+        hvo_sequences = []
+        hvo_sequences_inputs, hvo_sequences_outputs = [], []
+        processed_inputs, processed_outputs = [], []
+        unused_items = []
+
+        # init list with configurations
+        hvo_index, soundfonts = [], []
+
+        for hvo_idx, hvo_seq in enumerate(tqdm(data,
+                                               desc='Preprocessing dataset {}'.format(self.subset_info["subset"]))):
+
+            all_zeros = not np.any(hvo_seq.hvo.flatten())  # silent patterns
+
+            if len(hvo_seq.time_signatures) == 1 and not all_zeros:  # ignore if time_signature change happens
+
+                # add metadata to hvo_seq scores
+                add_metadata_to_hvo_seq(hvo_seq, hvo_idx, self.metadata)
+
+                # pad with zeros to match max_len
+                hvo_seq = pad_to_match_max_seq_len(hvo_seq, self.max_seq_len)
+
+                # append hvo_seq to hvo_sequences list
+                hvo_sequences.append(hvo_seq)
+
+                n_voices = len(hvo_seq.drum_mapping)
+
+                for i in range(self.max_aug_items):
+
+                    hvo_seq_in = hvo_seq.copy()
+                    hvo_seq_out = hvo_seq.copy()
+
+                    # hvo_seq hvo hits 32x9 matrix
+                    hits = hvo_seq_in.hvo[:,0:n_voices]
+
+                    # uniform probability distribution over nonzero hits
+                    nonzero_hits_idx = np.nonzero(hits)
+                    pd = np.random.uniform(size=len(nonzero_hits_idx[0]))
+
+                    # TODO allow different thresholds?
+                    # sample hits from probability distribution
+                    thres = 0.5
+                    nonzero_hits_idx = np.where((pd> thres, pd> thres), nonzero_hits_idx, None)
+                    reset_hits_idx = [list(filter(lambda x: x is not None, axis)) for axis in nonzero_hits_idx]
+
+                    # remove hits with associated probability distribution (pd) value lower than threshold
+                    reset_hits = np.zeros(hits.shape)
+                    reset_hits[tuple(reset_hits_idx)] = 1
+
+                    # update hvo_seq_in with reset hits
+                    hvo_seq_in.hvo[:,0:n_voices] = reset_hits
+
+                    # check if empty hvo_seq_in
+                    if not np.any(hvo_seq_in.hvo.flatten()):
+                        #nused_items.append(hvo_idx)
+                        continue
+
+                    hvo_sequences_inputs.append(hvo_seq_in)
+                    hvo_sequences_outputs.append(hvo_seq_out)
+
+                    # processed inputs: mso
+                    sf = random.choice(self.sfs_list)
+                    mso = hvo_seq_in.mso(sf_path=sf, **self.mso_params)
+                    processed_inputs.append(mso)
+
+                    hvo_index.append(hvo_idx)
+                    soundfonts.append(sf)
+
+                    # processed outputs
+                    processed_outputs.append(hvo_seq_out.hvo)
+
+
+        # convert inputs and outputs to torch tensors
+        processed_inputs = torch.Tensor(processed_inputs).to(device=device)
+        processed_outputs = torch.Tensor(processed_outputs).to(device=device)
+
+        preprocessed_dict = {
+            "processed_inputs": processed_inputs,
+            "processed_outputs": processed_outputs,
+            "hvo_sequences": hvo_sequences,
+            "hvo_sequences_inputs": hvo_sequences_inputs,
+            "hvo_sequences_outputs": hvo_sequences_outputs,
+            "hvo_index": hvo_index,
+            "voices_reduced": [],
+            "soundfonts": soundfonts,
+            "unused_items": unused_items
+        }
+
+
 
         return preprocessed_dict
