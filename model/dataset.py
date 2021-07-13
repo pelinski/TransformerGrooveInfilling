@@ -49,7 +49,7 @@ class GrooveMidiDatasetInfilling(Dataset):
         @param max_aug_items:       Maximum number of synthesized examples per example in subset
         @param dataset_name:        Dataset name (for experiment tracking)
         """
-        self.__version = "0.1.1"
+        self.__version = "0.1.2"
 
         # get params
         if load_dataset_path:
@@ -82,7 +82,7 @@ class GrooveMidiDatasetInfilling(Dataset):
 
             self.save_dataset_path = kwargs.get('save_dataset_path', os.path.join('../dataset', self.dataset_name))
 
-        self.metadata = pd.read_csv(os.path.join(self.subset_info["pickle_source_path"], self.subset_info["subset"],
+            self.metadata = pd.read_csv(os.path.join(self.subset_info["pickle_source_path"], self.subset_info["subset"],
                                                  self.subset_info["metadata_csv_filename"]))
         # preprocess dataset
         preprocessed_dataset = self.load_dataset_from_pickle(
@@ -205,18 +205,8 @@ class GrooveMidiDatasetInfilling(Dataset):
         with open(params_file, 'rb') as f:
             params = pickle.load(f)
 
-        self.max_seq_len = params['max_seq_len']
-        self.mso_params = params['mso_params']
-        self.voices_params = params['voices_params']
-        self.sf_path = params['sf_path']
-        self.max_n_sf = params['max_n_sf']
-        self.max_aug_items = params['max_aug_items']
-        self.timestamp = params['timestamp']
-        self.dataset_name = params['dataset_name']
-        self.save_dataset_path = params['save_dataset_path']
-        self.sfs_list = params['sfs_list']
-        self.subset_info = params['subset_info']
-        self.metadata = params['metadata']
+        for key in params.keys():
+            self.__setattr__(key, params[key])
 
         print('Loaded parameters from path: ', params_file)
 
@@ -256,19 +246,7 @@ class GrooveMidiDatasetInfilling(Dataset):
         return self.voices_reduced[idx]
 
     def get_params(self):
-        return {"subset_info": {**self.subset_info},
-                'max_seq_len': self.max_seq_len,
-                'mso_params': self.mso_params,
-                'voices_params': self.voices_params,
-                'sf_path': self.sf_path,
-                'max_n_sf': self.max_n_sf,
-                'sfs_list': self.sfs_list,
-                'save_dataset_path': self.save_dataset_path,
-                'max_aug_items': self.max_aug_items,
-                'dataset_name': self.dataset_name,
-                'timestamp': self.timestamp,
-                'metadata': self.metadata,
-                'length': len(self.processed_inputs)}
+        return self.__dict__
 
     # dataset methods
 
