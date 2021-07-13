@@ -328,7 +328,6 @@ class GrooveMidiDatasetInfillingSymbolic(GrooveMidiDatasetInfilling):
                     continue  # if there are no voices to remove, continue
 
                 # get voices and sf combinations
-                # f_v_comb = get_sf_v_combinations(_voices_params, self.max_aug_items, self.max_n_sf, self.sfs_list)
                 v_comb = get_voice_combinations(**_voices_params)
 
                 # for every sf and voice combination
@@ -377,7 +376,11 @@ class GrooveMidiDatasetInfillingRandom(GrooveMidiDatasetInfilling):
     def __init__(self,
                  data=None,
                  load_dataset_path=None,
+                 thres_range=(0.4,0.6),
                  **kwargs):
+
+        #FIXME load from params/save as params
+        self.thres_range = thres_range
         super(GrooveMidiDatasetInfillingRandom, self).__init__(data=data,
                                                                  load_dataset_path=load_dataset_path,
                                                                  **kwargs)
@@ -427,10 +430,10 @@ class GrooveMidiDatasetInfillingRandom(GrooveMidiDatasetInfilling):
                     nonzero_hits_idx = np.nonzero(hits)
                     pd = np.random.uniform(size=len(nonzero_hits_idx[0]))
 
-                    # TODO allow different thresholds?
+                    # get threshold from range
+                    thres = random.uniform(*self.thres_range)
                     # sample hits from probability distribution
-                    thres = 0.5
-                    nonzero_hits_idx = np.where((pd> thres, pd> thres), nonzero_hits_idx, None)
+                    nonzero_hits_idx = np.where((pd>thres, pd>thres), nonzero_hits_idx, None)
                     reset_hits_idx = [list(filter(lambda x: x is not None, axis)) for axis in nonzero_hits_idx]
 
                     # remove hits with associated probability distribution (pd) value lower than threshold
