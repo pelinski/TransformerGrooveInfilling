@@ -29,6 +29,7 @@ class InfillingEvaluator(Evaluator):
         self.__version = "0.2.1"
 
         self.sf_dict = {}
+        self.hvo_comp_dict = {}
 
         # common filters
         eval_styles = ["hiphop", "funk", "reggae", "soul", "latin", "jazz", "pop", "afrobeat", "highlife", "punk",
