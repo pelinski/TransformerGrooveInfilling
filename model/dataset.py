@@ -246,6 +246,16 @@ class GrooveMidiDatasetInfilling(Dataset):
         return self.voices_reduced[idx]
 
     def get_params(self):
+        params = copy.deepcopy(self.__dict__)
+
+        params['processed_inputs'] = {}
+        params['processed_outputs'] = {}
+        params['hvo_sequences'] = {}
+
+        del params['processed_inputs']
+        del params['processed_outputs']
+        del params['hvo_sequences']
+
         return self.__dict__
 
     # dataset methods
