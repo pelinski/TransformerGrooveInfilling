@@ -15,6 +15,7 @@ from utils import get_sf_list, add_metadata_to_hvo_seq, pad_to_match_max_seq_len
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+
 class GrooveMidiDatasetInfilling(Dataset):
     def __init__(self,
                  data=None,
@@ -376,14 +377,14 @@ class GrooveMidiDatasetInfillingRandom(GrooveMidiDatasetInfilling):
     def __init__(self,
                  data=None,
                  load_dataset_path=None,
-                 thres_range=(0.4,0.6),
+                 thres_range=(0.4, 0.6),
                  **kwargs):
 
-        #FIXME load from params/save as params
+        # FIXME load from params/save as params
         self.thres_range = thres_range
         super(GrooveMidiDatasetInfillingRandom, self).__init__(data=data,
-                                                                 load_dataset_path=load_dataset_path,
-                                                                 **kwargs)
+                                                               load_dataset_path=load_dataset_path,
+                                                               **kwargs)
         # voices attrs
         self.voices_params = {}
 
@@ -424,7 +425,7 @@ class GrooveMidiDatasetInfillingRandom(GrooveMidiDatasetInfilling):
                     hvo_seq_out = hvo_seq.copy()
 
                     # hvo_seq hvo hits 32x9 matrix
-                    hits = hvo_seq_in.hvo[:,0:n_voices]
+                    hits = hvo_seq_in.hvo[:, 0:n_voices]
 
                     # uniform probability distribution over nonzero hits
                     nonzero_hits_idx = np.nonzero(hits)
@@ -433,7 +434,7 @@ class GrooveMidiDatasetInfillingRandom(GrooveMidiDatasetInfilling):
                     # get threshold from range
                     thres = random.uniform(*self.thres_range)
                     # sample hits from probability distribution
-                    nonzero_hits_idx = np.where((pd>thres, pd>thres), nonzero_hits_idx, None)
+                    nonzero_hits_idx = np.where((pd > thres, pd > thres), nonzero_hits_idx, None)
                     reset_hits_idx = [list(filter(lambda x: x is not None, axis)) for axis in nonzero_hits_idx]
 
                     # remove hits with associated probability distribution (pd) value lower than threshold
@@ -441,11 +442,11 @@ class GrooveMidiDatasetInfillingRandom(GrooveMidiDatasetInfilling):
                     reset_hits[tuple(reset_hits_idx)] = 1
 
                     # update hvo_seq_in with reset hits
-                    hvo_seq_in.hvo[:,0:n_voices] = reset_hits
+                    hvo_seq_in.hvo[:, 0:n_voices] = reset_hits
 
                     # check if empty hvo_seq_in
                     if not np.any(hvo_seq_in.hvo.flatten()):
-                        #nused_items.append(hvo_idx)
+                        # nused_items.append(hvo_idx)
                         continue
 
                     hvo_sequences_inputs.append(hvo_seq_in)
@@ -462,7 +463,6 @@ class GrooveMidiDatasetInfillingRandom(GrooveMidiDatasetInfilling):
                     # processed outputs
                     processed_outputs.append(hvo_seq_out.hvo)
 
-
         # convert inputs and outputs to torch tensors
         processed_inputs = torch.Tensor(processed_inputs).to(device=device)
         processed_outputs = torch.Tensor(processed_outputs).to(device=device)
@@ -478,7 +478,5 @@ class GrooveMidiDatasetInfillingRandom(GrooveMidiDatasetInfilling):
             "soundfonts": soundfonts,
             "unused_items": unused_items
         }
-
-
 
         return preprocessed_dict
