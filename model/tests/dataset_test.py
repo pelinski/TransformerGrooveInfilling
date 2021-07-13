@@ -5,7 +5,7 @@ sys.path.insert(1, "../")
 sys.path.append('../../../hvo_sequence/')
 sys.path.append('../../../preprocessed_dataset/')
 
-from dataset import GrooveMidiDatasetInfilling, GrooveMidiDatasetInfillingSymbolic
+from dataset import GrooveMidiDatasetInfilling, GrooveMidiDatasetInfillingSymbolic, GrooveMidiDatasetInfillingRandom
 from Subset_Creators.subsetters import GrooveMidiSubsetter
 import numpy as np
 
@@ -110,8 +110,12 @@ if __name__ == "__main__":
         gmd_loaded = GrooveMidiDatasetInfilling(load_dataset_path=load_dataset_path)
         print(gmd_loaded.__len__())
 
-
-    test_dataset_symbolic = True
+    test_dataset_symbolic = False
     if test_dataset_symbolic:
         gmds = GrooveMidiDatasetInfillingSymbolic(data=subset_list[0], **params['dataset'])
         gmds.processed_inputs
+
+    test_dataset_random = True
+    if test_dataset_random:
+        gmds = GrooveMidiDatasetInfillingRandom(data=subset_list[0], **params['dataset'])
+
