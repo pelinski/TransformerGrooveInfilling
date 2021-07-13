@@ -49,7 +49,7 @@ class GrooveMidiDatasetInfilling(Dataset):
         @param max_aug_items:       Maximum number of synthesized examples per example in subset
         @param dataset_name:        Dataset name (for experiment tracking)
         """
-        self.__version = "0.1.2"
+        self.__version__ = "0.1.2"
 
         # get params
         if load_dataset_path:
@@ -75,6 +75,8 @@ class GrooveMidiDatasetInfilling(Dataset):
                                                           "metadata_csv_filename": "",
                                                           "hvo_pickle_filename": "",
                                                           "filters": ""})
+            self.split = kwargs.get('split', '')
+
             self.sfs_list = get_sf_list(self.sf_path)
 
             if self.max_n_sf is not None:
@@ -103,17 +105,29 @@ class GrooveMidiDatasetInfilling(Dataset):
 
         # save dataset to pickle file
         if load_dataset_path is None:
+            self.save_dataset_path = os.path.join(os.path.join(self.save_dataset_path, self.__version__), self.split)
+
             if not os.path.exists(self.save_dataset_path):
                 os.makedirs(self.save_dataset_path)
 
-            params_pickle_filename = os.path.join(self.save_dataset_path, self.dataset_name + '_params.pickle')
+            params_pickle_filename = os.path.join(self.save_dataset_path, self.dataset_name + '_' + self.split + '_' +
+                                                  self.__version__ + '_params.pickle')
             save_dict_to_pickle(params, params_pickle_filename)
-            dataset_pickle_filename = os.path.join(self.save_dataset_path, self.dataset_name + '_dataset.pickle')
+            dataset_pickle_filename = os.path.join(self.save_dataset_path,
+                                                   self.dataset_name + '_' + self.split + '_' + self.__version__ +
+                                                   '_dataset.pickle')
             save_dict_to_pickle(preprocessed_dataset, dataset_pickle_filename)
 
             print("Saved dataset to path: ", self.save_dataset_path)
 
     def preprocess_dataset(self, data):
+        # older dataset versions don't have attr split --> backwards compatible
+        if 'split' in self.__dict__.keys():
+            self.save_dataset_path = os.path.join(os.path.join(self.save_dataset_path, self.__version__), \
+                                                  self.split)
+
+        print('GrooveMidiDatasetInfilling version ' + self.__version__)
+
         # init lists to store hvo sequences and processed io
         hvo_sequences = []
         hvo_sequences_inputs, hvo_sequences_outputs = [], []
@@ -265,20 +279,24 @@ class GrooveMidiDatasetInfillingSymbolic(GrooveMidiDatasetInfilling):
                  data=None,
                  load_dataset_path=None,
                  **kwargs):
+
         super(GrooveMidiDatasetInfillingSymbolic, self).__init__(data=data,
                                                                  load_dataset_path=load_dataset_path,
                                                                  **kwargs)
+
         # audio attrs inherited from GMDInfilling
         del self.mso_params
         del self.sfs_list
         del self.sf_path
         del self.max_n_sf
 
-        self.__version__ = '0.1.0'
-
     # override preprocessing dataset method
     # keep unused audio attrs (sfs) for simplicity
     def preprocess_dataset(self, data):
+        self.__version__ = '0.1.0'
+        self.save_dataset_path = os.path.join(os.path.join(self.save_dataset_path, self.__version__), self.split)
+        print('GrooveMidiDatasetInfillingSymbolic version ' + self.__version__)
+
         # init lists to store hvo sequences and processed io
         hvo_sequences = []
         hvo_sequences_inputs, hvo_sequences_outputs = [], []
@@ -364,14 +382,17 @@ class GrooveMidiDatasetInfillingRandom(GrooveMidiDatasetInfilling):
         super(GrooveMidiDatasetInfillingRandom, self).__init__(data=data,
                                                                load_dataset_path=load_dataset_path,
                                                                **kwargs)
+
         # del voices attrs inherited from GMD Infilling
         del self.voices_params
         del self.max_n_sf
 
-        self.__version__ = '0.0.0'
-
     # override preprocessing dataset method
     def preprocess_dataset(self, data):
+        self.__version__ = '0.0.0'
+        self.save_dataset_path = os.path.join(os.path.join(self.save_dataset_path, self.__version__), self.split)
+        print('GrooveMidiDatasetInfillingRandom version ' + self.__version__)
+
         # init lists to store hvo sequences and processed io
         hvo_sequences = []
         hvo_sequences_inputs, hvo_sequences_outputs = [], []
@@ -383,7 +404,6 @@ class GrooveMidiDatasetInfillingRandom(GrooveMidiDatasetInfilling):
 
         for hvo_idx, hvo_seq in enumerate(tqdm(data,
                                                desc='Preprocessing dataset {}'.format(self.subset_info["subset"]))):
-
             all_zeros = not np.any(hvo_seq.hvo.flatten())  # silent patterns
 
             if len(hvo_seq.time_signatures) == 1 and not all_zeros:  # ignore if time_signature change happens
