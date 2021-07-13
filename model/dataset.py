@@ -249,10 +249,14 @@ class GrooveMidiDatasetInfilling(Dataset):
     def get_params(self):
         params = copy.deepcopy(self.__dict__)
 
+        params['hvo_sequences_inputs'] = {}
+        params['hvo_sequences_outputs'] = {}
         params['processed_inputs'] = {}
         params['processed_outputs'] = {}
         params['hvo_sequences'] = {}
 
+        del params['hvo_sequences_inputs']
+        del params['hvo_sequences_outputs']
         del params['processed_inputs']
         del params['processed_outputs']
         del params['hvo_sequences']
