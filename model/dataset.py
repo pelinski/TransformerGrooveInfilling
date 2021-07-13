@@ -76,6 +76,7 @@ class GrooveMidiDatasetInfilling(Dataset):
                                                           "hvo_pickle_filename": "",
                                                           "filters": ""})
             self.sfs_list = get_sf_list(self.sf_path)
+
             if self.max_n_sf is not None:
                 assert (self.max_n_sf <= len(self.sfs_list)), "max_n_sf can not be larger than number of available " \
                                                               "soundfonts"
@@ -256,7 +257,7 @@ class GrooveMidiDatasetInfilling(Dataset):
         del params['processed_outputs']
         del params['hvo_sequences']
 
-        return self.__dict__
+        return params
 
     # dataset methods
 
@@ -276,6 +277,7 @@ class GrooveMidiDatasetInfillingSymbolic(GrooveMidiDatasetInfilling):
                                                                  load_dataset_path=load_dataset_path,
                                                                  **kwargs)
         # audio attrs
+        # FIXME audio attrs could be removed
         self.mso_params = {}
         self.sfs_list = []
         self.sf_path = []
@@ -365,7 +367,7 @@ class GrooveMidiDatasetInfillingRandom(GrooveMidiDatasetInfilling):
     def __init__(self,
                  data=None,
                  load_dataset_path=None,
-                 thres_range=(0.4, 0.6),
+                 thres_range = (0.4,0.6),
                  **kwargs):
 
         # FIXME load from params/save as params
@@ -462,6 +464,7 @@ class GrooveMidiDatasetInfillingRandom(GrooveMidiDatasetInfilling):
             "hvo_sequences_inputs": hvo_sequences_inputs,
             "hvo_sequences_outputs": hvo_sequences_outputs,
             "hvo_index": hvo_index,
+            # FIXME voices_reduced should be removed
             "voices_reduced": [],
             "soundfonts": soundfonts,
             "unused_items": unused_items
