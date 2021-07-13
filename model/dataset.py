@@ -1,5 +1,3 @@
-import copy
-
 import torch
 from torch.utils.data import Dataset
 import pandas as pd
@@ -10,6 +8,8 @@ from tqdm import tqdm
 import wandb
 import pickle
 import random
+import copy
+
 from utils import get_sf_list, add_metadata_to_hvo_seq, pad_to_match_max_seq_len, get_voice_idx_for_item, \
     get_sf_v_combinations, get_voice_combinations, save_dict_to_pickle
 
@@ -90,15 +90,9 @@ class GrooveMidiDatasetInfilling(Dataset):
             load_dataset_path) if load_dataset_path else self.preprocess_dataset(data)
         print('GMD path: ', self.subset_info["pickle_source_path"])
 
-        self.processed_inputs = preprocessed_dataset["processed_inputs"]
-        self.processed_outputs = preprocessed_dataset["processed_outputs"]
-        self.hvo_sequences = preprocessed_dataset["hvo_sequences"]
-        self.hvo_sequences_inputs = preprocessed_dataset["hvo_sequences_inputs"]
-        self.hvo_sequences_outputs = preprocessed_dataset["hvo_sequences_outputs"]
-        self.hvo_index = preprocessed_dataset["hvo_index"]
-        self.voices_reduced = preprocessed_dataset["voices_reduced"]
-        self.soundfonts = preprocessed_dataset["soundfonts"]
-        self.unused_items = preprocessed_dataset["unused_items"]
+        # store preprocessed dataset in dataset attrs
+        for key in preprocessed_dataset.keys():
+            self.__setattr__(key, preprocessed_dataset[key])
 
         # dataset params dict
         params = self.get_params()
@@ -218,17 +212,10 @@ class GrooveMidiDatasetInfilling(Dataset):
         with open(pickle_file, 'rb') as f:
             preprocessed_dataset = pickle.load(f)
 
-        print('Loaded dataset from path: ', pickle_file)
+        for key in preprocessed_dataset.keys():
+            self.__setattr__(key, preprocessed_dataset[key])
 
-        self.processed_inputs = preprocessed_dataset["processed_inputs"]
-        self.processed_outputs = preprocessed_dataset["processed_outputs"]
-        self.hvo_sequences = preprocessed_dataset["hvo_sequences"]
-        self.hvo_sequences_inputs = preprocessed_dataset["hvo_sequences_inputs"]
-        self.hvo_sequences_outputs = preprocessed_dataset["hvo_sequences_outputs"]
-        self.hvo_index = preprocessed_dataset["hvo_index"]
-        self.voices_reduced = preprocessed_dataset["voices_reduced"]
-        self.soundfonts = preprocessed_dataset["soundfonts"]
-        self.unused_items = preprocessed_dataset["unused_items"]
+        print('Loaded dataset from path: ', pickle_file)
 
         print(str(self.__len__()) + ' items')
 
@@ -280,12 +267,11 @@ class GrooveMidiDatasetInfillingSymbolic(GrooveMidiDatasetInfilling):
         super(GrooveMidiDatasetInfillingSymbolic, self).__init__(data=data,
                                                                  load_dataset_path=load_dataset_path,
                                                                  **kwargs)
-        # audio attrs
-        # FIXME audio attrs could be removed
-        self.mso_params = {}
-        self.sfs_list = []
-        self.sf_path = []
-        self.max_n_sf = None
+        # audio attrs inherited from GMDInfilling
+        del self.mso_params
+        del self.sfs_list
+        del self.sf_path
+        del self.max_n_sf
 
         self.__version__ = '0.1.0'
 
@@ -298,7 +284,7 @@ class GrooveMidiDatasetInfillingSymbolic(GrooveMidiDatasetInfilling):
         processed_inputs, processed_outputs = [], []
 
         # init list with configurations
-        hvo_index, voices_reduced, soundfonts = [], [], []
+        hvo_index, voices_reduced = [], []
         unused_items = []
 
         for hvo_idx, hvo_seq in enumerate(tqdm(data,
@@ -360,7 +346,6 @@ class GrooveMidiDatasetInfillingSymbolic(GrooveMidiDatasetInfilling):
             "hvo_sequences_outputs": hvo_sequences_outputs,
             "hvo_index": hvo_index,
             "voices_reduced": voices_reduced,
-            "soundfonts": soundfonts,
             "unused_items": unused_items
         }
 
@@ -371,16 +356,15 @@ class GrooveMidiDatasetInfillingRandom(GrooveMidiDatasetInfilling):
     def __init__(self,
                  data=None,
                  load_dataset_path=None,
-                 thres_range = (0.4,0.6),
                  **kwargs):
 
-        # FIXME load from params/save as params
-        self.thres_range = thres_range
+        self.thres_range = kwargs.get('thres_range', (0.4,0.6))
+
         super(GrooveMidiDatasetInfillingRandom, self).__init__(data=data,
                                                                load_dataset_path=load_dataset_path,
                                                                **kwargs)
-        # voices attrs
-        self.voices_params = {}
+        # del voices attrs inherited from GMD Infilling
+        del self.voices_params
 
         self.__version__ = '0.0.0'
 
@@ -468,8 +452,6 @@ class GrooveMidiDatasetInfillingRandom(GrooveMidiDatasetInfilling):
             "hvo_sequences_inputs": hvo_sequences_inputs,
             "hvo_sequences_outputs": hvo_sequences_outputs,
             "hvo_index": hvo_index,
-            # FIXME voices_reduced should be removed
-            "voices_reduced": [],
             "soundfonts": soundfonts,
             "unused_items": unused_items
         }
