@@ -129,59 +129,53 @@ class GrooveMidiDatasetInfilling(Dataset):
 
         for hvo_idx, hvo_seq in enumerate(tqdm(data,
                                                desc='Preprocessing dataset {}'.format(self.subset_info["subset"]))):
-            # only
-            # one
-            # subset because
-            # only one set of
-            # filters
-            if len(hvo_seq.time_signatures) == 1:  # ignore if time_signature change happens
 
-                all_zeros = not np.any(hvo_seq.hvo.flatten())
+            all_zeros = not np.any(hvo_seq.hvo.flatten()) # silent patterns
 
-                if not all_zeros:  # ignore silent patterns
+            if len(hvo_seq.time_signatures) == 1 and not all_zeros:  # ignore if time_signature change happens
 
-                    # add metadata to hvo_seq scores
-                    add_metadata_to_hvo_seq(hvo_seq, hvo_idx, self.metadata)
+                # add metadata to hvo_seq scores
+                add_metadata_to_hvo_seq(hvo_seq, hvo_idx, self.metadata)
 
-                    # pad with zeros to match max_len
-                    hvo_seq = pad_to_match_max_seq_len(hvo_seq, self.max_seq_len)
+                # pad with zeros to match max_len
+                hvo_seq = pad_to_match_max_seq_len(hvo_seq, self.max_seq_len)
 
-                    # append hvo_seq to hvo_sequences list
-                    hvo_sequences.append(hvo_seq)
+                # append hvo_seq to hvo_sequences list
+                hvo_sequences.append(hvo_seq)
 
-                    # remove voices in voice_idx not present in item
-                    _voice_idx, _voices_params = get_voice_idx_for_item(hvo_seq, self.voices_params)
-                    if len(_voice_idx) == 0:
+                # remove voices in voice_idx not present in item
+                _voice_idx, _voices_params = get_voice_idx_for_item(hvo_seq, self.voices_params)
+                if len(_voice_idx) == 0:
+                    unused_items.append(hvo_idx)
+                    continue  # if there are no voices to remove, continue
+
+                # get voices and sf combinations
+                sf_v_comb = get_sf_v_combinations(_voices_params, self.max_aug_items, self.max_n_sf, self.sfs_list)
+
+                # for every sf and voice combination
+                for sf, v_idx in sf_v_comb:
+
+                    # reset voices in hvo
+                    hvo_seq_in, hvo_seq_out = hvo_seq.reset_voices(voice_idx=v_idx)
+                    # if the resulting hvos are 0, skip
+                    if not np.any(hvo_seq_in.hvo.flatten()) or not np.any(hvo_seq_out.hvo.flatten()):
                         unused_items.append(hvo_idx)
-                        continue  # if there are no voices to remove, continue
+                        continue
 
-                    # get voices and sf combinations
-                    sf_v_comb = get_sf_v_combinations(_voices_params, self.max_aug_items, self.max_n_sf, self.sfs_list)
+                    hvo_sequences_inputs.append(hvo_seq_in)
+                    hvo_sequences_outputs.append(hvo_seq_out)
 
-                    # for every sf and voice combination
-                    for sf, v_idx in sf_v_comb:
+                    # store hvo, v_idx and sf
+                    hvo_index.append(hvo_idx)
+                    voices_reduced.append(v_idx)
+                    soundfonts.append(sf)
 
-                        # reset voices in hvo
-                        hvo_seq_in, hvo_seq_out = hvo_seq.reset_voices(voice_idx=v_idx)
-                        # if the resulting hvos are 0, skip
-                        if not np.any(hvo_seq_in.hvo.flatten()) or not np.any(hvo_seq_out.hvo.flatten()):
-                            unused_items.append(hvo_idx)
-                            continue
+                    # processed inputs: mso
+                    mso = hvo_seq_in.mso(sf_path=sf, **self.mso_params)
+                    processed_inputs.append(mso)
 
-                        hvo_sequences_inputs.append(hvo_seq_in)
-                        hvo_sequences_outputs.append(hvo_seq_out)
-
-                        # store hvo, v_idx and sf
-                        hvo_index.append(hvo_idx)
-                        voices_reduced.append(v_idx)
-                        soundfonts.append(sf)
-
-                        # processed inputs: mso
-                        mso = hvo_seq_in.mso(sf_path=sf, **self.mso_params)
-                        processed_inputs.append(mso)
-
-                        # processed outputs complementary hvo_seq with reset voices
-                        processed_outputs.append(hvo_seq_out.hvo)
+                    # processed outputs complementary hvo_seq with reset voices
+                    processed_outputs.append(hvo_seq_out.hvo)
 
         # convert inputs and outputs to torch tensors
         processed_inputs = torch.Tensor(processed_inputs).to(device=device)
@@ -314,53 +308,51 @@ class GrooveMidiDatasetInfillingSymbolic(GrooveMidiDatasetInfilling):
 
         for hvo_idx, hvo_seq in enumerate(tqdm(data,
                                                desc='Preprocessing dataset {}'.format(self.subset_info["subset"]))):
-            if len(hvo_seq.time_signatures) == 1:  # ignore if time_signature change happens
 
-                all_zeros = not np.any(hvo_seq.hvo.flatten())
+            all_zeros = not np.any(hvo_seq.hvo.flatten())  # silent patterns
 
-                if not all_zeros:  # ignore silent patterns
+            if len(hvo_seq.time_signatures) == 1 and not all_zeros:  # ignore if time_signature change happens
+                # add metadata to hvo_seq scores
+                add_metadata_to_hvo_seq(hvo_seq, hvo_idx, self.metadata)
 
-                    # add metadata to hvo_seq scores
-                    add_metadata_to_hvo_seq(hvo_seq, hvo_idx, self.metadata)
+                # pad with zeros to match max_len
+                hvo_seq = pad_to_match_max_seq_len(hvo_seq, self.max_seq_len)
 
-                    # pad with zeros to match max_len
-                    hvo_seq = pad_to_match_max_seq_len(hvo_seq, self.max_seq_len)
+                # append hvo_seq to hvo_sequences list
+                hvo_sequences.append(hvo_seq)
 
-                    # append hvo_seq to hvo_sequences list
-                    hvo_sequences.append(hvo_seq)
+                # remove voices in voice_idx not present in item
+                _voice_idx, _voices_params = get_voice_idx_for_item(hvo_seq, self.voices_params)
+                if len(_voice_idx) == 0:
+                    unused_items.append(hvo_idx)
+                    continue  # if there are no voices to remove, continue
 
-                    # remove voices in voice_idx not present in item
-                    _voice_idx, _voices_params = get_voice_idx_for_item(hvo_seq, self.voices_params)
-                    if len(_voice_idx) == 0:
+                # get voices and sf combinations
+                # f_v_comb = get_sf_v_combinations(_voices_params, self.max_aug_items, self.max_n_sf, self.sfs_list)
+                v_comb = get_voice_combinations(**_voices_params)
+
+                # for every sf and voice combination
+                for v_idx in v_comb:
+
+                    # reset voices in hvo
+                    hvo_seq_in, hvo_seq_out = hvo_seq.reset_voices(voice_idx=v_idx)
+                    # if the resulting hvos are 0, skip
+                    if not np.any(hvo_seq_in.hvo.flatten()) or not np.any(hvo_seq_out.hvo.flatten()):
                         unused_items.append(hvo_idx)
-                        continue  # if there are no voices to remove, continue
+                        continue
 
-                    # get voices and sf combinations
-                    # f_v_comb = get_sf_v_combinations(_voices_params, self.max_aug_items, self.max_n_sf, self.sfs_list)
-                    v_comb = get_voice_combinations(**_voices_params)
+                    hvo_sequences_inputs.append(hvo_seq_in)
+                    hvo_sequences_outputs.append(hvo_seq_out)
 
-                    # for every sf and voice combination
-                    for v_idx in v_comb:
+                    # store hvo, v_idx and sf
+                    hvo_index.append(hvo_idx)
+                    voices_reduced.append(v_idx)
 
-                        # reset voices in hvo
-                        hvo_seq_in, hvo_seq_out = hvo_seq.reset_voices(voice_idx=v_idx)
-                        # if the resulting hvos are 0, skip
-                        if not np.any(hvo_seq_in.hvo.flatten()) or not np.any(hvo_seq_out.hvo.flatten()):
-                            unused_items.append(hvo_idx)
-                            continue
+                    # processed inputs
+                    processed_inputs.append(hvo_seq_in.hvo)
 
-                        hvo_sequences_inputs.append(hvo_seq_in)
-                        hvo_sequences_outputs.append(hvo_seq_out)
-
-                        # store hvo, v_idx and sf
-                        hvo_index.append(hvo_idx)
-                        voices_reduced.append(v_idx)
-
-                        # processed inputs
-                        processed_inputs.append(hvo_seq_in.hvo)
-
-                        # processed outputs complementary hvo_seq with reset voices
-                        processed_outputs.append(hvo_seq_out.hvo)
+                    # processed outputs complementary hvo_seq with reset voices
+                    processed_outputs.append(hvo_seq_out.hvo)
 
         # convert inputs and outputs to torch tensors
         processed_inputs = torch.Tensor(processed_inputs).to(device=device)
