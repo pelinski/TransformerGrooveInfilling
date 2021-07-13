@@ -84,7 +84,7 @@ class GrooveMidiDatasetInfilling(Dataset):
             self.save_dataset_path = kwargs.get('save_dataset_path', os.path.join('../dataset', self.dataset_name))
 
             self.metadata = pd.read_csv(os.path.join(self.subset_info["pickle_source_path"], self.subset_info["subset"],
-                                                 self.subset_info["metadata_csv_filename"]))
+                                                     self.subset_info["metadata_csv_filename"]))
         # preprocess dataset
         preprocessed_dataset = self.load_dataset_from_pickle(
             load_dataset_path) if load_dataset_path else self.preprocess_dataset(data)
@@ -236,6 +236,7 @@ class GrooveMidiDatasetInfilling(Dataset):
     def get_params(self):
         params = copy.deepcopy(self.__dict__)
 
+        # delete dataset attr
         params['hvo_sequences_inputs'] = {}
         params['hvo_sequences_outputs'] = {}
         params['processed_inputs'] = {}
@@ -358,13 +359,14 @@ class GrooveMidiDatasetInfillingRandom(GrooveMidiDatasetInfilling):
                  load_dataset_path=None,
                  **kwargs):
 
-        self.thres_range = kwargs.get('thres_range', (0.4,0.6))
+        self.thres_range = kwargs.get('thres_range', (0.4, 0.6))
 
         super(GrooveMidiDatasetInfillingRandom, self).__init__(data=data,
                                                                load_dataset_path=load_dataset_path,
                                                                **kwargs)
         # del voices attrs inherited from GMD Infilling
         del self.voices_params
+        del self.max_n_sf
 
         self.__version__ = '0.0.0'
 
