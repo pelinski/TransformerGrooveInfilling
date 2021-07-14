@@ -446,7 +446,7 @@ class GrooveMidiDatasetInfillingRandom(GrooveMidiDatasetInfilling):
 
                     # check if empty hvo_seq_in
                     if not np.any(hvo_seq_in.hvo.flatten()):
-                        # nused_items.append(hvo_idx)
+                        unused_items.append(hvo_idx)
                         continue
 
                     hvo_sequences_inputs.append(hvo_seq_in)
