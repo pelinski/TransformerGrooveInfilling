@@ -417,35 +417,11 @@ class GrooveMidiDatasetInfillingRandom(GrooveMidiDatasetInfilling):
                 # append hvo_seq to hvo_sequences list
                 hvo_sequences.append(hvo_seq)
 
-                n_voices = len(hvo_seq.drum_mapping)
-
                 for i in range(self.max_aug_items):
+    
+                    hvo_seq_in, hvo_seq_out = hvo_seq.remove_random_events(thres_range=self.thres_range)
 
-                    hvo_seq_in = hvo_seq.copy()
-                    hvo_seq_out = hvo_seq.copy()
-
-                    # hvo_seq hvo hits 32x9 matrix
-                    hits = hvo_seq_in.hvo[:, 0:n_voices]
-
-                    # uniform probability distribution over nonzero hits
-                    nonzero_hits_idx = np.nonzero(hits)
-                    pd = np.random.uniform(size=len(nonzero_hits_idx[0]))
-
-                    # get threshold from range
-                    thres = random.uniform(*self.thres_range)
-                    # sample hits from probability distribution
-                    nonzero_hits_idx = np.where((pd > thres, pd > thres), nonzero_hits_idx, None)
-                    reset_hits_idx = [list(filter(lambda x: x is not None, axis)) for axis in nonzero_hits_idx]
-
-                    # remove hits with associated probability distribution (pd) value lower than threshold
-                    reset_hits = np.zeros(hits.shape)
-                    reset_hits[tuple(reset_hits_idx)] = 1
-
-                    # update hvo_seq_in with reset hits
-                    hvo_seq_in.hvo[:, 0:n_voices] = reset_hits
-
-                    # check if empty hvo_seq_in
-                    if not np.any(hvo_seq_in.hvo.flatten()):
+                    if not np.any(hvo_seq_in.hvo.flatten()) or not np.any(hvo_seq_out.hvo.flatten()):
                         unused_items.append(hvo_idx)
                         continue
 
@@ -462,6 +438,7 @@ class GrooveMidiDatasetInfillingRandom(GrooveMidiDatasetInfilling):
 
                     # processed outputs
                     processed_outputs.append(hvo_seq_out.hvo)
+
 
         # convert inputs and outputs to torch tensors
         processed_inputs = torch.Tensor(processed_inputs).to(device=device)
