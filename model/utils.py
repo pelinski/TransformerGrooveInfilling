@@ -29,6 +29,10 @@ def get_sf_list(sf_path):
 
 
 def get_hvo_idxs_for_voice(voice_idx, n_voices):
+    """
+    Gets index for hits, velocity and offsets for a voice. Used for copying hvo values from a voice from an
+    hvo_sequence to another one.
+    """
     h_idx = voice_idx
     v_idx = [_ + n_voices for _ in voice_idx]
     o_idx = [_ + 2 * n_voices for _ in voice_idx]
