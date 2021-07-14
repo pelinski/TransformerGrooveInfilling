@@ -1,6 +1,5 @@
 import sys
 from dataset import GrooveMidiDatasetInfilling, GrooveMidiDatasetInfillingSymbolic, GrooveMidiDatasetInfillingRandom
-
 sys.path.append('../../preprocessed_dataset/')
 from Subset_Creators.subsetters import GrooveMidiSubsetter
 
@@ -130,10 +129,11 @@ def load_preprocessed_dataset(load_dataset_path, exp):
 if __name__ == "__main__":
     # change experiment and split here
     exp = 'InfillingRandom'
-    split = 'test'
+    splits = ['train', 'test', 'validation']
 
-    params_exp = params[exp]
-    params_exp['split'] = split
-    params_exp['subset_info']['subset'] = params_exp['subset_info']['subset'] + split
+    for split in splits:
+        params_exp = params[exp]
+        params_exp['split'] = split
+        params_exp['subset_info']['subset'] = params_exp['subset_info']['subset'] + split
 
-    preprocess_dataset(params_exp, exp=exp)
+        preprocess_dataset(params_exp, exp=exp)
