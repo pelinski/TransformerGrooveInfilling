@@ -26,7 +26,7 @@ class InfillingEvaluator(Evaluator):
                  model=None,
                  n_epochs=None):
 
-        self.__version = "0.2.1"
+        self.__version = "0.2.2"
 
         self.sf_dict = {}
         self.hvo_comp_dict = {}
