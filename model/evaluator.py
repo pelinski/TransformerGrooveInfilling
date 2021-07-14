@@ -128,22 +128,28 @@ class InfillingEvaluator(Evaluator):
 
         self.audio_sample_locations = self.get_sample_indices(n_samples_to_synthesize_visualize_per_subset)
 
-    def set_pred(self):
+    def set_pred(self, horizontal=True):
         eval_pred = self.model.predict(self.processed_inputs, use_thres=True, thres=0.5)
         eval_pred = [_.cpu() for _ in eval_pred]
         eval_pred_hvo_array = np.concatenate(eval_pred, axis=2)
         eval_pred = np.zeros_like(eval_pred_hvo_array)
-        # sets all voices different from voices_reduced to 0
-        # sync between hits and vels+offs is done when converted to hvo sequence
 
-        for idx in range(eval_pred_hvo_array.shape[0]):  # N
-            if isinstance(self.voices_reduced[idx], int):
-                self.voices_reduced[idx] = [self.voices_reduced[idx]]
-            h_idx, v_idx, o_idx = get_hvo_idxs_for_voice(voice_idx=list(self.voices_reduced[idx]),
-                                                        n_voices=eval_pred_hvo_array.shape[2] // 3)
+        n_voices = eval_pred_hvo_array.shape[2] // 3
 
-            eval_pred[idx, :, h_idx+v_idx+o_idx] = eval_pred_hvo_array[idx, :, h_idx+v_idx+o_idx]
+        for idx in range(eval_pred_hvo_array.shape[0]):
 
+            if horizontal:  # horizontally removing voices
+                if isinstance(self.voices_reduced[idx], int):
+                    self.voices_reduced[idx] = [self.voices_reduced[idx]]
+                h_idx, v_idx, o_idx = get_hvo_idxs_for_voice(voice_idx=list(self.voices_reduced[idx]),
+                                                             n_voices=n_voices)
+                eval_pred[idx, :, h_idx + v_idx + o_idx] = eval_pred_hvo_array[idx, :, h_idx + v_idx + o_idx]
+
+            else:  # randomly removing voices
+                hits = self.hvo_sequences_inputs[idx][:n_voices]
+                input_hits_idx = np.nonzero(hits)
+                eval_pred[idx, :, :] = eval_pred_hvo_array[idx, :, :]
+                eval_pred[idx, tuple(input_hits_idx)] = 0
 
         self._prediction_hvos_array = eval_pred
         self._prediction_tags, self._prediction_subsets, self._subset_hvo_array_index = \
