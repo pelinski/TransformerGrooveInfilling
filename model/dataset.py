@@ -106,16 +106,20 @@ class GrooveMidiDatasetInfilling(Dataset):
         # save dataset to pickle file
         if load_dataset_path is None:
             self.save_dataset_path = os.path.join(os.path.join(self.save_dataset_path, self.__version__), self.split)
-
             if not os.path.exists(self.save_dataset_path):
                 os.makedirs(self.save_dataset_path)
 
+            # move tensor to cpu (tensors saved while on gpu cannot be loaded from pickle file in cpu)
+            preprocessed_dataset["processed_inputs"] = preprocessed_dataset["processed_inputs"].to(device='cpu')
+            preprocessed_dataset["processed_outputs"] = preprocessed_dataset["processed_outputs"].to(device='cpu')
+
+            # save to pickle
             params_pickle_filename = os.path.join(self.save_dataset_path, self.dataset_name + '_' + self.split + '_' +
                                                   self.__version__ + '_params.pickle')
-            save_dict_to_pickle(params, params_pickle_filename)
             dataset_pickle_filename = os.path.join(self.save_dataset_path,
                                                    self.dataset_name + '_' + self.split + '_' + self.__version__ +
                                                    '_dataset.pickle')
+            save_dict_to_pickle(params, params_pickle_filename)
             save_dict_to_pickle(preprocessed_dataset, dataset_pickle_filename)
 
             print("Saved dataset to path: ", self.save_dataset_path)
