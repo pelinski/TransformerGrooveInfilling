@@ -109,7 +109,7 @@ params = {
 }
 
 
-def preprocess_dataset(params):
+def preprocess_dataset(params,exp):
     _, subset_list = GrooveMidiSubsetter(pickle_source_path=params["subset_info"]["pickle_source_path"],
                                          subset=params["subset_info"]["subset"],
                                          hvo_pickle_filename=params["subset_info"]["hvo_pickle_filename"],
@@ -144,7 +144,6 @@ if __name__ == "__main__":
     splits = ['train', 'test', 'validation']
 
     for exp in exps:
-        print(exp)
         for split in splits:
             params_exp = copy.deepcopy(params[exp])
             params_exp['split'] = split
