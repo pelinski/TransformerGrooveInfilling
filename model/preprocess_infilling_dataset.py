@@ -8,7 +8,7 @@ params = {
     "InfillingClosedHH": {
         "dataset_name": "InfillingClosedHH",
         "subset_info": {
-            "pickle_source_path": "../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.4.5/Processed_On_14_06_2021_at_14_26_hrs",
+            "pickle_source_path":"../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.5.0/Processed_On_14_07_2021_at_20_42_hrs",
             "subset": "GrooveMIDI_processed_",
             "metadata_csv_filename": "metadata.csv",
             "hvo_pickle_filename": "hvo_sequence_data.obj",
@@ -43,7 +43,7 @@ params = {
     "InfillingMultipleVoices": {
         "dataset_name": "InfillingMultipleVoices",
         "subset_info": {
-            "pickle_source_path": "../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.4.5/Processed_On_14_06_2021_at_14_26_hrs",
+            "pickle_source_path": "../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.5.0/Processed_On_14_07_2021_at_20_42_hrs",
             "subset": "GrooveMIDI_processed_",
             "metadata_csv_filename": "metadata.csv",
             "hvo_pickle_filename": "hvo_sequence_data.obj",
@@ -78,7 +78,7 @@ params = {
     "InfillingRandom": {
         "dataset_name": "InfillingRandom",
         "subset_info": {
-            "pickle_source_path": "../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.4.5/Processed_On_14_06_2021_at_14_26_hrs",
+            "pickle_source_path": "../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.5.0/Processed_On_14_07_2021_at_20_42_hrs",
             "subset": "GrooveMIDI_processed_",
             "metadata_csv_filename": "metadata.csv",
             "hvo_pickle_filename": "hvo_sequence_data.obj",
@@ -89,7 +89,7 @@ params = {
         },
         "max_len": 32,
         "sf_path": "../soundfonts/filtered_soundfonts/",
-        "max_aug_items": 6,
+        "max_aug_items": 3,
         "thres_range": (0.4, 0.7),
         "save_dataset_path": '../preprocessed_infilling_datasets/InfillingRandom/'
     }
@@ -129,7 +129,8 @@ def load_preprocessed_dataset(load_dataset_path, exp):
 
 if __name__ == "__main__":
     # change experiment and split here
-    exps = ['InfillingRandom', 'InfillingMultipleVoices', 'InfillingClosedHH']
+    #exps = ['InfillingRandom', 'InfillingMultipleVoices', 'InfillingClosedHH']
+    exps = ['InfillingRandom']
     splits = ['train', 'test', 'validation']
 
     for exp in exps:
