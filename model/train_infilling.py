@@ -166,6 +166,11 @@ for i in range(eps):
                 heatmaps_global_features_train = evaluator_train.get_wandb_logging_media(global_features_html=False)
                 if len(heatmaps_global_features_train.keys()) > 0:
                     wandb.log(heatmaps_global_features_train, commit=False)
+
+            # move torch tensors to cpu before saving so that they can be loaded in cpu machines
+            evaluator_train.processed_inputs.to(device='cpu')
+            evaluator_train.processed_gt.to(device='cpu')
+
             evaluator_train.dump(path="evaluator/evaluator_train_run_{}_Epoch_{}.Eval".format(wandb_run.name, ep))
 
             """
@@ -183,7 +188,10 @@ for i in range(eps):
                 heatmaps_global_features_test = evaluator_test.get_wandb_logging_media(global_features_html=False)
                 if len(heatmaps_global_features_test.keys()) > 0:
                     wandb.log(heatmaps_global_features_test, commit=False)
-
+            
+            # move torch tensors to cpu before saving so that they can be loaded in cpu machines
+            evaluator_test.processed_inputs.to(device='cpu')
+            evaluator_test.processed_gt.to(device='cpu')
             evaluator_test.dump(path="evaluator/evaluator_test_run_{}_Epoch_{}.Eval".format(wandb_run.name, ep))
             
             """
