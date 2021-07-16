@@ -6,7 +6,7 @@ sys.path.append('../../preprocessed_dataset/')
 from Subset_Creators.subsetters import GrooveMidiSubsetter
 
 subset_info = {
-    "pickle_source_path": "../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.5.0/Processed_On_14_07_2021_at_20_42_hrs",
+    "pickle_source_path": "../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.5.1/Processed_On_16_07_2021_at_19_17_hrs",
     "subset": "GrooveMIDI_processed_",
     "metadata_csv_filename": "metadata.csv",
     "hvo_pickle_filename": "hvo_sequence_data.obj",
@@ -109,7 +109,7 @@ params = {
 }
 
 
-def preprocess_dataset(params,exp):
+def preprocess_dataset(params, exp):
     _, subset_list = GrooveMidiSubsetter(pickle_source_path=params["subset_info"]["pickle_source_path"],
                                          subset=params["subset_info"]["subset"],
                                          hvo_pickle_filename=params["subset_info"]["hvo_pickle_filename"],
@@ -140,10 +140,11 @@ def load_preprocessed_dataset(load_dataset_path, exp):
 if __name__ == "__main__":
     # change experiment and split here
     # exps = ['InfillingRandom', 'InfillingMultipleVoices', 'InfillingClosedHH']
-    exps = ['InfillingClosedHH', 'InfillingRandom', 'InfillingKicksAndSnares']
+    exps = ['InfillingRandom', 'InfillingKicksAndSnares']
     splits = ['train', 'test', 'validation']
 
     for exp in exps:
+        print('------------------------\n'+exp+'\n------------------------\n')
         for split in splits:
             params_exp = copy.deepcopy(params[exp])
             params_exp['split'] = split
