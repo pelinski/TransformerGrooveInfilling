@@ -12,7 +12,9 @@ subset_info = {
     "hvo_pickle_filename": "hvo_sequence_data.obj",
     "filters": {
         "beat_type": ["beat"],
-        "time_signature": ["4-4"]
+        "time_signature": ["4-4"],
+#        "master_id": ["drummer2/session2/8"] # testing
+
     }
 }
 
@@ -64,7 +66,7 @@ params = {
             "prob": [1, 1],
             "k": 3
         },
-        "sf_path": ["../soundfonts/filtered_soundfonts/Standard_Drum_Kit.sf2"],
+        "sf_path": "../soundfonts/filtered_soundfonts/",
         "max_n_sf": 3,
         "max_aug_items": 4,
         "save_dataset_path": '../preprocessed_infilling_datasets/InfillingKicksAndSnares/'
@@ -140,7 +142,7 @@ def load_preprocessed_dataset(load_dataset_path, exp):
 if __name__ == "__main__":
     # change experiment and split here
     # exps = ['InfillingRandom', 'InfillingMultipleVoices', 'InfillingClosedHH']
-    exps = ['InfillingRandom', 'InfillingKicksAndSnares']
+    exps = ['InfillingKicksAndSnares', 'InfillingClosedHH','InfillingMultipleVoices' ]
     splits = ['train', 'test', 'validation']
 
     for exp in exps:
