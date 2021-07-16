@@ -88,9 +88,9 @@ class GrooveMidiDatasetInfilling(Dataset):
             self.metadata = pd.read_csv(os.path.join(self.subset_info["pickle_source_path"], self.subset_info["subset"],
                                                      self.subset_info["metadata_csv_filename"]))
         # preprocess dataset
+        print('GMD path: ', self.subset_info["pickle_source_path"])
         preprocessed_dataset = self.load_dataset_from_pickle(
             load_dataset_path) if load_dataset_path else self.preprocess_dataset(data)
-        print('GMD path: ', self.subset_info["pickle_source_path"])
 
         # store preprocessed dataset in dataset attrs
         for key in preprocessed_dataset.keys():
@@ -105,10 +105,10 @@ class GrooveMidiDatasetInfilling(Dataset):
 
         # save dataset to pickle file
         if load_dataset_path is None:
-            self.save_dataset_path = os.path.join(os.path.join(self.save_dataset_path, self.__version__), self.split)
+            #self.save_dataset_path = os.path.join(os.path.join(self.save_dataset_path, self.__version__), self.split)
             if not os.path.exists(self.save_dataset_path):
                 os.makedirs(self.save_dataset_path)
-
+            print(self.save_dataset_path)
             # move tensor to cpu (tensors saved while on gpu cannot be loaded from pickle file in cpu)
             preprocessed_dataset["processed_inputs"] = preprocessed_dataset["processed_inputs"].to(device='cpu')
             preprocessed_dataset["processed_outputs"] = preprocessed_dataset["processed_outputs"].to(device='cpu')
