@@ -105,7 +105,6 @@ class GrooveMidiDatasetInfilling(Dataset):
 
         # save dataset to pickle file
         if load_dataset_path is None:
-            #self.save_dataset_path = os.path.join(os.path.join(self.save_dataset_path, self.__version__), self.split)
             if not os.path.exists(self.save_dataset_path):
                 os.makedirs(self.save_dataset_path)
             print(self.save_dataset_path)
@@ -125,9 +124,7 @@ class GrooveMidiDatasetInfilling(Dataset):
             print("Saved dataset to path: ", self.save_dataset_path)
 
     def preprocess_dataset(self, data):
-        # older dataset versions don't have attr split --> backwards compatible
-        if 'split' in self.__dict__.keys():
-            self.save_dataset_path = os.path.join(os.path.join(self.save_dataset_path, self.__version__), \
+        self.save_dataset_path = os.path.join(os.path.join(self.save_dataset_path, self.__version__), \
                                                   self.split)
 
         print('GrooveMidiDatasetInfilling version ' + self.__version__)
