@@ -7,8 +7,7 @@ sys.path.insert(1, "../../GrooveEvaluator")
 from GrooveEvaluator.evaluator import Evaluator, HVOSeq_SubSet_Evaluator
 
 sys.path.insert(1, "../preprocessed_dataset/")
-from Subset_Creators import subsetters
-from utils import get_hvo_idx_for_voice, _convert_hvos_array_to_subsets
+from utils import get_hvo_idxs_for_voice, _convert_hvos_array_to_subsets
 
 
 class InfillingEvaluator(Evaluator):
@@ -27,11 +26,10 @@ class InfillingEvaluator(Evaluator):
                  model=None,
                  n_epochs=None):
 
-        # TODO version not compatible with data aug (more than 1sf, 1voice)
-
-        self.__version = "0.1.0"
+        self.__version___ = "0.2.2"
 
         self.sf_dict = {}
+        self.hvo_comp_dict = {}
 
         # common filters
         eval_styles = ["hiphop", "funk", "reggae", "soul", "latin", "jazz", "pop", "afrobeat", "highlife", "punk",
@@ -59,13 +57,12 @@ class InfillingEvaluator(Evaluator):
         self.eps = n_epochs
 
         self._gmd_gt_hvo_sequences = []
-        self._gt_hvos_array_tags, self._gmd_gt_hvos_array, self._prediction_hvo_seq_templates = [], [], []
+        self._gt_hvos_array_tags, self._gmd_gt_hvos_array = [], []
         for subset_ix, tag in enumerate(self._gt_tags):
             for sample_ix, sample_hvo in enumerate(self._gt_subsets[subset_ix]):
                 self._gmd_gt_hvo_sequences.append(sample_hvo)
                 self._gt_hvos_array_tags.append(tag)
                 self._gmd_gt_hvos_array.append(sample_hvo.get("hvo"))
-                self._prediction_hvo_seq_templates.append(sample_hvo.copy_empty())
 
         self._gmd_gt_hvos_array = np.stack(self._gmd_gt_hvos_array)
 
@@ -77,31 +74,48 @@ class InfillingEvaluator(Evaluator):
         self.hvo_index = preprocessed_dict["hvo_index"]
         self.voices_reduced = preprocessed_dict["voices_reduced"]
         self.soundfonts = preprocessed_dict["soundfonts"]
-
         self.unused_items = preprocessed_dict["unused_items"]
         self._gt_hvo_sequences = preprocessed_dict["hvo_sequences_outputs"]
         self._gt_hvos_array = np.stack([hvo_seq.hvo for hvo_seq in self._gt_hvo_sequences])
 
-        # remove items from _gt that are unused
         tags = list(set(self._gt_hvos_array_tags))
         hvo_index_dict = {tag: [] for tag in tags}
 
         for i in range(self._gmd_gt_hvos_array.shape[0]):
             hvo_index_dict[self._gt_hvos_array_tags[i]].append(i)
 
+        # clean unused items (solves out of range index in sfs)
         for subset_idx, subset in enumerate(self._gt_tags):
             items_to_remove = np.where(np.isin(hvo_index_dict[subset], self.unused_items))[0]
             self._gt_subsets[subset_idx] = np.delete(self._gt_subsets[subset_idx], items_to_remove).tolist()
             if len(self._gt_subsets[subset_idx]) == 0:
                 self._gt_tags[subset_idx] = None
-
-        self._gt_subsets = list(filter(None, self._gt_subsets))
         self._gt_tags = list(filter(None, self._gt_tags))
 
-        self._gt_hvos_array_tags = np.delete(self._gt_hvos_array_tags, self.unused_items).tolist()
+        # remove items from _gt that are unused
         self._gmd_gt_hvos_array = np.delete(self._gmd_gt_hvos_array, self.unused_items, axis=0)
         self._gmd_gt_hvo_sequences = np.delete(self._gmd_gt_hvo_sequences, self.unused_items).tolist()
-        self._prediction_hvo_seq_templates = np.delete(self._prediction_hvo_seq_templates, self.unused_items).tolist()
+
+        # add augmented items
+        _gt_hvos_array_tags = []
+        for idx in self.hvo_index:
+            _gt_hvos_array_tags.append(self._gt_hvos_array_tags[idx])
+        self._gt_hvos_array_tags = _gt_hvos_array_tags
+
+        hvo_index_dict_gt = {tag: [] for tag in tags}
+        for i in range(self._gt_hvos_array.shape[0]):
+            hvo_index_dict_gt[self._gt_hvos_array_tags[i]].append(i)
+
+        _gt_subsets = [[] for _ in self._gt_tags]
+        for subset_idx, subset in enumerate(self._gt_tags):
+            for idx in hvo_index_dict_gt[subset]:
+                _gt_subsets[subset_idx].append(self._gt_hvo_sequences[idx])
+        self._gt_subsets = _gt_subsets
+
+        self._prediction_hvo_seq_templates = []
+        for subset_ix, tag in enumerate(self._gt_tags):
+            for sample_ix, sample_hvo in enumerate(self._gt_subsets[subset_ix]):
+                self._prediction_hvo_seq_templates.append(sample_hvo.copy_empty())
 
         # gt subset evaluator
         self.gt_SubSet_Evaluator = HVOSeq_SubSet_InfillingEvaluator(
@@ -114,21 +128,28 @@ class InfillingEvaluator(Evaluator):
 
         self.audio_sample_locations = self.get_sample_indices(n_samples_to_synthesize_visualize_per_subset)
 
-    def set_pred(self):
+    def set_pred(self, horizontal=True):
         eval_pred = self.model.predict(self.processed_inputs, use_thres=True, thres=0.5)
         eval_pred = [_.cpu() for _ in eval_pred]
         eval_pred_hvo_array = np.concatenate(eval_pred, axis=2)
         eval_pred = np.zeros_like(eval_pred_hvo_array)
-        # sets all voices different from voices_reduced to 0
-        # sync between hits and vels+offs is done when converted to hvo sequence
-        # FIXME avoid for loop
-        for idx in range(eval_pred_hvo_array.shape[0]):  # N
-            # FIXME works for only one voice
-            h_idx, v_idx, o_idx = get_hvo_idx_for_voice(voice_idx=self.voices_reduced[idx],
-                                                        n_voices=eval_pred_hvo_array.shape[2] // 3)
-            eval_pred[idx, :, h_idx] = eval_pred_hvo_array[idx][:, h_idx]
-            eval_pred[idx, :, v_idx] = eval_pred_hvo_array[idx][:, v_idx]
-            eval_pred[idx, :, o_idx] = eval_pred_hvo_array[idx][:, o_idx]
+
+        n_voices = eval_pred_hvo_array.shape[2] // 3
+
+        for idx in range(eval_pred_hvo_array.shape[0]):
+
+            if horizontal:  # horizontally removing voices
+                if isinstance(self.voices_reduced[idx], int):
+                    self.voices_reduced[idx] = [self.voices_reduced[idx]]
+                h_idx, v_idx, o_idx = get_hvo_idxs_for_voice(voice_idx=list(self.voices_reduced[idx]),
+                                                             n_voices=n_voices)
+                eval_pred[idx, :, h_idx + v_idx + o_idx] = eval_pred_hvo_array[idx, :, h_idx + v_idx + o_idx]
+
+            else:  # randomly removing voices
+                hits = self.hvo_sequences_inputs[idx][:n_voices]
+                input_hits_idx = np.nonzero(hits)
+                eval_pred[idx, :, :] = eval_pred_hvo_array[idx, :, :]
+                eval_pred[idx, tuple(input_hits_idx)] = 0
 
         self._prediction_hvos_array = eval_pred
         self._prediction_tags, self._prediction_subsets, self._subset_hvo_array_index = \
@@ -146,21 +167,17 @@ class InfillingEvaluator(Evaluator):
             group_by_minor_keys=True,
             is_gt=False)
 
-        sf_dict = {}
+        sf_dict, hvo_comp_dict = {}, {}
         for key in self.audio_sample_locations.keys():
             sf_dict[key] = []
-            for idx in self.audio_sample_locations[key]:
-                sf_dict[key].append(self.soundfonts[self._subset_hvo_array_index[key][idx]])
-        self.sf_dict = sf_dict
-
-        hvo_comp_dict = {}
-        for key in self.audio_sample_locations.keys():
             hvo_comp_dict[key] = []
             for idx in self.audio_sample_locations[key]:
+                sf_dict[key].append(self.soundfonts[self._subset_hvo_array_index[key][idx]])
                 hvo_comp_dict[key].append(self.hvo_sequences_inputs[self._subset_hvo_array_index[key][idx]])
+        self.sf_dict = sf_dict
         self.hvo_comp_dict = hvo_comp_dict
 
-        # set soundfonts in subset classes
+        # set soundfonts in subset classes and hvo comp to render non-removed voices in get_audio
         self.gt_SubSet_Evaluator.sf_dict = self.sf_dict
         self.prediction_SubSet_Evaluator.sf_dict = self.sf_dict
         self.gt_SubSet_Evaluator.hvo_comp_dict = self.hvo_comp_dict

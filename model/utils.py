@@ -28,10 +28,14 @@ def get_sf_list(sf_path):
     return sfs_list
 
 
-def get_hvo_idx_for_voice(voice_idx, n_voices):
+def get_hvo_idxs_for_voice(voice_idx, n_voices):
+    """
+    Gets index for hits, velocity and offsets for a voice. Used for copying hvo values from a voice from an
+    hvo_sequence to another one.
+    """
     h_idx = voice_idx
-    v_idx = voice_idx + n_voices
-    o_idx = voice_idx + 2 * n_voices
+    v_idx = [_ + n_voices for _ in voice_idx]
+    o_idx = [_ + 2 * n_voices for _ in voice_idx]
 
     return h_idx, v_idx, o_idx
 
@@ -171,13 +175,12 @@ def _convert_hvos_array_to_subsets(hvos_array_tags, hvos_array_predicted, hvo_se
 
 def save_parameters_to_json(params, params_path=None):
     if params_path is None:
-        params_path = os.path.join('../dataset', params["dataset_name"])
+        params_path = os.path.join('../dataset')
     if not os.path.exists(params_path):
         os.makedirs(params_path)
     params_json = os.path.join(params_path, params['dataset_name']+'_params.json')
     with open(params_json, 'w') as f:
         json.dump(params, f, cls=NpEncoder)
-
 
 class NpEncoder(json.JSONEncoder):
     """
