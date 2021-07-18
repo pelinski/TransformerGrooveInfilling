@@ -160,7 +160,7 @@ for i in range(eps):
     if wandb.config.use_evaluator:
         if i in epoch_save_partial or i in epoch_save_all:
             # Train set evaluator
-            evaluator_train._identifier = 'Train_Epoch_{}'.format(ep)
+            evaluator_train._identifier = 'Train_Set'
             evaluator_train.set_pred(horizontal=pred_horizontal)
             train_acc_h = evaluator_train.get_hits_accuracies(drum_mapping=ROLAND_REDUCED_MAPPING)
             train_mse_v = evaluator_train.get_velocity_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
@@ -180,8 +180,8 @@ for i in range(eps):
 
             if settings['evaluator_test']:
                 # Test set evaluator
-                evaluator_test._identifier = 'Test_Epoch_{}'.format(ep)
-                evaluator_test.set_pred(horizontal=pred_horizontal) # TODO if horizontal
+                evaluator_test._identifier = 'Test_Set'
+                evaluator_test.set_pred(horizontal=pred_horizontal)
                 test_acc_h = evaluator_test.get_hits_accuracies(drum_mapping=ROLAND_REDUCED_MAPPING)
                 test_mse_v = evaluator_test.get_velocity_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
                 test_mse_o = evaluator_test.get_micro_timing_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
