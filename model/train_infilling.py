@@ -15,11 +15,11 @@ from utils import get_epoch_log_freq
 from preprocess_infilling_dataset import load_preprocessed_dataset
 
 # ================================= SETTINGS ==================================================== #
-preprocessed_dataset_path_train = '../preprocessed_infilling_datasets/InfillingClosedHH/0.1.2/train'
-preprocessed_dataset_path_test = '../preprocessed_infilling_datasets/InfillingClosedHH/0.1.2/test'
+preprocessed_dataset_path_train = '../preprocessed_infilling_datasets/InfillingKicksAndSnares/0.1.2/train'
+preprocessed_dataset_path_test = '../preprocessed_infilling_datasets/InfillingKicksAndSnares/0.1.2/test'
 
-settings = {'log_to_wandb': False,
-            'evaluator_test': False,
+settings = {'log_to_wandb': True,
+            'evaluator_test': True,
             'job_type': 'train'}
 os.environ['WANDB_MODE'] = 'online' if settings['log_to_wandb'] else 'offline'
 
@@ -28,23 +28,25 @@ print(f"-------------------------------\nSettings: {settings}\n-----------------
 # ============================================================================================== #
 
 hyperparameter_defaults = dict(
-    experiment='InfillingClosedHH',
+    experiment='InfillingKicksAndSnares',
     encoder_only=1,
     optimizer_algorithm='sgd',
-    d_model=32,
-    n_heads=1,
-    dropout=0,
-    num_encoder_decoder_layers=1,
+    d_model=64,
+    n_heads=16,
+    dropout=0.2,
+    num_encoder_decoder_layers=7,
+    batch_size=16,
+    dim_feedforward=256,
     learning_rate=1e-3,
-    batch_size=64,
-    dim_feedforward=32,
-    epochs=5,
+    epochs=250,
     use_evaluator=1,
     #    lr_scheduler_step_size=30,
     #    lr_scheduler_gamma=0.1
 )
-project_name = 'infilling-encoder' if hyperparameter_defaults['encoder_only'] else 'infilling'
-wandb_run = wandb.init(config=hyperparameter_defaults, project=project_name, job_type=settings['job_type'])
+#project_name = 'infilling-encoder' + hyperparameter_defaults if hyperparameter_defaults['encoder_only'] else
+# 'infilling'
+wandb_run = wandb.init(config=hyperparameter_defaults, project=hyperparameter_defaults['experiment'], job_type=settings[
+    'job_type'])
 
 params = {
     "model": {
