@@ -26,7 +26,7 @@ class InfillingEvaluator(Evaluator):
                  model=None,
                  n_epochs=None):
 
-        self.__version___ = "0.2.2"
+        self.__version___ = "0.2.3"
 
         self.sf_dict = {}
         self.hvo_comp_dict = {}
@@ -68,14 +68,8 @@ class InfillingEvaluator(Evaluator):
 
         # preprocess evaluator_subset
         preprocessed_dict = self.dataset.preprocess_dataset(self._gmd_gt_hvo_sequences)
-        self.processed_inputs = preprocessed_dict["processed_inputs"]
-        self.processed_gt = preprocessed_dict["processed_outputs"]
-        self.hvo_sequences_inputs = preprocessed_dict["hvo_sequences_inputs"]
-        self.hvo_index = preprocessed_dict["hvo_index"]
-        self.voices_reduced = preprocessed_dict["voices_reduced"]
-        self.soundfonts = preprocessed_dict["soundfonts"]
-        self.unused_items = preprocessed_dict["unused_items"]
-        self._gt_hvo_sequences = preprocessed_dict["hvo_sequences_outputs"]
+        for key in preprocessed_dict.keys():
+            self.__setattr__(key, preprocessed_dict[key])
         self._gt_hvos_array = np.stack([hvo_seq.hvo for hvo_seq in self._gt_hvo_sequences])
 
         tags = list(set(self._gt_hvos_array_tags))
