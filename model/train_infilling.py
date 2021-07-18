@@ -38,7 +38,7 @@ hyperparameter_defaults = dict(
     batch_size=16,
     dim_feedforward=256,
     learning_rate=1e-3,
-    epochs=250,
+    epochs=1,
     use_evaluator=1,
     #    lr_scheduler_step_size=30,
     #    lr_scheduler_gamma=0.1
@@ -73,8 +73,9 @@ params = {
     "evaluator": {"n_samples_to_use": 2048,  # 2048
                   "n_samples_to_synthesize_visualize_per_subset": 10},  # 10
     "cp_paths": {
-        'checkpoint_path': '../train_results/',
-        'checkpoint_save_str': '../train_results/transformer_groove_infilling-epoch-{}'
+        'checkpoint_path': '../train_results/'+hyperparameter_defaults['experiment'],
+        'checkpoint_save_str': '../train_results/'+hyperparameter_defaults[
+            'experiment']+'/transformer_groove_infilling-epoch-{}'
     },
     "load_model": None,
 }
@@ -112,8 +113,9 @@ if wandb.config.use_evaluator:
 
     # log eval_subset parameters to wandb
     wandb.config.update({"train_hvo_index": evaluator_train.hvo_index,
-                         "train_voices_reduced": evaluator_train.voices_reduced,
                          "train_soundfons": evaluator_train.soundfonts})
+    if pred_horizontal:
+        wandb.config.update({"train_voices_reduced": evaluator_train.voices_reduced})
 
     if settings['evaluator_test']:
         dataset_test = load_preprocessed_dataset(preprocessed_dataset_path_test, exp=wandb.config.experiment)
@@ -136,8 +138,9 @@ if wandb.config.use_evaluator:
 
         # log eval_subset parameters to wandb
         wandb.config.update({"test_hvo_index": evaluator_test.hvo_index,
-                             "test_voices_reduced": evaluator_test.voices_reduced,
                              "test_soundfons": evaluator_test.soundfonts})
+        if pred_horizontal:
+            wandb.config.update({"train_voices_reduced": evaluator_test.voices_reduced})
 
 eps = wandb.config.epochs
 BCE_fn = torch.nn.BCEWithLogitsLoss(reduction='none')
