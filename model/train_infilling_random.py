@@ -17,8 +17,8 @@ from preprocess_infilling_dataset import load_preprocessed_dataset
 # ================================= SETTINGS ==================================================== #
 preprocessed_dataset_path_train = '../preprocessed_infilling_datasets/InfillingRandom/0.0.0/train'
 preprocessed_dataset_path_test = '../preprocessed_infilling_datasets/InfillingRandom/0.0.0/test'
-#preprocessed_dataset_path_train = '../preprocessed_infilling_datasets/InfillingKicksAndSnares/0.1.2/train'
-#preprocessed_dataset_path_test = '../preprocessed_infilling_datasets/InfillingKicksAndSnares/0.1.2/test'
+# preprocessed_dataset_path_train = '../preprocessed_infilling_datasets/InfillingRandom_testing/0.0.0/train'
+# preprocessed_dataset_path_test = '../preprocessed_infilling_datasets/InfillingRandom_testing/0.0.0/test'
 
 settings = {'log_to_wandb': True,
             'evaluator_test': True,
@@ -40,7 +40,7 @@ hyperparameter_defaults = dict(
     batch_size=16,
     dim_feedforward=256,
     learning_rate=1e-3,
-    epochs=1,
+    epochs=250,
     use_evaluator=1,
     #    lr_scheduler_step_size=30,
     #    lr_scheduler_gamma=0.1
