@@ -26,7 +26,7 @@ class InfillingEvaluator(Evaluator):
                  model=None,
                  n_epochs=None):
 
-        self.__version___ = "0.2.3"
+        self.__version___ = "0.2.4"
 
         self.sf_dict = {}
         self.hvo_comp_dict = {}
@@ -70,6 +70,8 @@ class InfillingEvaluator(Evaluator):
         preprocessed_dict = self.dataset.preprocess_dataset(self._gmd_gt_hvo_sequences)
         for key in preprocessed_dict.keys():
             self.__setattr__(key, preprocessed_dict[key])
+        self.processed_gt = preprocessed_dict["processed_outputs"]
+        self._gt_hvo_sequences = preprocessed_dict["hvo_sequences_outputs"]
         self._gt_hvos_array = np.stack([hvo_seq.hvo for hvo_seq in self._gt_hvo_sequences])
 
         tags = list(set(self._gt_hvos_array_tags))
@@ -140,7 +142,7 @@ class InfillingEvaluator(Evaluator):
                 eval_pred[idx, :, h_idx + v_idx + o_idx] = eval_pred_hvo_array[idx, :, h_idx + v_idx + o_idx]
 
             else:  # randomly removing voices
-                hits = self.hvo_sequences_inputs[idx][:n_voices]
+                hits = self.hvo_sequences_inputs[idx].hvo[:n_voices]
                 input_hits_idx = np.nonzero(hits)
                 eval_pred[idx, :, :] = eval_pred_hvo_array[idx, :, :]
                 eval_pred[idx, tuple(input_hits_idx)] = 0
@@ -225,6 +227,8 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
             for idx, sample_hvo in enumerate(self._sampled_hvos[key]):
                 if not self.is_gt:
                     hvo_comp = self.hvo_comp_dict[key][idx]
+                    non_zero_idx = np.nonzero(hvo_comp.hvo[:,:len(hvo_comp.drum_mapping)])
+                    sample_hvo.hvo[non_zero_idx] = 0 # make sure that predicted hits don't overwrite input hits
                     sample_hvo.hvo = sample_hvo.hvo + hvo_comp.hvo
                 sf_path = self.sf_dict[key][idx]  # force usage of sf_dict
                 audios.append(sample_hvo.synthesize(sf_path=sf_path))
