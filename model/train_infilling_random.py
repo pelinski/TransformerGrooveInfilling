@@ -142,7 +142,7 @@ if wandb.config.use_evaluator:
         wandb.config.update({"test_hvo_index": evaluator_test.hvo_index,
                              "test_soundfons": evaluator_test.soundfonts})
         if pred_horizontal:
-            wandb.config.update({"train_voices_reduced": evaluator_test.voices_reduced})
+            wandb.config.update({"test_voices_reduced": evaluator_test.voices_reduced})
 
 eps = wandb.config.epochs
 BCE_fn = torch.nn.BCEWithLogitsLoss(reduction='none')
