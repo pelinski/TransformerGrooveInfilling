@@ -45,8 +45,6 @@ hyperparameter_defaults = dict(
     #    lr_scheduler_step_size=30,
     #    lr_scheduler_gamma=0.1
 )
-#project_name = 'infilling-encoder' + hyperparameter_defaults if hyperparameter_defaults['encoder_only'] else
-# 'infilling'
 wandb_run = wandb.init(config=hyperparameter_defaults, project=hyperparameter_defaults['experiment'], job_type=settings[
     'job_type'])
 
@@ -149,7 +147,7 @@ BCE_fn = torch.nn.BCEWithLogitsLoss(reduction='none')
 MSE_fn = torch.nn.MSELoss(reduction='none')
 
 # epoch_save_all, epoch_save_partial = get_epoch_log_freq(eps)
-epoch_save_all, epoch_save_partial = [eps - 1], []
+epoch_save_all, epoch_save_partial = [eps - 1], [99,199]
 print('Training...')
 for i in range(eps):
     ep += 1
@@ -177,7 +175,6 @@ for i in range(eps):
             # move torch tensors to cpu before saving so that they can be loaded in cpu machines
             evaluator_train.processed_inputs.to(device='cpu')
             evaluator_train.processed_gt.to(device='cpu')
-
             evaluator_train.dump(path="evaluator/evaluator_train_run_{}_Epoch_{}.Eval".format(wandb_run.name, ep))
 
             if settings['evaluator_test']:
