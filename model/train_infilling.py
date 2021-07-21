@@ -15,8 +15,8 @@ from utils import get_epoch_log_freq
 from preprocess_infilling_dataset import load_preprocessed_dataset
 
 # ================================= SETTINGS ==================================================== #
-preprocessed_dataset_path_train = '../preprocessed_infilling_datasets/InfillingKicksAndSnares/0.1.2/train'
-preprocessed_dataset_path_test = '../preprocessed_infilling_datasets/InfillingKicksAndSnares/0.1.2/test'
+preprocessed_dataset_path_train = '../preprocessed_infilling_datasets/InfillingKicksAndSnares_testing/0.1.2/train'
+preprocessed_dataset_path_test = '../preprocessed_infilling_datasets/InfillingKicksAndSnares_testing/0.1.2/test'
 #preprocessed_dataset_path_train = '../preprocessed_infilling_datasets/InfillingKicksAndSnares_testing/0.1.2/train'
 #preprocessed_dataset_path_test = '../preprocessed_infilling_datasets/InfillingKicksAndSnares_testing/0.1.2/test'
 
@@ -40,7 +40,7 @@ hyperparameter_defaults = dict(
     batch_size=16,
     dim_feedforward=256,
     learning_rate=0.05,
-    epochs=250,
+    epochs=1,
     use_evaluator=1,
     h_loss_multiplier=1,
     v_loss_multiplier=1,
@@ -48,8 +48,8 @@ hyperparameter_defaults = dict(
     #    lr_scheduler_step_size=30,
     #    lr_scheduler_gamma=0.1
 )
-wandb_run = wandb.init(config=hyperparameter_defaults, project=hyperparameter_defaults['experiment'], job_type=settings[
-    'job_type'])
+wandb_run = wandb.init(config=hyperparameter_defaults, project=hyperparameter_defaults['experiment']+'_testing',
+                       job_type=settings['job_type'],settings=wandb.Settings(start_method="fork"))
 
 params = {
     "model": {
@@ -76,7 +76,7 @@ params = {
         #        'lr_scheduler_step_size': wandb.config.lr_scheduler_step_size,
         #        'lr_scheduler_gamma': wandb.config.lr_scheduler_gamma
     },
-    "evaluator": {"n_samples_to_use": 2048,  # 2048
+    "evaluator": {"n_samples_to_use": 11,  # 2048
                   "n_samples_to_synthesize_visualize_per_subset": 10},  # 10
     "cp_paths": {
         'checkpoint_path': '../train_results/' + hyperparameter_defaults['experiment'],
