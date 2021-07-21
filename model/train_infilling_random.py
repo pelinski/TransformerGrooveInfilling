@@ -109,11 +109,12 @@ if wandb.config.use_evaluator:
         analyze_global_features=True,
         dataset=dataset_train,
         model=model,
-        n_epochs=wandb.config.epochs)
+        n_epochs=wandb.config.epochs,
+        horizontal=pred_horizontal)
 
     # log eval_subset parameters to wandb
     wandb.config.update({"train_hvo_index": evaluator_train.hvo_index,
-                         "train_soundfons": evaluator_train.soundfonts})
+                         "train_soundfonts": evaluator_train.soundfonts})
     if pred_horizontal:
         wandb.config.update({"train_voices_reduced": evaluator_train.voices_reduced})
 
@@ -134,11 +135,12 @@ if wandb.config.use_evaluator:
             analyze_global_features=True,
             dataset=dataset_test,
             model=model,
-            n_epochs=wandb.config.epochs)
+            n_epochs=wandb.config.epochs,
+            horizontal=pred_horizontal)
 
         # log eval_subset parameters to wandb
         wandb.config.update({"test_hvo_index": evaluator_test.hvo_index,
-                             "test_soundfons": evaluator_test.soundfonts})
+                             "test_soundfonts": evaluator_test.soundfonts})
         if pred_horizontal:
             wandb.config.update({"test_voices_reduced": evaluator_test.voices_reduced})
 
@@ -161,16 +163,16 @@ for i in range(eps):
         if i in epoch_save_partial or i in epoch_save_all:
             # Train set evaluator
             evaluator_train._identifier = 'Train_Set'
-            evaluator_train.set_pred(horizontal=pred_horizontal)
+            evaluator_train.set_pred()
             train_acc_h = evaluator_train.get_hits_accuracies(drum_mapping=ROLAND_REDUCED_MAPPING)
             train_mse_v = evaluator_train.get_velocity_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
             train_mse_o = evaluator_train.get_micro_timing_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
             wandb.log({**train_acc_h, **train_mse_v, **train_mse_v}, commit=False)
 
             if i in epoch_save_all:
-                heatmaps_global_features_train = evaluator_train.get_wandb_logging_media(global_features_html=False)
-                if len(heatmaps_global_features_train.keys()) > 0:
-                    wandb.log(heatmaps_global_features_train, commit=False)
+                wandb_media_train = evaluator_train.get_wandb_logging_media(global_features_html=False)
+                if len(wandb_media_train.keys()) > 0:
+                    wandb.log(wandb_media_train, commit=False)
 
             # move torch tensors to cpu before saving so that they can be loaded in cpu machines
             evaluator_train.processed_inputs.to(device='cpu')
@@ -180,16 +182,16 @@ for i in range(eps):
             if settings['evaluator_test']:
                 # Test set evaluator
                 evaluator_test._identifier = 'Test_Set'
-                evaluator_test.set_pred(horizontal=pred_horizontal)
+                evaluator_test.set_pred()
                 test_acc_h = evaluator_test.get_hits_accuracies(drum_mapping=ROLAND_REDUCED_MAPPING)
                 test_mse_v = evaluator_test.get_velocity_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
                 test_mse_o = evaluator_test.get_micro_timing_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
                 wandb.log({**test_acc_h, **test_mse_v, **test_mse_v}, commit=False)
 
                 if i in epoch_save_all:
-                    heatmaps_global_features_test = evaluator_test.get_wandb_logging_media(global_features_html=False)
-                    if len(heatmaps_global_features_test.keys()) > 0:
-                        wandb.log(heatmaps_global_features_test, commit=False)
+                    wandb_media_test = evaluator_test.get_wandb_logging_media(global_features_html=False)
+                    if len(wandb_media_test.keys()) > 0:
+                        wandb.log(wandb_media_test, commit=False)
 
                 # move torch tensors to cpu before saving so that they can be loaded in cpu machines
                 evaluator_test.processed_inputs.to(device='cpu')

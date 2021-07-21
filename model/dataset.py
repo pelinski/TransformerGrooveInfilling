@@ -146,7 +146,7 @@ class GrooveMidiDatasetInfilling(Dataset):
             if len(hvo_seq.time_signatures) == 1 and not all_zeros:  # ignore if time_signature change happens
 
                 # add metadata to hvo_seq scores
-                add_metadata_to_hvo_seq(hvo_seq, hvo_idx, self.metadata)
+                add_metadata_to_hvo_seq(hvo_seq, hvo_idx, self.metadata) # TODO remove this line
 
                 # pad with zeros to match max_len
                 hvo_seq = pad_to_match_max_seq_len(hvo_seq, self.max_seq_len)
