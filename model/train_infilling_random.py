@@ -113,7 +113,7 @@ if wandb.config.use_evaluator:
 
     # log eval_subset parameters to wandb
     wandb.config.update({"train_hvo_index": evaluator_train.hvo_index,
-                         "train_soundfons": evaluator_train.soundfonts})
+                         "train_soundfonts": evaluator_train.soundfonts})
     if pred_horizontal:
         wandb.config.update({"train_voices_reduced": evaluator_train.voices_reduced})
 
@@ -138,7 +138,7 @@ if wandb.config.use_evaluator:
 
         # log eval_subset parameters to wandb
         wandb.config.update({"test_hvo_index": evaluator_test.hvo_index,
-                             "test_soundfons": evaluator_test.soundfonts})
+                             "test_soundfonts": evaluator_test.soundfonts})
         if pred_horizontal:
             wandb.config.update({"test_voices_reduced": evaluator_test.voices_reduced})
 
@@ -161,7 +161,7 @@ for i in range(eps):
         if i in epoch_save_partial or i in epoch_save_all:
             # Train set evaluator
             evaluator_train._identifier = 'Train_Set'
-            evaluator_train.set_pred(horizontal=pred_horizontal)
+            evaluator_train.set_pred()
             train_acc_h = evaluator_train.get_hits_accuracies(drum_mapping=ROLAND_REDUCED_MAPPING)
             train_mse_v = evaluator_train.get_velocity_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
             train_mse_o = evaluator_train.get_micro_timing_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
@@ -180,7 +180,7 @@ for i in range(eps):
             if settings['evaluator_test']:
                 # Test set evaluator
                 evaluator_test._identifier = 'Test_Set'
-                evaluator_test.set_pred(horizontal=pred_horizontal)
+                evaluator_test.set_pred()
                 test_acc_h = evaluator_test.get_hits_accuracies(drum_mapping=ROLAND_REDUCED_MAPPING)
                 test_mse_v = evaluator_test.get_velocity_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
                 test_mse_o = evaluator_test.get_micro_timing_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
