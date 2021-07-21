@@ -49,7 +49,7 @@ hyperparameter_defaults = dict(
     #    lr_scheduler_gamma=0.1
 )
 wandb_run = wandb.init(config=hyperparameter_defaults, project=hyperparameter_defaults['experiment'], job_type=settings[
-    'job_type'])
+    'job_type'],settings=wandb.Settings(start_method="fork"))
 
 params = {
     "model": {
