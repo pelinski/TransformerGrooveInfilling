@@ -73,6 +73,7 @@ class InfillingEvaluator(Evaluator):
         preprocessed_dict = self.dataset.preprocess_dataset(self._gmd_gt_hvo_sequences)
         for key in preprocessed_dict.keys():
             self.__setattr__(key, preprocessed_dict[key])
+        del self.processed_outputs
         self.processed_gt = preprocessed_dict["processed_outputs"]
         self._gt_hvo_sequences = preprocessed_dict["hvo_sequences_outputs"]
         self._gt_hvos_array = np.stack([hvo_seq.hvo for hvo_seq in self._gt_hvo_sequences])
