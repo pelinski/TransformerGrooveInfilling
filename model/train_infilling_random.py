@@ -42,6 +42,9 @@ hyperparameter_defaults = dict(
     learning_rate=1e-3,
     epochs=250,
     use_evaluator=1,
+    h_loss_multiplier=1,
+    v_loss_multiplier=1,
+    o_loss_multiplier=1
     #    lr_scheduler_step_size=30,
     #    lr_scheduler_gamma=0.1
 )
@@ -62,7 +65,10 @@ params = {
         'max_len': 32,
         'embedding_size_src': 16,  # mso
         'embedding_size_tgt': 27,  # hvo
-        'device': 'cuda' if torch.cuda.is_available() else 'cpu'
+        'device': 'cuda' if torch.cuda.is_available() else 'cpu',
+        "h_loss_multiplier": wandb.config.h_loss_multiplier,
+        "v_loss_multiplier": wandb.config.v_loss_multiplier,
+        "o_loss_multiplier": wandb.config.o_loss_multiplier
     },
     "training": {
         'learning_rate': wandb.config.learning_rate,
@@ -73,9 +79,9 @@ params = {
     "evaluator": {"n_samples_to_use": 2048,  # 2048
                   "n_samples_to_synthesize_visualize_per_subset": 10},  # 10
     "cp_paths": {
-        'checkpoint_path': '../train_results/'+hyperparameter_defaults['experiment'],
-        'checkpoint_save_str': '../train_results/'+hyperparameter_defaults[
-            'experiment']+'/transformer_groove_infilling-epoch-{}'
+        'checkpoint_path': '../train_results/' + hyperparameter_defaults['experiment'],
+        'checkpoint_save_str': '../train_results/' + hyperparameter_defaults[
+            'experiment'] + '/transformer_groove_infilling-epoch-{}'
     },
     "load_model": None,
 }
@@ -149,7 +155,7 @@ BCE_fn = torch.nn.BCEWithLogitsLoss(reduction='none')
 MSE_fn = torch.nn.MSELoss(reduction='none')
 
 # epoch_save_all, epoch_save_partial = get_epoch_log_freq(eps)
-epoch_save_all, epoch_save_partial = [eps - 1], [99,199]
+epoch_save_all, epoch_save_partial = [eps - 1], [99, 199]
 print('Training...')
 for i in range(eps):
     ep += 1
@@ -157,7 +163,12 @@ for i in range(eps):
     print(f"Epoch {ep}\n-------------------------------")
     train_loop(dataloader=dataloader_train, groove_transformer=model, encoder_only=params["model"][
         "encoder_only"], opt=optimizer, epoch=ep, loss_fn=calculate_loss, bce_fn=BCE_fn,
-               mse_fn=MSE_fn, save=save_model, device=params["model"]['device'])
+               mse_fn=MSE_fn, save=save_model, device=params["model"]['device'],
+               test_inputs=evaluator_test.processed_inputs,
+               test_gt = evaluator_test.processed_gt,
+               h_loss_mult=params["model"]["h_loss_multiplier"],
+               v_loss_mult=params["model"]["v_loss_multiplier"],
+               o_loss_mult=params["model"]["o_loss_multiplier"])
     print("-------------------------------\n")
     if wandb.config.use_evaluator:
         if i in epoch_save_partial or i in epoch_save_all:
