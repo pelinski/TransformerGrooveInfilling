@@ -26,7 +26,7 @@ class InfillingEvaluator(Evaluator):
                  model=None,
                  n_epochs=None):
 
-        self.__version___ = "0.2.4"
+        self.__version___ = "0.2.4" # TODO updaate version
 
         self.sf_dict = {}
         self.hvo_comp_dict = {}
@@ -124,9 +124,13 @@ class InfillingEvaluator(Evaluator):
 
         self.audio_sample_locations = self.get_sample_indices(n_samples_to_synthesize_visualize_per_subset)
 
-    def set_pred(self, horizontal=True):
+    def set_pred(self):
         eval_pred = self.model.predict(self.processed_inputs, use_thres=True, thres=0.5)
         eval_pred = [_.cpu() for _ in eval_pred]
+        eval_pred = np.concatenate(eval_pred, axis=2)
+
+        # FIXME this set to 0 should happen in get piano roll and get audio methods
+        """
         eval_pred_hvo_array = np.concatenate(eval_pred, axis=2)
         eval_pred = np.zeros_like(eval_pred_hvo_array)
 
@@ -141,11 +145,13 @@ class InfillingEvaluator(Evaluator):
                                                              n_voices=n_voices)
                 eval_pred[idx, :, h_idx + v_idx + o_idx] = eval_pred_hvo_array[idx, :, h_idx + v_idx + o_idx]
 
-            else:  # randomly removing voices
+
+            else:  # randomly removing events       # FIXME don't set to 0 the predictions that overlap with the input
                 hits = self.hvo_sequences_inputs[idx].hvo[:n_voices]
                 input_hits_idx = np.nonzero(hits)
                 eval_pred[idx, :, :] = eval_pred_hvo_array[idx, :, :]
                 eval_pred[idx, tuple(input_hits_idx)] = 0
+        """
 
         self._prediction_hvos_array = eval_pred
         self._prediction_tags, self._prediction_subsets, self._subset_hvo_array_index = \
@@ -211,7 +217,7 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
 
         self.sf_dict = sf_dict
         self.hvo_comp_dict = hvo_comp_dict
-        self.is_gt = is_gt
+        self.is_gt = is_gt  # TODO clean this prop?
 
     def get_audios(self, _, use_specific_samples_at=None):
         """ use_specific_samples_at: must be a list of tuples of (subset_ix, sample_ix) denoting to get
@@ -224,17 +230,21 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
         for key in tqdm(self._sampled_hvos.keys(),
                         desc='Synthesizing samples - {} '.format(self.set_identifier),
                         disable=self.disable_tqdm):
-            for idx, sample_hvo in enumerate(self._sampled_hvos[key]):
-                if not self.is_gt:
-                    hvo_comp = self.hvo_comp_dict[key][idx]
-                    non_zero_idx = np.nonzero(hvo_comp.hvo[:,:len(hvo_comp.drum_mapping)])
-                    sample_hvo.hvo[non_zero_idx] = 0 # make sure that predicted hits don't overwrite input hits
-                    sample_hvo.hvo = sample_hvo.hvo + hvo_comp.hvo
+            for idx, _sample_hvo in enumerate(self._sampled_hvos[key]):
+                sample_hvo = _sample_hvo.copy() # make sure not to modify og hvo
+                # add 'context'
+                hvo_comp = self.hvo_comp_dict[key][idx]
+                non_zero_idx = np.nonzero(hvo_comp.hvo[:,:len(hvo_comp.drum_mapping)])
+                sample_hvo.hvo[non_zero_idx] = 0 # make sure that predicted hits don't overwrite input hits
+                sample_hvo.hvo = sample_hvo.hvo + hvo_comp.hvo
                 sf_path = self.sf_dict[key][idx]  # force usage of sf_dict
                 audios.append(sample_hvo.synthesize(sf_path=sf_path))
-                captions.append("{}_{}_{}.wav".format(
+                captions.append("{}_{}_{}.wav".format(  #FIXME add idx to distinguish between items that come from
+                    # the same hvo
                     self.set_identifier, sample_hvo.metadata.style_primary,
                     sample_hvo.metadata.master_id.replace("/", "_")
                 ))
 
         return list(zip(captions, audios))
+
+# TODO overwrite piano rolls
