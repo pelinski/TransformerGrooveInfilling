@@ -109,7 +109,8 @@ if wandb.config.use_evaluator:
         analyze_global_features=True,
         dataset=dataset_train,
         model=model,
-        n_epochs=wandb.config.epochs)
+        n_epochs=wandb.config.epochs,
+        horizontal=pred_horizontal)
 
     # log eval_subset parameters to wandb
     wandb.config.update({"train_hvo_index": evaluator_train.hvo_index,
@@ -134,7 +135,8 @@ if wandb.config.use_evaluator:
             analyze_global_features=True,
             dataset=dataset_test,
             model=model,
-            n_epochs=wandb.config.epochs)
+            n_epochs=wandb.config.epochs,
+            horizontal=pred_horizontal)
 
         # log eval_subset parameters to wandb
         wandb.config.update({"test_hvo_index": evaluator_test.hvo_index,
@@ -168,9 +170,9 @@ for i in range(eps):
             wandb.log({**train_acc_h, **train_mse_v, **train_mse_v}, commit=False)
 
             if i in epoch_save_all:
-                heatmaps_global_features_train = evaluator_train.get_wandb_logging_media(global_features_html=False)
-                if len(heatmaps_global_features_train.keys()) > 0:
-                    wandb.log(heatmaps_global_features_train, commit=False)
+                wandb_media_train = evaluator_train.get_wandb_logging_media(global_features_html=False)
+                if len(wandb_media_train.keys()) > 0:
+                    wandb.log(wandb_media_train, commit=False)
 
             # move torch tensors to cpu before saving so that they can be loaded in cpu machines
             evaluator_train.processed_inputs.to(device='cpu')
@@ -187,9 +189,9 @@ for i in range(eps):
                 wandb.log({**test_acc_h, **test_mse_v, **test_mse_v}, commit=False)
 
                 if i in epoch_save_all:
-                    heatmaps_global_features_test = evaluator_test.get_wandb_logging_media(global_features_html=False)
-                    if len(heatmaps_global_features_test.keys()) > 0:
-                        wandb.log(heatmaps_global_features_test, commit=False)
+                    wandb_media_test = evaluator_test.get_wandb_logging_media(global_features_html=False)
+                    if len(wandb_media_test.keys()) > 0:
+                        wandb.log(wandb_media_test, commit=False)
 
                 # move torch tensors to cpu before saving so that they can be loaded in cpu machines
                 evaluator_test.processed_inputs.to(device='cpu')
