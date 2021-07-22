@@ -144,7 +144,8 @@ if __name__ == "__main__":
     # change experiment and split here
     # exps = ['InfillingRandom', 'InfillingMultipleVoices', 'InfillingClosedHH']
     exps = ['InfillingKicksAndSnares']
-    splits = ['train', 'test', 'validation']
+    #splits = ['train', 'test', 'validation']
+    splits = ['train', 'test']
 
     for exp in exps:
         print('------------------------\n'+exp+'\n------------------------\n')
