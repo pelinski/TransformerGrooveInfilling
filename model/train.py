@@ -11,9 +11,9 @@ from utils import get_epoch_log_freq
 sys.path.insert(1, "../../BaseGrooveTransformers/")
 from models.train import initialize_model, calculate_loss, train_loop
 
-experiment = 'InfillingRandom_testing'
+experiment = 'InfillingKicksAndSnares'
 
-settings = {'testing': True,
+settings = {'testing': False,
             'log_to_wandb': True,
             'evaluator_train': True,
             'evaluator_test': True,
@@ -32,7 +32,7 @@ hyperparameter_defaults = dict(
     batch_size=16,
     dim_feedforward=256,
     learning_rate=0.05,
-    epochs=1 if settings['testing'] else 100,
+    epochs=1 if settings['testing'] else 250,
     h_loss_multiplier=1,
     v_loss_multiplier=1,
     o_loss_multiplier=1
@@ -41,6 +41,15 @@ hyperparameter_defaults = dict(
 )
 
 paths = {
+    "InfillingKicksAndSnares": {
+        'datasets': {
+            "train": '../datasets/InfillingKicksAndSnares/0.1.2/train',
+            "test": '../datasets/InfillingKicksAndSnares/0.1.2/test'},
+        'evaluators': {
+            'train': '../evaluators/InfillingKicksAndSnares/0.1.2/InfillingKicksAndSnares_train_0.1.2_evaluator.pickle',
+            'test': '../evaluators/InfillingKicksAndSnares/0.1.2/InfillingKicksAndSnares_test_0.1.2_evaluator.pickle'
+        }
+    },
     "InfillingKicksAndSnares_testing": {
         'datasets': {
             "train": '../datasets/InfillingKicksAndSnares_testing/0.1.2/train',
