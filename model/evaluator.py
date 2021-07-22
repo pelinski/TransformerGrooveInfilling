@@ -3,10 +3,15 @@ import os
 import numpy as np
 from tqdm import tqdm
 import copy
+import pickle
+import wandb
 
 sys.path.insert(1, "../../GrooveEvaluator")
 from GrooveEvaluator.evaluator import Evaluator, HVOSeq_SubSet_Evaluator
 from GrooveEvaluator.plotting_utils import separate_figues_by_tabs
+
+sys.path.insert(1, "../../hvo_sequence")
+from hvo_sequence.drum_mappings import ROLAND_REDUCED_MAPPING
 
 sys.path.insert(1, "../preprocessed_dataset/")
 from utils import _convert_hvos_array_to_subsets, save_to_pickle
@@ -126,7 +131,7 @@ class InfillingEvaluator(Evaluator):
 
         self.audio_sample_locations = self.get_sample_indices(n_samples_to_synthesize_visualize_per_subset)
 
-    def set_pred(self,model):
+    def set_pred(self, model):
         eval_pred = model.predict(self.processed_inputs, use_thres=True, thres=0.5)
         eval_pred = [_.cpu() for _ in eval_pred]
         eval_pred = np.concatenate(eval_pred, axis=2)
@@ -174,8 +179,7 @@ class InfillingEvaluator(Evaluator):
 
         filename = os.path.join(save_evaluator_path, self.dataset.dataset_name + '_' + self.dataset.split +
                                 '_' + self.dataset.__version__ + '_evaluator.pickle')
-        save_to_pickle(self,filename)
-
+        save_to_pickle(self, filename)
 
 
 class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
@@ -306,3 +310,39 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
             del wandb_media['piano_roll_html'][self.set_identifier]
 
         return wandb_media
+
+
+# training script evaluator-related code wrappers
+
+def init_evaluator(evaluator_path):
+    with open(evaluator_path, 'rb') as f:
+        evaluator = pickle.load(f)
+
+    # log eval_subset parameters to wandb
+    wandb.config.update({evaluator._identifier + "_hvo_index": evaluator.hvo_index,
+                         evaluator._identifier + "_soundfonts": evaluator.soundfonts})
+    if evaluator.horizontal:
+        wandb.config.update({evaluator._identifier + "_voices_reduced": evaluator.voices_reduced})
+
+    return evaluator
+
+
+def log_eval(evaluator, model, log_media, epoch):
+    evaluator._identifier = copy.deepcopy(evaluator._identifier)
+    evaluator.set_pred(model)
+
+    acc_h = evaluator.get_hits_accuracies(drum_mapping=ROLAND_REDUCED_MAPPING)
+    mse_v = evaluator.get_velocity_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
+    mse_o = evaluator.get_micro_timing_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
+    wandb.log({**acc_h, **mse_v, **mse_o}, commit=False)
+
+    if log_media:
+        wandb_media = evaluator.get_wandb_logging_media(global_features_html=False)
+        if len(wandb_media.keys()) > 0:
+            wandb.log(wandb_media, commit=False)
+
+    # move torch tensors to cpu before saving so that they can be loaded in cpu machines
+    evaluator.processed_inputs.to(device='cpu')
+    evaluator.processed_gt.to(device='cpu')
+    evaluator.dump(path="evaluator/evaluator_{}_run_{}_Epoch_{}.Eval".format(evaluator._identifier, wandb.run.name,
+                                                                             epoch))
