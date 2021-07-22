@@ -346,3 +346,6 @@ def log_eval(evaluator, model, log_media, epoch):
     evaluator.processed_gt.to(device='cpu')
     evaluator.dump(path="evaluator/evaluator_{}_run_{}_Epoch_{}.Eval".format(evaluator._identifier, wandb.run.name,
                                                                              epoch))
+
+    # rhythmic_distances = evaluator.get_rhythmic_distances()
+    # wandb.log(rhythmic_distances, commit=False)
