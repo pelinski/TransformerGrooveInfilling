@@ -2,7 +2,6 @@ import os
 import torch
 import wandb
 from torch.utils.data import DataLoader
-
 import sys
 
 sys.path.insert(1, "../../BaseGrooveTransformers/")
@@ -12,7 +11,7 @@ from utils import get_epoch_log_freq
 from preprocess_dataset import load_preprocessed_dataset
 from evaluator import init_evaluator, log_eval
 
-exp = 'InfillingKicksAndSnares_testing'
+experiment = 'InfillingRandom_testing'
 
 settings = {'testing': True,
             'log_to_wandb': True,
@@ -23,7 +22,7 @@ settings = {'testing': True,
 # –––––––––––––––––––––––––––––––––––––––––––––––––––
 
 hyperparameter_defaults = dict(
-    experiment=exp,
+    experiment=experiment,
     encoder_only=1,
     optimizer_algorithm='sgd',
     d_model=64,
@@ -47,9 +46,18 @@ paths = {
             "train": '../datasets/InfillingKicksAndSnares_testing/0.1.2/train',
             "test": '../datasets/InfillingKicksAndSnares_testing/0.1.2/test'},
         'evaluators': {
-            'train': '../evaluators/InfillingKicksAndSnares_testing/InfillingKicksAndSnares_train_0.1.2_evaluator.pickle',
-            'test': '../evaluators/InfillingKicksAndSnares_testing/InfillingKicksAndSnares_test_0.1.2_evaluator' \
-                    '.pickle'
+            'train': '../evaluators/InfillingKicksAndSnares_testing/0.1.2/InfillingKicksAndSnares_testing_train_0.1'
+                     '.2_evaluator.pickle',
+            'test': '../evaluators/InfillingKicksAndSnares_testing/0.1.2/InfillingKicksAndSnares_testing_test_0.1.2_evaluator.pickle'
+        }
+    },
+    "InfillingRandom_testing": {
+        'datasets': {
+            "train": '../datasets/InfillingRandom_testing/0.0.0/train',
+            "test": '../datasets/InfillingRandom_testing/0.0.0/test'},
+        'evaluators': {
+            'train': '../evaluators/InfillingRandom_testing/0.0.0/InfillingRandom_testing_train_0.0.0_evaluator.pickle',
+            'test': '../evaluators/InfillingRandom_testing/0.0.0/InfillingRandom_testing_test_0.0.0_evaluator.pickle'
         }
     }
 }
@@ -59,7 +67,7 @@ paths = {
 if __name__ == '__main__':
     os.environ['WANDB_MODE'] = 'online' if settings['log_to_wandb'] else 'offline'
 
-    wandb.init(config=hyperparameter_defaults, project=exp, job_type=settings['job_type'],
+    wandb.init(config=hyperparameter_defaults, project=wandb.config.experiment, job_type=settings['job_type'],
                settings=wandb.Settings(start_method="fork"))
 
     params = {
@@ -88,8 +96,9 @@ if __name__ == '__main__':
             #        'lr_scheduler_gamma': 0.1
         },
         "cp_paths": {
-            'checkpoint_path': '../train_results/' + exp,
-            'checkpoint_save_str': '../train_results/' + exp + '/transformer_groove_infilling-epoch-{}'
+            'checkpoint_path': '../train_results/' + wandb.config.experiment,
+            'checkpoint_save_str': '../train_results/' + wandb.config.experiment +
+                                   '/transformer_groove_infilling-epoch-{}'
         },
         "load_model": None,
     }
@@ -102,13 +111,14 @@ if __name__ == '__main__':
     wandb.watch(model)
 
     # load dataset
-    dataset_train = load_preprocessed_dataset(paths[exp]['datasets']['train'], exp=exp)
+    dataset_train = load_preprocessed_dataset(paths[wandb.config.experiment]['datasets']['train'],
+                                              exp=wandb.config.experiment)
     dataloader_train = DataLoader(dataset_train, batch_size=wandb.config.batch_size, shuffle=True)
 
     if settings['evaluator_train']:
-        evaluator_train = init_evaluator(paths[exp]['evaluators']['train'])
+        evaluator_train = init_evaluator(paths[wandb.config.experiment]['evaluators']['train'])
     if settings['evaluator_test']:
-        evaluator_test = init_evaluator(paths[exp]['evaluators']['test'])
+        evaluator_test = init_evaluator(paths[wandb.config.experiment]['evaluators']['test'])
 
     eps = wandb.config.epochs
     BCE_fn, MSE_fn = torch.nn.BCEWithLogitsLoss(reduction='none'), torch.nn.MSELoss(reduction='none')
