@@ -4,12 +4,12 @@ import wandb
 from torch.utils.data import DataLoader
 import sys
 
-sys.path.insert(1, "../../BaseGrooveTransformers/")
-
-from models.train import initialize_model, calculate_loss, train_loop
-from utils import get_epoch_log_freq
 from preprocess_dataset import load_preprocessed_dataset
 from evaluator import init_evaluator, log_eval
+from utils import get_epoch_log_freq
+
+sys.path.insert(1, "../../BaseGrooveTransformers/")
+from models.train import initialize_model, calculate_loss, train_loop
 
 experiment = 'InfillingRandom_testing'
 
@@ -67,7 +67,9 @@ paths = {
 if __name__ == '__main__':
     os.environ['WANDB_MODE'] = 'online' if settings['log_to_wandb'] else 'offline'
 
-    wandb.init(config=hyperparameter_defaults, project=wandb.config.experiment, job_type=settings['job_type'],
+    wandb.init(config=hyperparameter_defaults,
+               project=experiment,
+               job_type=settings['job_type'],
                settings=wandb.Settings(start_method="fork"))
 
     params = {
@@ -126,7 +128,6 @@ if __name__ == '__main__':
     # epoch_save_all, epoch_save_partial = get_epoch_log_freq(eps)
     epoch_save_all, epoch_save_partial = [eps - 1], [99, 199]  # FIXME
 
-    print('Training...')
     for i in range(eps):
         ep += 1
 
