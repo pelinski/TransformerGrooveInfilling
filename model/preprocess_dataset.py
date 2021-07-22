@@ -70,7 +70,7 @@ params = {
         "sf_path": "../soundfonts/filtered_soundfonts/",
         "max_n_sf": 3,
         "max_aug_items": 4,
-        "save_dataset_path": '../preprocessed_infilling_datasets/InfillingKicksAndSnares/'
+        "save_dataset_path": '../datasets/InfillingKicksAndSnares/'
     },
 
     "InfillingMultipleVoices": {
@@ -97,7 +97,7 @@ params = {
         "sf_path": "../soundfonts/filtered_soundfonts/",
         "max_n_sf": 3,
         "max_aug_items": 6,
-        "save_dataset_path": '../preprocessed_infilling_datasets/InfillingMultipleVoices/'
+        "save_dataset_path": '../datasets/InfillingMultipleVoices/'
     },
 
     "InfillingRandom": {
@@ -106,7 +106,7 @@ params = {
         "sf_path": "../soundfonts/filtered_soundfonts/",
         "max_aug_items": 4,
         "thres_range": (0.4, 0.7),
-        "save_dataset_path": '../preprocessed_infilling_datasets/InfillingRandom/'
+        "save_dataset_path": '../datasets/InfillingRandom/'
     }
 
 }
@@ -143,8 +143,9 @@ def load_preprocessed_dataset(load_dataset_path, exp):
 if __name__ == "__main__":
     # change experiment and split here
     # exps = ['InfillingRandom', 'InfillingMultipleVoices', 'InfillingClosedHH']
-    exps = ['InfillingKicksAndSnares', 'InfillingRandom' ]
-    splits = ['train', 'test', 'validation']
+    exps = ['InfillingKicksAndSnares']
+    #splits = ['train', 'test', 'validation']
+    splits = ['train', 'test']
 
     for exp in exps:
         print('------------------------\n'+exp+'\n------------------------\n')

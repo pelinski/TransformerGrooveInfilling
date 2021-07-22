@@ -27,8 +27,11 @@ wandb/
 notes.txt
 
 #preprocessed_datasets
-preprocessed_infilling_datasets/*/*/*/*.pickle
-preprocessed_infilling_datasets/old/*
+datasets/*/*/*/*.pickle
+datasets/old/*
+# evaluator
+evaluators/*/*/*.pickle
 model/evaluator/
+
 
 soundfonts/filtered_soundfonts/ARIAConverted/
