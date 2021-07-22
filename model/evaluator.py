@@ -303,6 +303,8 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
     def get_wandb_logging_media(self, velocity_heatmap_html=True, global_features_html=True,
                                 piano_roll_html=True, audio_files=True, sf_paths=None, use_specific_samples_at=None):
 
+        self._sampled_hvos = self.get_hvo_samples_located_at(use_specific_samples_at)
+
         _wandb_media = super(HVOSeq_SubSet_InfillingEvaluator, self).get_wandb_logging_media(
             velocity_heatmap_html=velocity_heatmap_html,
             global_features_html=global_features_html,
