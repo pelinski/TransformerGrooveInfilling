@@ -11,7 +11,7 @@ import random
 import copy
 
 from utils import get_sf_list, add_metadata_to_hvo_seq, pad_to_match_max_seq_len, get_voice_idx_for_item, \
-    get_sf_v_combinations, get_voice_combinations, save_dict_to_pickle
+    get_sf_v_combinations, get_voice_combinations, save_to_pickle
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -118,8 +118,8 @@ class GrooveMidiDatasetInfilling(Dataset):
             dataset_pickle_filename = os.path.join(self.save_dataset_path,
                                                    self.dataset_name + '_' + self.split + '_' + self.__version__ +
                                                    '_dataset.pickle')
-            save_dict_to_pickle(params, params_pickle_filename)
-            save_dict_to_pickle(preprocessed_dataset, dataset_pickle_filename)
+            save_to_pickle(params, params_pickle_filename)
+            save_to_pickle(preprocessed_dataset, dataset_pickle_filename)
 
             print("Saved dataset to path: ", self.save_dataset_path)
 
