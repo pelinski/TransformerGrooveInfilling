@@ -27,12 +27,10 @@ parameters:
     max: 12
   epochs:
     value: 100
-  use_evaluator:
-    value: 1
   encoder_only:
     value: 1
-  config:
-    value: 'InfillingRandom'
-program: train_infilling_random.py
+  experiment:
+    value: 'InfillingRandom',
+program: train_infilling.py
 project: 'InfillingRandom_sweeps'
 description: ''
