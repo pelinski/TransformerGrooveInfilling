@@ -1,19 +1,16 @@
 import os
 import torch
 import wandb
-import pickle
 from torch.utils.data import DataLoader
 
 import sys
 
 sys.path.insert(1, "../../BaseGrooveTransformers/")
-sys.path.insert(1, "../../hvo_sequence")
 
-from evaluator import InfillingEvaluator
-from hvo_sequence.drum_mappings import ROLAND_REDUCED_MAPPING
 from models.train import initialize_model, calculate_loss, train_loop
 from utils import get_epoch_log_freq
 from preprocess_dataset import load_preprocessed_dataset
+from evaluator import init_evaluator, log_eval
 
 # ================================= SETTINGS ==================================================== #
 preprocessed_dataset_path_train = '../datasets/InfillingKicksAndSnares_testing/0.1.2/train'
@@ -28,6 +25,7 @@ evaluator_test_file = '../evaluators/InfillingKicksAndSnares_testing/InfillingKi
 # TODO select experiment here
 
 settings = {'log_to_wandb': True,
+            'evaluator_train':True,
             'evaluator_test': True,
             'job_type': 'train'}
 os.environ['WANDB_MODE'] = 'online' if settings['log_to_wandb'] else 'offline'
@@ -48,7 +46,6 @@ hyperparameter_defaults = dict(
     dim_feedforward=256,
     learning_rate=0.05,
     epochs=1,
-    use_evaluator=1,
     h_loss_multiplier=1,
     v_loss_multiplier=1,
     o_loss_multiplier=1
@@ -91,7 +88,7 @@ params = {
     "load_model": None,
 }
 # log params to wandb
-wandb.config.update({**params["model"], 'evaluator': params['evaluator']})
+wandb.config.update(params["model"])
 
 # initialize model
 model, optimizer, ep = initialize_model(params)
@@ -101,31 +98,11 @@ wandb.watch(model)
 dataset_train = load_preprocessed_dataset(preprocessed_dataset_path_train, exp=wandb.config.experiment)
 dataloader_train = DataLoader(dataset_train, batch_size=params['training']['batch_size'], shuffle=True)
 
-# instance evaluator and set gt
-if wandb.config.use_evaluator:
 
-    pred_horizontal = False if wandb.config.experiment == 'InfillingRandom' else True
-
-    with open(evaluator_train_file, 'rb') as f:
-        evaluator_train = pickle.load(f)
-
-    # log eval_subset parameters to wandb
-    wandb.config.update({"train_hvo_index": evaluator_train.hvo_index,
-                         "train_soundfonts": evaluator_train.soundfonts})
-    if pred_horizontal:
-        wandb.config.update({"train_voices_reduced": evaluator_train.voices_reduced})
-
-    if settings['evaluator_test']:
-        dataset_test = load_preprocessed_dataset(preprocessed_dataset_path_test, exp=wandb.config.experiment)
-
-        with open(evaluator_test_file, 'rb') as f:
-            evaluator_test = pickle.load(f)
-
-        # log eval_subset parameters to wandb
-        wandb.config.update({"test_hvo_index": evaluator_test.hvo_index,
-                             "test_soundfonts": evaluator_test.soundfonts})
-        if pred_horizontal:
-            wandb.config.update({"test_voices_reduced": evaluator_test.voices_reduced})
+if settings['evaluator_train']:
+    evaluator_train = init_evaluator(evaluator_train_file)
+if settings['evaluator_test']:
+    evaluator_test = init_evaluator(evaluator_test_file)
 
 eps = wandb.config.epochs
 BCE_fn = torch.nn.BCEWithLogitsLoss(reduction='none')
@@ -133,61 +110,32 @@ MSE_fn = torch.nn.MSELoss(reduction='none')
 
 # epoch_save_all, epoch_save_partial = get_epoch_log_freq(eps)
 epoch_save_all, epoch_save_partial = [eps - 1], [99, 199]
+
 print('Training...')
 for i in range(eps):
+
     ep += 1
-    save_model = (i in epoch_save_partial or i in epoch_save_all)
+
     print(f"Epoch {ep}\n-------------------------------")
     train_loop(dataloader=dataloader_train, groove_transformer=model, encoder_only=params["model"][
         "encoder_only"], opt=optimizer, epoch=ep, loss_fn=calculate_loss, bce_fn=BCE_fn,
-               mse_fn=MSE_fn, save=save_model, device=params["model"]['device'],
+               mse_fn=MSE_fn, device=params["model"]['device'],
                test_inputs=evaluator_test.processed_inputs,
                test_gt=evaluator_test.processed_gt,
                h_loss_mult=params["model"]["h_loss_multiplier"],
                v_loss_mult=params["model"]["v_loss_multiplier"],
-               o_loss_mult=params["model"]["o_loss_multiplier"])
+               o_loss_mult=params["model"]["o_loss_multiplier"],
+               save=(i in epoch_save_partial or i in epoch_save_all))
     print("-------------------------------\n")
-    if wandb.config.use_evaluator:
-        if i in epoch_save_partial or i in epoch_save_all:
-            # Train set evaluator
-            evaluator_train._identifier = 'Train_Set'
-            evaluator_train.set_pred(model)
-            train_acc_h = evaluator_train.get_hits_accuracies(drum_mapping=ROLAND_REDUCED_MAPPING)
-            train_mse_v = evaluator_train.get_velocity_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
-            train_mse_o = evaluator_train.get_micro_timing_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
-            wandb.log({**train_acc_h, **train_mse_v, **train_mse_v}, commit=False)
 
-            if i in epoch_save_all:
-                wandb_media_train = evaluator_train.get_wandb_logging_media(global_features_html=False)
-                if len(wandb_media_train.keys()) > 0:
-                    wandb.log(wandb_media_train, commit=False)
+    if i in epoch_save_partial or i in epoch_save_all:
+        if settings['evaluator_train']:
+            log_eval(evaluator_train, model, log_media=i in epoch_save_all, epoch=ep)
+        if settings['evaluator_test']:
+            log_eval(evaluator_test, model, log_media=i in epoch_save_all, epoch=ep)
 
-            # move torch tensors to cpu before saving so that they can be loaded in cpu machines
-            evaluator_train.processed_inputs.to(device='cpu')
-            evaluator_train.processed_gt.to(device='cpu')
-            evaluator_train.dump(path="evaluator/evaluator_train_run_{}_Epoch_{}.Eval".format(wandb_run.name, ep))
-
-            if settings['evaluator_test']:
-                # Test set evaluator
-                evaluator_test._identifier = 'Test_Set'
-                evaluator_test.set_pred(model)
-                test_acc_h = evaluator_test.get_hits_accuracies(drum_mapping=ROLAND_REDUCED_MAPPING)
-                test_mse_v = evaluator_test.get_velocity_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
-                test_mse_o = evaluator_test.get_micro_timing_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
-                wandb.log({**test_acc_h, **test_mse_v, **test_mse_v}, commit=False)
-
-                if i in epoch_save_all:
-                    wandb_media_test = evaluator_test.get_wandb_logging_media(global_features_html=False)
-                    if len(wandb_media_test.keys()) > 0:
-                        wandb.log(wandb_media_test, commit=False)
-
-                # move torch tensors to cpu before saving so that they can be loaded in cpu machines
-                evaluator_test.processed_inputs.to(device='cpu')
-                evaluator_test.processed_gt.to(device='cpu')
-                evaluator_test.dump(path="evaluator/evaluator_test_run_{}_Epoch_{}.Eval".format(wandb_run.name, ep))
-
-            # rhythmic_distances = evaluator_train.get_rhythmic_distances()
-            # wandb.log(rhythmic_distances, commit=False)
+        # rhythmic_distances = evaluator_train.get_rhythmic_distances()
+        # wandb.log(rhythmic_distances, commit=False)
 
     wandb.log({"epoch": ep})
 
