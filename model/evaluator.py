@@ -5,6 +5,7 @@ from tqdm import tqdm
 import copy
 import pickle
 import wandb
+import torch
 
 sys.path.insert(1, "../../GrooveEvaluator")
 from GrooveEvaluator.evaluator import Evaluator, HVOSeq_SubSet_Evaluator
@@ -323,6 +324,9 @@ def init_evaluator(evaluator_path):
                          evaluator._identifier + "_soundfonts": evaluator.soundfonts})
     if evaluator.horizontal:
         wandb.config.update({evaluator._identifier + "_voices_reduced": evaluator.voices_reduced})
+
+    evaluator.processed_inputs.to(device='cuda' if torch.cuda.is_available() else 'cpu')
+    evaluator.processed_gt.to(device='cuda' if torch.cuda.is_available() else 'cpu')
 
     return evaluator
 
