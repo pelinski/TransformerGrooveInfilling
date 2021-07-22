@@ -134,7 +134,7 @@ class InfillingEvaluator(Evaluator):
 
     def set_pred(self, model):
         eval_pred = model.predict(self.processed_inputs, use_thres=True, thres=0.5)
-        eval_pred = [_.cpu() for _ in eval_pred]
+        #eval_pred = [_.cpu() for _ in eval_pred]
         eval_pred = np.concatenate(eval_pred, axis=2)
 
         self._prediction_hvos_array = eval_pred
