@@ -154,9 +154,6 @@ if __name__ == '__main__':
             if settings['evaluator_test']:
                 log_eval(evaluator_test, model, log_media=i in epoch_save_all, epoch=ep)
 
-            # rhythmic_distances = evaluator_train.get_rhythmic_distances()
-            # wandb.log(rhythmic_distances, commit=False)
-
         wandb.log({"epoch": ep})
 
     wandb.finish()
