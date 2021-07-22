@@ -1,4 +1,5 @@
 import sys
+import os
 import numpy as np
 from tqdm import tqdm
 import copy
@@ -8,7 +9,7 @@ from GrooveEvaluator.evaluator import Evaluator, HVOSeq_SubSet_Evaluator
 from GrooveEvaluator.plotting_utils import separate_figues_by_tabs
 
 sys.path.insert(1, "../preprocessed_dataset/")
-from utils import _convert_hvos_array_to_subsets
+from utils import _convert_hvos_array_to_subsets, save_to_pickle
 
 
 class InfillingEvaluator(Evaluator):
@@ -24,11 +25,9 @@ class InfillingEvaluator(Evaluator):
                  analyze_global_features=True,
                  disable_tqdm=True,
                  dataset=None,
-                 model=None,
-                 n_epochs=None,
                  horizontal=True):
 
-        self.__version___ = "0.3.0"
+        self.__version___ = "0.3.1"
 
         self.sf_dict = {}
         self.hvo_comp_dict = {}
@@ -42,7 +41,7 @@ class InfillingEvaluator(Evaluator):
             list_of_filter_dicts_for_subsets.append(
                 {"style_primary": [style], "beat_type": ["beat"], "time_signature": ["4-4"]}
             )
-
+        # TODO bypass feature extractor
         super(InfillingEvaluator, self).__init__(pickle_source_path,
                                                  set_subfolder,
                                                  hvo_pickle_filename,
@@ -56,8 +55,6 @@ class InfillingEvaluator(Evaluator):
                                                  disable_tqdm=disable_tqdm)
 
         self.dataset = dataset
-        self.model = model
-        self.eps = n_epochs
 
         self._gmd_gt_hvo_sequences = []
         self._gt_hvos_array_tags, self._gmd_gt_hvos_array = [], []
@@ -129,35 +126,10 @@ class InfillingEvaluator(Evaluator):
 
         self.audio_sample_locations = self.get_sample_indices(n_samples_to_synthesize_visualize_per_subset)
 
-    def set_pred(self):
-        eval_pred = self.model.predict(self.processed_inputs, use_thres=True, thres=0.5)
+    def set_pred(self,model):
+        eval_pred = model.predict(self.processed_inputs, use_thres=True, thres=0.5)
         eval_pred = [_.cpu() for _ in eval_pred]
         eval_pred = np.concatenate(eval_pred, axis=2)
-        """ 
-        # This part sets to 0 the hits that are present in the non removed part.
-        # This has been removed since the loss calculation in the training process is done without this
-        
-        eval_pred_hvo_array = np.concatenate(eval_pred, axis=2)
-        eval_pred = np.zeros_like(eval_pred_hvo_array)
-
-        n_voices = eval_pred_hvo_array.shape[2] // 3
-
-        for idx in range(eval_pred_hvo_array.shape[0]):
-
-            if horizontal:  # horizontally removing voices
-                if isinstance(self.voices_reduced[idx], int):
-                    self.voices_reduced[idx] = [self.voices_reduced[idx]]
-                h_idx, v_idx, o_idx = get_hvo_idxs_for_voice(voice_idx=list(self.voices_reduced[idx]),
-                                                             n_voices=n_voices)
-                eval_pred[idx, :, h_idx + v_idx + o_idx] = eval_pred_hvo_array[idx, :, h_idx + v_idx + o_idx]
-
-
-            else:  # randomly removing events       # FIXME don't set to 0 the predictions that overlap with the input
-                hits = self.hvo_sequences_inputs[idx].hvo[:n_voices]
-                input_hits_idx = np.nonzero(hits)
-                eval_pred[idx, :, :] = eval_pred_hvo_array[idx, :, :]
-                eval_pred[idx, tuple(input_hits_idx)] = 0
-        """
 
         self._prediction_hvos_array = eval_pred
         self._prediction_tags, self._prediction_subsets, self._subset_hvo_array_index = \
@@ -175,7 +147,7 @@ class InfillingEvaluator(Evaluator):
             group_by_minor_keys=True,
             horizontal=self.horizontal,
             is_gt=False
-            )
+        )
 
         sf_dict, hvo_comp_dict = {}, {}
         for key in self.audio_sample_locations.keys():
@@ -195,6 +167,15 @@ class InfillingEvaluator(Evaluator):
 
     def get_gmd_ground_truth_hvo_sequences(self):  # for testing
         return copy.deepcopy(self._gmd_gt_hvo_sequences)
+
+    def save_as_pickle(self, save_evaluator_path):
+        if not os.path.exists(save_evaluator_path):
+            os.makedirs(save_evaluator_path)
+
+        filename = os.path.join(save_evaluator_path, self.dataset.dataset_name + '_' + self.dataset.split +
+                                '_' + self.dataset.__version__ + '_evaluator.pickle')
+        save_to_pickle(self,filename)
+
 
 
 class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
