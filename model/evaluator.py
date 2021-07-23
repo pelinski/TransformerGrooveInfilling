@@ -31,13 +31,15 @@ class InfillingEvaluator(Evaluator):
                  analyze_global_features=True,
                  disable_tqdm=True,
                  dataset=None,
-                 horizontal=True):
+                 horizontal=True,
+                 device= 'cuda' if torch.cuda.is_available() else 'cpu'):
 
         self.__version___ = "0.3.1"
 
         self.sf_dict = {}
         self.hvo_comp_dict = {}
         self.horizontal = horizontal
+        self.device = device
 
         # common filters
         eval_styles = ["hiphop", "funk", "reggae", "soul", "latin", "jazz", "pop", "afrobeat", "highlife", "punk",
@@ -133,8 +135,9 @@ class InfillingEvaluator(Evaluator):
         self.audio_sample_locations = self.get_sample_indices(n_samples_to_synthesize_visualize_per_subset)
 
     def set_pred(self, model):
+        self.processed_inputs = self.processed_inputs.to(self.device)
         eval_pred = model.predict(self.processed_inputs, use_thres=True, thres=0.5)
-        #eval_pred = [_.cpu() for _ in eval_pred]
+        eval_pred = [_.cpu() for _ in eval_pred]
         eval_pred = np.concatenate(eval_pred, axis=2)
 
         self._prediction_hvos_array = eval_pred
@@ -315,7 +318,7 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
 
 # training script evaluator-related code wrappers
 
-def init_evaluator(evaluator_path):
+def init_evaluator(evaluator_path, device):
     with open(evaluator_path, 'rb') as f:
         evaluator = pickle.load(f)
 
@@ -325,8 +328,9 @@ def init_evaluator(evaluator_path):
     if evaluator.horizontal:
         wandb.config.update({evaluator._identifier + "_voices_reduced": evaluator.voices_reduced})
 
-    evaluator.processed_inputs.to(device='cuda' if torch.cuda.is_available() else 'cpu')
-    evaluator.processed_gt.to(device='cuda' if torch.cuda.is_available() else 'cpu')
+    evaluator.device = device
+    evaluator.processed_inputs.to(device)
+    evaluator.processed_gt.to(device)
 
     return evaluator
 

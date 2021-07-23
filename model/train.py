@@ -11,7 +11,7 @@ from utils import get_epoch_log_freq
 sys.path.insert(1, "../../BaseGrooveTransformers/")
 from models.train import initialize_model, calculate_loss, train_loop
 
-experiment = 'InfillingKicksAndSnares_testing'
+experiment = 'InfillingKicksAndSnares'
 
 settings = {'testing': True,
             'log_to_wandb': True,
@@ -131,9 +131,11 @@ if __name__ == '__main__':
     dataloader_train = DataLoader(dataset_train, batch_size=wandb.config.batch_size, shuffle=True)
 
     if settings['evaluator_train']:
-        evaluator_train = init_evaluator(paths[wandb.config.experiment]['evaluators']['train'])
+        evaluator_train = init_evaluator(paths[wandb.config.experiment]['evaluators']['train'], device= params[
+            'model']['device'])
     if settings['evaluator_test']:
-        evaluator_test = init_evaluator(paths[wandb.config.experiment]['evaluators']['test'])
+        evaluator_test = init_evaluator(paths[wandb.config.experiment]['evaluators']['test'],device= params[
+            'model']['device'])
 
     eps = wandb.config.epochs
     BCE_fn, MSE_fn = torch.nn.BCEWithLogitsLoss(reduction='none'), torch.nn.MSELoss(reduction='none')
