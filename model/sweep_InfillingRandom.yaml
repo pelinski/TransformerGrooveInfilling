@@ -30,7 +30,7 @@ parameters:
   encoder_only:
     value: 1
   experiment:
-    value: 'InfillingRandom',
+    value: 'InfillingRandom'
 program: train.py
 project: 'InfillingRandom_sweeps'
 description: ''
