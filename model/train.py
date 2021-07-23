@@ -11,9 +11,9 @@ from utils import get_epoch_log_freq
 sys.path.insert(1, "../../BaseGrooveTransformers/")
 from models.train import initialize_model, calculate_loss, train_loop
 
-experiment = 'InfillingKicksAndSnares'
+experiment = 'InfillingKicksAndSnares_testing'
 
-settings = {'testing': False,
+settings = {'testing': True,
             'log_to_wandb': True,
             'evaluator_train': True,
             'evaluator_test': True,
@@ -32,7 +32,7 @@ hyperparameter_defaults = dict(
     batch_size=16,
     dim_feedforward=256,
     learning_rate=0.05,
-    epochs=1 if settings['testing'] else 150,
+    epochs=2 if settings['testing'] else 150,
     h_loss_multiplier=1,
     v_loss_multiplier=1,
     o_loss_multiplier=1
@@ -114,11 +114,6 @@ if __name__ == '__main__':
             'batch_size': wandb.config.batch_size,
             #        'lr_scheduler_step_size': 30,
             #        'lr_scheduler_gamma': 0.1
-        },
-        "cp_paths": {
-            'checkpoint_path': '../train_results/' + wandb.config.experiment,
-            'checkpoint_save_str': '../train_results/' + wandb.config.experiment +
-                                   '/transformer_groove_infilling-epoch-{}'
         },
         "load_model": None,
     }
