@@ -58,6 +58,7 @@ paths = {
             'train': '../evaluators/InfillingRandom/0.0.0/InfillingRandom_train_0.0.0_evaluator.pickle',
             'test': '../evaluators/InfillingRandom/0.0.0/InfillingRandom_test_0.0.0_evaluator.pickle'
         },
+    }
     "InfillingKicksAndSnares_testing": {
         'datasets': {
             "train": '../datasets/InfillingKicksAndSnares_testing/0.1.2/train',
