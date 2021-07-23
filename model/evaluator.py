@@ -34,7 +34,7 @@ class InfillingEvaluator(Evaluator):
                  horizontal=True,
                  device= 'cuda' if torch.cuda.is_available() else 'cpu'):
 
-        self.__version___ = "0.3.1"
+        self.__version___ = "0.3.2"
 
         self.sf_dict = {}
         self.hvo_comp_dict = {}
@@ -253,8 +253,7 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
         """ use_specific_samples_at: must be a dict of lists of (sample_ix) """
 
         self._sampled_hvos = self.get_hvo_samples_located_at(use_specific_samples_at)
-        tab_titles = []
-        piano_roll_tabs = []
+        tab_titles, piano_roll_tabs = [], []
         for subset_ix, tag in tqdm(enumerate(self._sampled_hvos.keys()),
                                    desc='Creating Piano rolls for ' + self.set_identifier,
                                    disable=self.disable_tqdm):
@@ -263,7 +262,9 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
                 sample_hvo = _sample_hvo.copy()  # make sure not to modify og hvo
 
                 # add 'context'
-                if self.horizontal and self.is_gt:
+                if self.horizontal:
+                    sample_hvo = self.add_removed_part_to_hvo(sample_hvo, tag, idx)
+                if not self.horizontal and not self.is_gt:  # if it's random and prediction
                     sample_hvo = self.add_removed_part_to_hvo(sample_hvo, tag, idx)
 
                 title = "{}_{}_{}_{}".format(
@@ -304,13 +305,19 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
 
         wandb_media = copy.deepcopy(_wandb_media)
 
-        if ('_').join(self.set_identifier.split('_')[2:]) == 'Ground_Truth' and self.horizontal:
-            wandb_media['audios'][self.set_identifier + '_with_removed_parts'] = _wandb_media['audios'][
-                self.set_identifier]
-            wandb_media['piano_roll_html'][self.set_identifier + '_with_removed_parts'] = \
-                _wandb_media['piano_roll_html'][self.set_identifier]
+        wandb_media['audios'][self.set_identifier + '_plus_Input'] = _wandb_media['audios'][
+            self.set_identifier]
+        del wandb_media['audios'][self.set_identifier]
 
-            del wandb_media['audios'][self.set_identifier]
+        if self.horizontal:
+            wandb_media['piano_roll_html'][self.set_identifier + '_plus_Input'] = \
+                _wandb_media['piano_roll_html'][self.set_identifier]
+            del wandb_media['piano_roll_html'][self.set_identifier]
+
+        _set = self.set_identifier.split('_')[-1]
+        if _set == 'Predictions' and not self.horizontal:  # if random and predictions
+            wandb_media['piano_roll_html'][self.set_identifier + '_plus_Input'] = \
+                _wandb_media['piano_roll_html'][self.set_identifier]
             del wandb_media['piano_roll_html'][self.set_identifier]
 
         return wandb_media
