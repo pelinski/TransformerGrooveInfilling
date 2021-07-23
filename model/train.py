@@ -13,7 +13,7 @@ from models.train import initialize_model, calculate_loss, train_loop
 
 experiment = 'InfillingKicksAndSnares'
 
-settings = {'testing': False,
+settings = {'testing': True,
             'log_to_wandb': True,
             'evaluator_train': True,
             'evaluator_test': True,
@@ -55,27 +55,29 @@ paths = {
             "train": '../datasets/InfillingRandom/0.0.0/train',
             "test": '../datasets/InfillingRandom/0.0.0/test'},
         'evaluators': {
-            'train': '../evaluators/InfillingRandom/0.0.0/InfillingRandom_train_0.0.0_evaluator.pickle',
-            'test': '../evaluators/InfillingRandom/0.0.0/InfillingRandom_test_0.0.0_evaluator.pickle'
+            'train': '../evaluators/InfillingRandom/0.0.1/InfillingRandom_train_0.0.1_evaluator.pickle',
+            'test': '../evaluators/InfillingRandom/0.0.1/InfillingRandom_test_0.0.1_evaluator.pickle'
         },
     },
     "InfillingKicksAndSnares_testing": {
         'datasets': {
-            "train": '../datasets/InfillingKicksAndSnares_testing/0.1.2/train',
-            "test": '../datasets/InfillingKicksAndSnares_testing/0.1.2/test'},
+            "train": '../datasets/InfillingKicksAndSnares_testing/0.1.3/train',
+            "test": '../datasets/InfillingKicksAndSnares_testing/0.1.3/test'},
         'evaluators': {
-            'train': '../evaluators/InfillingKicksAndSnares_testing/0.1.2/InfillingKicksAndSnares_testing_train_0.1'
-                     '.2_evaluator.pickle',
-            'test': '../evaluators/InfillingKicksAndSnares_testing/0.1.2/InfillingKicksAndSnares_testing_test_0.1.2_evaluator.pickle'
+            'train': '../evaluators/InfillingKicksAndSnares_testing/0.1.3/InfillingKicksAndSnares_testing_train_0.1'
+                     '.3_evaluator.pickle',
+            'test': '../evaluators/InfillingKicksAndSnares_testing/0.1.3/InfillingKicksAndSnares_testing_test_0'
+                    '.1.3_evaluator'
+                    '.pickle'
         }
     },
     "InfillingRandom_testing": {
         'datasets': {
-            "train": '../datasets/InfillingRandom_testing/0.0.0/train',
-            "test": '../datasets/InfillingRandom_testing/0.0.0/test'},
+            "train": '../datasets/InfillingRandom_testing/0.0.1/train',
+            "test": '../datasets/InfillingRandom_testing/0.0.1/test'},
         'evaluators': {
-            'train': '../evaluators/InfillingRandom_testing/0.0.0/InfillingRandom_testing_train_0.0.0_evaluator.pickle',
-            'test': '../evaluators/InfillingRandom_testing/0.0.0/InfillingRandom_testing_test_0.0.0_evaluator.pickle'
+            'train': '../evaluators/InfillingRandom_testing/0.0.1/InfillingRandom_testing_train_0.0.1_evaluator.pickle',
+            'test': '../evaluators/InfillingRandom_testing/0.0.1/InfillingRandom_testing_test_0.0.1_evaluator.pickle'
         }
     }
 }
