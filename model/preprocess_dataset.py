@@ -43,7 +43,7 @@ params = {
         "sf_path": ["../soundfonts/filtered_soundfonts/Standard_Drum_Kit.sf2"],
         "max_n_sf": 1,
         "max_aug_items": 1,
-        "save_dataset_path": '../preprocessed_infilling_datasets/InfillingClosedHH/'
+        "save_dataset_path": '../datasets/InfillingClosedHH/'
 
     },
 
@@ -131,25 +131,37 @@ def preprocess_dataset(params, exp):
 
 def load_preprocessed_dataset(load_dataset_path, exp):
     if exp == 'InfillingSymbolic':
+        print('Loading GrooveMidiDatasetInfillingSymbolic...')
         _dataset = GrooveMidiDatasetInfillingSymbolic(load_dataset_path=load_dataset_path)
     elif exp == 'InfillingRandom':
+        print('Loading GrooveMidiDatasetInfillingRandom...')
         _dataset = GrooveMidiDatasetInfillingRandom(load_dataset_path=load_dataset_path)
     else:
+        print('Loading GrooveMidiDatasetInfilling...')
         _dataset = GrooveMidiDatasetInfilling(load_dataset_path=load_dataset_path)
 
     return _dataset
 
 
 if __name__ == "__main__":
+
+    testing = True
+
     # change experiment and split here
-    # exps = ['InfillingRandom', 'InfillingMultipleVoices', 'InfillingClosedHH']
-    exps = ['InfillingKicksAndSnares']
-    #splits = ['train', 'test', 'validation']
+    exps = ['InfillingRandom']
     splits = ['train', 'test']
 
     for exp in exps:
-        print('------------------------\n'+exp+'\n------------------------\n')
+        if testing:
+            params[exp]['subset_info']['filters']['master_id'] = ["drummer2/session2/8"]
+            params[exp]['dataset_name'] = params[exp]['dataset_name']  + '_testing'
+            params[exp]['save_dataset_path'] = '../datasets/' + params[exp]['dataset_name']  + '/'
+
+
+        print('------------------------\n'+params[exp]['dataset_name']+'\n------------------------\n')
+
         for split in splits:
+
             params_exp = copy.deepcopy(params[exp])
             params_exp['split'] = split
             params_exp['subset_info']['subset'] = params_exp['subset_info']['subset'] + split
