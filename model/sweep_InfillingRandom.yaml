@@ -31,6 +31,6 @@ parameters:
     value: 1
   experiment:
     value: 'InfillingRandom',
-program: train_infilling.py
+program: train.py
 project: 'InfillingRandom_sweeps'
 description: ''
