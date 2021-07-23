@@ -49,7 +49,7 @@ class GrooveMidiDatasetInfilling(Dataset):
         @param max_aug_items:       Maximum number of synthesized examples per example in subset
         @param dataset_name:        Dataset name (for experiment tracking)
         """
-        self.__version__ = "0.1.2"
+        self.__version__ = "0.1.3"
 
         # get params
         if load_dataset_path:
@@ -85,8 +85,10 @@ class GrooveMidiDatasetInfilling(Dataset):
 
             self.save_dataset_path = kwargs.get('save_dataset_path', os.path.join('../dataset', self.dataset_name))
 
+            """
             self.metadata = pd.read_csv(os.path.join(self.subset_info["pickle_source_path"], self.subset_info["subset"],
                                                      self.subset_info["metadata_csv_filename"]))
+            """
         # preprocess dataset
         print('GMD path: ', self.subset_info["pickle_source_path"])
         preprocessed_dataset = self.load_dataset_from_pickle(
@@ -146,7 +148,7 @@ class GrooveMidiDatasetInfilling(Dataset):
             if len(hvo_seq.time_signatures) == 1 and not all_zeros:  # ignore if time_signature change happens
 
                 # add metadata to hvo_seq scores
-                add_metadata_to_hvo_seq(hvo_seq, hvo_idx, self.metadata) # TODO remove this line
+                #add_metadata_to_hvo_seq(hvo_seq, hvo_idx, self.metadata)
 
                 # pad with zeros to match max_len
                 hvo_seq = pad_to_match_max_seq_len(hvo_seq, self.max_seq_len)
@@ -294,7 +296,7 @@ class GrooveMidiDatasetInfillingSymbolic(GrooveMidiDatasetInfilling):
     # override preprocessing dataset method
     # keep unused audio attrs (sfs) for simplicity
     def preprocess_dataset(self, data):
-        self.__version__ = '0.1.0'
+        self.__version__ = '0.1.1'
         self.save_dataset_path = os.path.join(os.path.join(self.save_dataset_path, self.__version__), self.split)
         print('GrooveMidiDatasetInfillingSymbolic version ' + self.__version__)
 
@@ -314,7 +316,7 @@ class GrooveMidiDatasetInfillingSymbolic(GrooveMidiDatasetInfilling):
 
             if len(hvo_seq.time_signatures) == 1 and not all_zeros:  # ignore if time_signature change happens
                 # add metadata to hvo_seq scores
-                add_metadata_to_hvo_seq(hvo_seq, hvo_idx, self.metadata)
+                #add_metadata_to_hvo_seq(hvo_seq, hvo_idx, self.metadata)
 
                 # pad with zeros to match max_len
                 hvo_seq = pad_to_match_max_seq_len(hvo_seq, self.max_seq_len)
@@ -390,7 +392,7 @@ class GrooveMidiDatasetInfillingRandom(GrooveMidiDatasetInfilling):
 
     # override preprocessing dataset method
     def preprocess_dataset(self, data):
-        self.__version__ = '0.0.0'
+        self.__version__ = '0.0.1'
         self.save_dataset_path = os.path.join(os.path.join(self.save_dataset_path, self.__version__), self.split)
         print('GrooveMidiDatasetInfillingRandom version ' + self.__version__)
 
@@ -410,7 +412,7 @@ class GrooveMidiDatasetInfillingRandom(GrooveMidiDatasetInfilling):
             if len(hvo_seq.time_signatures) == 1 and not all_zeros:  # ignore if time_signature change happens
 
                 # add metadata to hvo_seq scores
-                add_metadata_to_hvo_seq(hvo_seq, hvo_idx, self.metadata)
+                #add_metadata_to_hvo_seq(hvo_seq, hvo_idx, self.metadata)
 
                 # pad with zeros to match max_len
                 hvo_seq = pad_to_match_max_seq_len(hvo_seq, self.max_seq_len)
