@@ -10,8 +10,8 @@ import pickle
 import random
 import copy
 
-from utils import get_sf_list, add_metadata_to_hvo_seq, pad_to_match_max_seq_len, get_voice_idx_for_item, \
-    get_sf_v_combinations, get_voice_combinations, save_to_pickle
+from utils import get_sf_list, pad_to_match_max_seq_len, get_voice_idx_for_item, get_sf_v_combinations, \
+    get_voice_combinations, save_to_pickle
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -49,7 +49,7 @@ class GrooveMidiDatasetInfilling(Dataset):
         @param max_aug_items:       Maximum number of synthesized examples per example in subset
         @param dataset_name:        Dataset name (for experiment tracking)
         """
-        self.__version__ = "0.1.3"
+        self.__version__ = "0.1.2"
 
         # get params
         if load_dataset_path:
@@ -127,7 +127,7 @@ class GrooveMidiDatasetInfilling(Dataset):
 
     def preprocess_dataset(self, data):
         self.save_dataset_path = os.path.join(os.path.join(self.save_dataset_path, self.__version__), \
-                                                  self.split)
+                                              self.split)
 
         print('GrooveMidiDatasetInfilling version ' + self.__version__)
 
@@ -148,7 +148,7 @@ class GrooveMidiDatasetInfilling(Dataset):
             if len(hvo_seq.time_signatures) == 1 and not all_zeros:  # ignore if time_signature change happens
 
                 # add metadata to hvo_seq scores
-                #add_metadata_to_hvo_seq(hvo_seq, hvo_idx, self.metadata)
+                # add_metadata_to_hvo_seq(hvo_seq, hvo_idx, self.metadata)
 
                 # pad with zeros to match max_len
                 hvo_seq = pad_to_match_max_seq_len(hvo_seq, self.max_seq_len)
@@ -316,7 +316,7 @@ class GrooveMidiDatasetInfillingSymbolic(GrooveMidiDatasetInfilling):
 
             if len(hvo_seq.time_signatures) == 1 and not all_zeros:  # ignore if time_signature change happens
                 # add metadata to hvo_seq scores
-                #add_metadata_to_hvo_seq(hvo_seq, hvo_idx, self.metadata)
+                # add_metadata_to_hvo_seq(hvo_seq, hvo_idx, self.metadata)
 
                 # pad with zeros to match max_len
                 hvo_seq = pad_to_match_max_seq_len(hvo_seq, self.max_seq_len)
@@ -392,7 +392,7 @@ class GrooveMidiDatasetInfillingRandom(GrooveMidiDatasetInfilling):
 
     # override preprocessing dataset method
     def preprocess_dataset(self, data):
-        self.__version__ = '0.0.1'
+        self.__version__ = '0.0.0'
         self.save_dataset_path = os.path.join(os.path.join(self.save_dataset_path, self.__version__), self.split)
         print('GrooveMidiDatasetInfillingRandom version ' + self.__version__)
 
@@ -412,7 +412,7 @@ class GrooveMidiDatasetInfillingRandom(GrooveMidiDatasetInfilling):
             if len(hvo_seq.time_signatures) == 1 and not all_zeros:  # ignore if time_signature change happens
 
                 # add metadata to hvo_seq scores
-                #add_metadata_to_hvo_seq(hvo_seq, hvo_idx, self.metadata)
+                # add_metadata_to_hvo_seq(hvo_seq, hvo_idx, self.metadata)
 
                 # pad with zeros to match max_len
                 hvo_seq = pad_to_match_max_seq_len(hvo_seq, self.max_seq_len)
@@ -421,7 +421,7 @@ class GrooveMidiDatasetInfillingRandom(GrooveMidiDatasetInfilling):
                 hvo_sequences.append(hvo_seq)
 
                 for i in range(self.max_aug_items):
-    
+
                     hvo_seq_in, hvo_seq_out = hvo_seq.remove_random_events(thres_range=self.thres_range)
 
                     if not np.any(hvo_seq_in.hvo.flatten()) or not np.any(hvo_seq_out.hvo.flatten()):
@@ -441,7 +441,6 @@ class GrooveMidiDatasetInfillingRandom(GrooveMidiDatasetInfilling):
 
                     # processed outputs
                     processed_outputs.append(hvo_seq_out.hvo)
-
 
         # convert inputs and outputs to torch tensors
         processed_inputs = torch.Tensor(processed_inputs).to(device=device)
