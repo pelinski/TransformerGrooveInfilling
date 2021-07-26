@@ -32,7 +32,7 @@ class InfillingEvaluator(Evaluator):
                  disable_tqdm=True,
                  dataset=None,
                  horizontal=True,
-                 device= 'cuda' if torch.cuda.is_available() else 'cpu'):
+                 device='cuda' if torch.cuda.is_available() else 'cpu'):
 
         self.__version___ = "0.3.2"
 
@@ -178,6 +178,9 @@ class InfillingEvaluator(Evaluator):
         return copy.deepcopy(self._gmd_gt_hvo_sequences)
 
     def save_as_pickle(self, save_evaluator_path):
+
+        save_evaluator_path = os.path.join(save_evaluator_path, 'InfillingEvaluator_' + self.__version___)
+
         if not os.path.exists(save_evaluator_path):
             os.makedirs(save_evaluator_path)
 
@@ -261,11 +264,13 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
             for idx, _sample_hvo in enumerate(self._sampled_hvos[tag]):
                 sample_hvo = _sample_hvo.copy()  # make sure not to modify og hvo
 
+                """
                 # add 'context'
                 if self.horizontal:
                     sample_hvo = self.add_removed_part_to_hvo(sample_hvo, tag, idx)
                 if not self.horizontal and not self.is_gt:  # if it's random and prediction
                     sample_hvo = self.add_removed_part_to_hvo(sample_hvo, tag, idx)
+                """
 
                 title = "{}_{}_{}_{}".format(
                     self.set_identifier, sample_hvo.metadata.style_primary,
@@ -303,12 +308,17 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
             sf_paths=sf_paths,
             use_specific_samples_at=use_specific_samples_at)
 
-        wandb_media = copy.deepcopy(_wandb_media)
+        # change plot titles
 
+        #wandb_media = copy.deepcopy(_wandb_media)
+        """
+
+        # audios
         wandb_media['audios'][self.set_identifier + '_plus_Input'] = _wandb_media['audios'][
             self.set_identifier]
         del wandb_media['audios'][self.set_identifier]
 
+        # piano rolls
         if self.horizontal:
             wandb_media['piano_roll_html'][self.set_identifier + '_plus_Input'] = \
                 _wandb_media['piano_roll_html'][self.set_identifier]
@@ -319,8 +329,9 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
             wandb_media['piano_roll_html'][self.set_identifier + '_plus_Input'] = \
                 _wandb_media['piano_roll_html'][self.set_identifier]
             del wandb_media['piano_roll_html'][self.set_identifier]
+        """
+        return _wandb_media
 
-        return wandb_media
 
 
 # training script evaluator-related code wrappers
@@ -342,8 +353,8 @@ def init_evaluator(evaluator_path, device):
     return evaluator
 
 
-def log_eval(evaluator, model, log_media, epoch):
-    evaluator._identifier = copy.deepcopy(evaluator._identifier)
+def log_eval(evaluator, model, log_media, epoch, dump):
+    #evaluator._identifier = copy.deepcopy(evaluator._identifier)
     evaluator.set_pred(model)
 
     acc_h = evaluator.get_hits_accuracies(drum_mapping=ROLAND_REDUCED_MAPPING)
@@ -354,13 +365,14 @@ def log_eval(evaluator, model, log_media, epoch):
     if log_media:
         wandb_media = evaluator.get_wandb_logging_media(global_features_html=False)
         if len(wandb_media.keys()) > 0:
-            wandb.log(wandb_media, commit=False)
+            wandb.log({evaluator._identifier:wandb_media}, commit=False)
 
     # move torch tensors to cpu before saving so that they can be loaded in cpu machines
-    evaluator.processed_inputs.to(device='cpu')
-    evaluator.processed_gt.to(device='cpu')
-    evaluator.dump(path="evaluator/evaluator_{}_run_{}_Epoch_{}.Eval".format(evaluator._identifier, wandb.run.name,
-                                                                             epoch))
+    if dump:
+        evaluator.processed_inputs.to(device='cpu')
+        evaluator.processed_gt.to(device='cpu')
+        evaluator.dump(path="evaluator/evaluator_{}_run_{}_Epoch_{}.Eval".format(evaluator._identifier, wandb.run.name,
+                                                                                 epoch))
 
     # rhythmic_distances = evaluator.get_rhythmic_distances()
     # wandb.log(rhythmic_distances, commit=False)
