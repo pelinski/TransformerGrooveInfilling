@@ -14,8 +14,6 @@ subset_info = {
     "filters": {
         "beat_type": ["beat"],
         "time_signature": ["4-4"],
-        #"master_id": ["drummer2/session2/8"] # testing
-
     }
 }
 
@@ -148,20 +146,18 @@ if __name__ == "__main__":
     testing = True
 
     # change experiment and split here
-    exps = ['InfillingRandom']
+    exps = ['InfillingClosedHH']
     splits = ['train', 'test']
 
     for exp in exps:
         if testing:
             params[exp]['subset_info']['filters']['master_id'] = ["drummer2/session2/8"]
-            params[exp]['dataset_name'] = params[exp]['dataset_name']  + '_testing'
-            params[exp]['save_dataset_path'] = '../datasets/' + params[exp]['dataset_name']  + '/'
+            params[exp]['dataset_name'] = params[exp]['dataset_name'] + '_testing'
+            params[exp]['save_dataset_path'] = '../datasets/' + params[exp]['dataset_name'] + '/'
 
-
-        print('------------------------\n'+params[exp]['dataset_name']+'\n------------------------\n')
+        print('------------------------\n' + params[exp]['dataset_name'] + '\n------------------------\n')
 
         for split in splits:
-
             params_exp = copy.deepcopy(params[exp])
             params_exp['split'] = split
             params_exp['subset_info']['subset'] = params_exp['subset_info']['subset'] + split
