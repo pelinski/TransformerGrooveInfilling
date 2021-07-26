@@ -11,7 +11,7 @@ from utils import get_epoch_log_freq
 sys.path.insert(1, "../../BaseGrooveTransformers/")
 from models.train import initialize_model, calculate_loss, train_loop
 
-experiment = 'InfillingKicksAndSnares'
+experiment = 'InfillingClosedHH_testing'
 
 settings = {'testing': True,
             'log_to_wandb': True,
@@ -32,7 +32,7 @@ hyperparameter_defaults = dict(
     batch_size=16,
     dim_feedforward=256,
     learning_rate=0.05,
-    epochs=2 if settings['testing'] else 150,
+    epochs=5 if settings['testing'] else 150,
     h_loss_multiplier=1,
     v_loss_multiplier=1,
     o_loss_multiplier=1
@@ -64,22 +64,30 @@ paths = {
             "train": '../datasets/InfillingKicksAndSnares_testing/0.1.3/train',
             "test": '../datasets/InfillingKicksAndSnares_testing/0.1.3/test'},
         'evaluators': {
-            'train': '../evaluators/InfillingKicksAndSnares_testing/0.1.3/InfillingKicksAndSnares_testing_train_0.1'
-                     '.3_evaluator.pickle',
-            'test': '../evaluators/InfillingKicksAndSnares_testing/0.1.3/InfillingKicksAndSnares_testing_test_0'
-                    '.1.3_evaluator'
+            'train': '../evaluators/InfillingEvaluator_0.3.2/InfillingKicksAndSnares_testing_train_0.1.3_evaluator.pickle',
+            'test': '../evaluators/InfillingEvaluator_0.3.2/InfillingKicksAndSnares_testing_test_0.1.3_evaluator'
                     '.pickle'
         }
     },
     "InfillingRandom_testing": {
         'datasets': {
-            "train": '../datasets/InfillingRandom_testing/0.0.1/train',
-            "test": '../datasets/InfillingRandom_testing/0.0.1/test'},
+            "train": '../datasets/InfillingRandom_testing/0.0.0/train',
+            "test": '../datasets/InfillingRandom_testing/0.0.0/test'},
         'evaluators': {
-            'train': '../evaluators/InfillingRandom_testing/0.0.1/InfillingRandom_testing_train_0.0.1_evaluator.pickle',
-            'test': '../evaluators/InfillingRandom_testing/0.0.1/InfillingRandom_testing_test_0.0.1_evaluator.pickle'
+            'train': '../evaluators/InfillingEvaluator_0.3.2/InfillingRandom_testing_train_0.0.0_evaluator.pickle',
+            'test': '../evaluators/InfillingEvaluator_0.3.2/InfillingRandom_testing_test_0.0.0_evaluator.pickle'
         }
-    }
+    },
+    "InfillingClosedHH_testing": {
+        'datasets': {
+            "train": '../datasets/InfillingClosedHH_testing/0.1.2/train',
+            "test": '../datasets/InfillingClosedHH_testing/0.1.2/test'},
+        'evaluators': {
+            'train': '../evaluators/InfillingEvaluator_0.3.2/InfillingClosedHH_testing_train_0.1.2_evaluator.pickle',
+            'test': '../evaluators/InfillingEvaluator_0.3.2/InfillingClosedHH_testing_test_0.1.2_evaluator'
+                    '.pickle'
+        }
+    },
 }
 
 # –––––––––––––––––––––––––––––––––––––––––––––––––––
@@ -149,7 +157,7 @@ if __name__ == '__main__':
         ep += 1
 
         print(f"Epoch {ep}\n-------------------------------")
-        train_loop(dataloader=dataloader_train,
+        model , _ = train_loop(dataloader=dataloader_train,
                    groove_transformer=model,
                    encoder_only=wandb.config.encoder_only,
                    opt=optimizer,
@@ -158,8 +166,8 @@ if __name__ == '__main__':
                    bce_fn=BCE_fn,
                    mse_fn=MSE_fn,
                    device=params["model"]['device'],
-                   test_inputs=evaluator_test.processed_inputs,
-                   test_gt=evaluator_test.processed_gt,
+                   test_inputs=evaluator_test.processed_inputs if settings['evaluator_test'] else None,
+                   test_gt=evaluator_test.processed_gt if settings['evaluator_test'] else None,
                    h_loss_mult=wandb.config.h_loss_multiplier,
                    v_loss_mult=wandb.config.v_loss_multiplier,
                    o_loss_mult=wandb.config.o_loss_multiplier,
@@ -168,10 +176,15 @@ if __name__ == '__main__':
 
         if i in epoch_save_partial or i in epoch_save_all:
             if settings['evaluator_train']:
-                log_eval(evaluator_train, model, log_media=i in epoch_save_all, epoch=ep)
-            if settings['evaluator_test']:
-                log_eval(evaluator_test, model, log_media=i in epoch_save_all, epoch=ep)
+                #evaluator_train._identifier = 'Train_Set_Epoch_{}'.format(ep) # FIXME
+                evaluator_train._identifier = 'Train_Set'
+                log_eval(evaluator_train, model, log_media=i in epoch_save_all, epoch=ep, dump=not settings['testing'])
 
-        wandb.log({"epoch": ep})
+            if settings['evaluator_test']:
+                evaluator_test._identifier = 'Test_Set'
+                #evaluator_test._identifier = 'Test_Set_Epoch_{}'.format(ep) # FIXME
+                log_eval(evaluator_test, model, log_media=i in epoch_save_all, epoch=ep, dump=not settings['testing'])
+
+        wandb.log({"epoch": ep}, commit=True)
 
     wandb.finish()
