@@ -32,7 +32,7 @@ hyperparameter_defaults = dict(
     batch_size=16,
     dim_feedforward=256,
     learning_rate=0.05,
-    epochs=10 if settings['testing'] else 150,
+    epochs=1 if settings['testing'] else 150,
     h_loss_multiplier=1,
     v_loss_multiplier=1,
     o_loss_multiplier=1
@@ -161,7 +161,7 @@ if __name__ == '__main__':
     BCE_fn, MSE_fn = torch.nn.BCEWithLogitsLoss(reduction='none'), torch.nn.MSELoss(reduction='none')
 
     # epoch_save_all, epoch_save_partial = get_epoch_log_freq(eps)
-    epoch_save_all, epoch_save_partial = [eps - 1], [49, 99, 149, 199]  # FIXME
+    epoch_save_all, epoch_save_partial = [eps - 1], [0,2,4]  # FIXME
 
     for i in range(eps):
         ep += 1
