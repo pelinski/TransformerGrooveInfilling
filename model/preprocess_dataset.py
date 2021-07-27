@@ -143,7 +143,7 @@ def load_preprocessed_dataset(load_dataset_path, exp):
 
 if __name__ == "__main__":
 
-    testing = True
+    testing = False
 
     # change experiment and split here
     exps = ['InfillingClosedHH']
