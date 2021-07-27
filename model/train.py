@@ -11,7 +11,7 @@ from utils import get_epoch_log_freq
 sys.path.insert(1, "../../BaseGrooveTransformers/")
 from models.train import initialize_model, calculate_loss, train_loop
 
-experiment = 'InfillingClosedHH_testing'
+experiment = 'InfillingClosedHH'
 
 settings = {'testing': True,
             'log_to_wandb': True,
