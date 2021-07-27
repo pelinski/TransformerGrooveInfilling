@@ -29,8 +29,9 @@ notes.txt
 #preprocessed_datasets
 datasets/*/*/*/*.pickle
 datasets/old/*
+
 # evaluator
-evaluators/*/*/*.pickle
+evaluators/*/*.pickle
 model/evaluator/
 
 
