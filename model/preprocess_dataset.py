@@ -6,15 +6,14 @@ sys.path.append('../../preprocessed_dataset/')
 from Subset_Creators.subsetters import GrooveMidiSubsetter
 
 subset_info = {
-    "pickle_source_path": "../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.5.1/Processed_On_16_07_2021_at_19_17_hrs",
+    "pickle_source_path": "../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.5.2"
+                          "/Processed_On_21_07_2021_at_14_32_hrs",
     "subset": "GrooveMIDI_processed_",
     "metadata_csv_filename": "metadata.csv",
     "hvo_pickle_filename": "hvo_sequence_data.obj",
     "filters": {
         "beat_type": ["beat"],
         "time_signature": ["4-4"],
-#        "master_id": ["drummer2/session2/8"] # testing
-
     }
 }
 
@@ -42,7 +41,7 @@ params = {
         "sf_path": ["../soundfonts/filtered_soundfonts/Standard_Drum_Kit.sf2"],
         "max_n_sf": 1,
         "max_aug_items": 1,
-        "save_dataset_path": '../preprocessed_infilling_datasets/InfillingClosedHH/'
+        "save_dataset_path": '../datasets/InfillingClosedHH/'
 
     },
 
@@ -69,7 +68,7 @@ params = {
         "sf_path": "../soundfonts/filtered_soundfonts/",
         "max_n_sf": 3,
         "max_aug_items": 4,
-        "save_dataset_path": '../preprocessed_infilling_datasets/InfillingKicksAndSnares/'
+        "save_dataset_path": '../datasets/InfillingKicksAndSnares/'
     },
 
     "InfillingMultipleVoices": {
@@ -96,7 +95,7 @@ params = {
         "sf_path": "../soundfonts/filtered_soundfonts/",
         "max_n_sf": 3,
         "max_aug_items": 6,
-        "save_dataset_path": '../preprocessed_infilling_datasets/InfillingMultipleVoices/'
+        "save_dataset_path": '../datasets/InfillingMultipleVoices/'
     },
 
     "InfillingRandom": {
@@ -105,7 +104,7 @@ params = {
         "sf_path": "../soundfonts/filtered_soundfonts/",
         "max_aug_items": 4,
         "thres_range": (0.4, 0.7),
-        "save_dataset_path": '../preprocessed_infilling_datasets/InfillingRandom/'
+        "save_dataset_path": '../datasets/InfillingRandom/'
     }
 
 }
@@ -130,23 +129,34 @@ def preprocess_dataset(params, exp):
 
 def load_preprocessed_dataset(load_dataset_path, exp):
     if exp == 'InfillingSymbolic':
+        print('Loading GrooveMidiDatasetInfillingSymbolic...')
         _dataset = GrooveMidiDatasetInfillingSymbolic(load_dataset_path=load_dataset_path)
     elif exp == 'InfillingRandom':
+        print('Loading GrooveMidiDatasetInfillingRandom...')
         _dataset = GrooveMidiDatasetInfillingRandom(load_dataset_path=load_dataset_path)
     else:
+        print('Loading GrooveMidiDatasetInfilling...')
         _dataset = GrooveMidiDatasetInfilling(load_dataset_path=load_dataset_path)
 
     return _dataset
 
 
 if __name__ == "__main__":
+
+    testing = False
+
     # change experiment and split here
-    # exps = ['InfillingRandom', 'InfillingMultipleVoices', 'InfillingClosedHH']
-    exps = ['InfillingKicksAndSnares', 'InfillingClosedHH','InfillingMultipleVoices' ]
-    splits = ['train', 'test', 'validation']
+    exps = ['InfillingClosedHH']
+    splits = ['train', 'test']
 
     for exp in exps:
-        print('------------------------\n'+exp+'\n------------------------\n')
+        if testing:
+            params[exp]['subset_info']['filters']['master_id'] = ["drummer2/session2/8"]
+            params[exp]['dataset_name'] = params[exp]['dataset_name'] + '_testing'
+            params[exp]['save_dataset_path'] = '../datasets/' + params[exp]['dataset_name'] + '/'
+
+        print('------------------------\n' + params[exp]['dataset_name'] + '\n------------------------\n')
+
         for split in splits:
             params_exp = copy.deepcopy(params[exp])
             params_exp['split'] = split

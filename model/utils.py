@@ -208,9 +208,9 @@ def save_parameters_to_pickle(params, params_path=None):
         pickle.dump(params, f)
 
 
-def save_dict_to_pickle(dict, filename):
+def save_to_pickle(obj, filename):
     with open(filename, 'wb') as f:
-        pickle.dump(dict, f)
+        pickle.dump(obj, f)
 
 
 def get_epoch_log_freq(n_epochs):

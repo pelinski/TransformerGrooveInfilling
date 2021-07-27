@@ -14,9 +14,7 @@ parameters:
     min: 0.1
     max: 0.3
   optimizer_algorithm:
-    values:
-    - 'sgd'
-    - 'adam'
+    value: 'sgd'
   learning_rate:
     distribution: 'uniform'
     min: 0
@@ -29,13 +27,10 @@ parameters:
     max: 12
   epochs:
     value: 100
-  use_evaluator:
-    value: 1
   encoder_only:
     value: 1
-  config:
-    value: 'InfillingClosedHH'
-program: train_infilling.py
-project: 'train_infilling_sweeps'
-description: 'Full dataset, trained on 100 epochs. Test and train evaluator enabled only on last epoch, model on saving mode. 6 to
-12 enc_dec_layers'
+  experiment:
+    value: 'InfillingRandom'
+program: train.py
+project: 'InfillingRandom_sweeps'
+description: ''

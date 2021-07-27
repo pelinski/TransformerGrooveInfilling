@@ -1,13 +1,24 @@
 import sys
+import os
 import numpy as np
 from tqdm import tqdm
 import copy
+import pickle
+import wandb
+import torch
+
+from bokeh.embed import file_html
+from bokeh.resources import CDN
 
 sys.path.insert(1, "../../GrooveEvaluator")
 from GrooveEvaluator.evaluator import Evaluator, HVOSeq_SubSet_Evaluator
+from GrooveEvaluator.plotting_utils import separate_figues_by_tabs
+
+sys.path.insert(1, "../../hvo_sequence")
+from hvo_sequence.drum_mappings import ROLAND_REDUCED_MAPPING
 
 sys.path.insert(1, "../preprocessed_dataset/")
-from utils import get_hvo_idxs_for_voice, _convert_hvos_array_to_subsets
+from utils import _convert_hvos_array_to_subsets, save_to_pickle
 
 
 class InfillingEvaluator(Evaluator):
@@ -23,13 +34,15 @@ class InfillingEvaluator(Evaluator):
                  analyze_global_features=True,
                  disable_tqdm=True,
                  dataset=None,
-                 model=None,
-                 n_epochs=None):
+                 horizontal=True,
+                 device='cuda' if torch.cuda.is_available() else 'cpu'):
 
-        self.__version___ = "0.2.2"
+        self.__version___ = "0.3.2"
 
         self.sf_dict = {}
         self.hvo_comp_dict = {}
+        self.horizontal = horizontal
+        self.device = device
 
         # common filters
         eval_styles = ["hiphop", "funk", "reggae", "soul", "latin", "jazz", "pop", "afrobeat", "highlife", "punk",
@@ -39,7 +52,7 @@ class InfillingEvaluator(Evaluator):
             list_of_filter_dicts_for_subsets.append(
                 {"style_primary": [style], "beat_type": ["beat"], "time_signature": ["4-4"]}
             )
-
+        # TODO bypass feature extractor
         super(InfillingEvaluator, self).__init__(pickle_source_path,
                                                  set_subfolder,
                                                  hvo_pickle_filename,
@@ -53,8 +66,6 @@ class InfillingEvaluator(Evaluator):
                                                  disable_tqdm=disable_tqdm)
 
         self.dataset = dataset
-        self.model = model
-        self.eps = n_epochs
 
         self._gmd_gt_hvo_sequences = []
         self._gt_hvos_array_tags, self._gmd_gt_hvos_array = [], []
@@ -68,13 +79,10 @@ class InfillingEvaluator(Evaluator):
 
         # preprocess evaluator_subset
         preprocessed_dict = self.dataset.preprocess_dataset(self._gmd_gt_hvo_sequences)
-        self.processed_inputs = preprocessed_dict["processed_inputs"]
+        for key in preprocessed_dict.keys():
+            self.__setattr__(key, preprocessed_dict[key])
+        del self.processed_outputs
         self.processed_gt = preprocessed_dict["processed_outputs"]
-        self.hvo_sequences_inputs = preprocessed_dict["hvo_sequences_inputs"]
-        self.hvo_index = preprocessed_dict["hvo_index"]
-        self.voices_reduced = preprocessed_dict["voices_reduced"]
-        self.soundfonts = preprocessed_dict["soundfonts"]
-        self.unused_items = preprocessed_dict["unused_items"]
         self._gt_hvo_sequences = preprocessed_dict["hvo_sequences_outputs"]
         self._gt_hvos_array = np.stack([hvo_seq.hvo for hvo_seq in self._gt_hvo_sequences])
 
@@ -121,35 +129,19 @@ class InfillingEvaluator(Evaluator):
         self.gt_SubSet_Evaluator = HVOSeq_SubSet_InfillingEvaluator(
             self._gt_subsets,  # Ground Truth typically
             self._gt_tags,
-            "{}_Set_Ground_Truth".format(self._identifier),  # a name for the subset
+            "Ground_Truth",  # a name for the subset
             disable_tqdm=self.disable_tqdm,
             group_by_minor_keys=True,
+            horizontal=self.horizontal,
             is_gt=True)
 
         self.audio_sample_locations = self.get_sample_indices(n_samples_to_synthesize_visualize_per_subset)
 
-    def set_pred(self, horizontal=True):
-        eval_pred = self.model.predict(self.processed_inputs, use_thres=True, thres=0.5)
+    def set_pred(self, model):
+        self.processed_inputs = self.processed_inputs.to(self.device)
+        eval_pred = model.predict(self.processed_inputs, use_thres=True, thres=0.5)
         eval_pred = [_.cpu() for _ in eval_pred]
-        eval_pred_hvo_array = np.concatenate(eval_pred, axis=2)
-        eval_pred = np.zeros_like(eval_pred_hvo_array)
-
-        n_voices = eval_pred_hvo_array.shape[2] // 3
-
-        for idx in range(eval_pred_hvo_array.shape[0]):
-
-            if horizontal:  # horizontally removing voices
-                if isinstance(self.voices_reduced[idx], int):
-                    self.voices_reduced[idx] = [self.voices_reduced[idx]]
-                h_idx, v_idx, o_idx = get_hvo_idxs_for_voice(voice_idx=list(self.voices_reduced[idx]),
-                                                             n_voices=n_voices)
-                eval_pred[idx, :, h_idx + v_idx + o_idx] = eval_pred_hvo_array[idx, :, h_idx + v_idx + o_idx]
-
-            else:  # randomly removing voices
-                hits = self.hvo_sequences_inputs[idx][:n_voices]
-                input_hits_idx = np.nonzero(hits)
-                eval_pred[idx, :, :] = eval_pred_hvo_array[idx, :, :]
-                eval_pred[idx, tuple(input_hits_idx)] = 0
+        eval_pred = np.concatenate(eval_pred, axis=2)
 
         self._prediction_hvos_array = eval_pred
         self._prediction_tags, self._prediction_subsets, self._subset_hvo_array_index = \
@@ -162,10 +154,13 @@ class InfillingEvaluator(Evaluator):
         self.prediction_SubSet_Evaluator = HVOSeq_SubSet_InfillingEvaluator(
             self._prediction_subsets,
             self._prediction_tags,
-            "{}_Set_Predictions".format(self._identifier),  # a name for the subset
+            "Predictions",  # a name for the subset
             disable_tqdm=self.disable_tqdm,
             group_by_minor_keys=True,
-            is_gt=False)
+            horizontal=self.horizontal,
+            is_gt=False
+        )
+        self.gt_SubSet_Evaluator.set_identifier = 'Ground_Truth'
 
         sf_dict, hvo_comp_dict = {}, {}
         for key in self.audio_sample_locations.keys():
@@ -186,6 +181,17 @@ class InfillingEvaluator(Evaluator):
     def get_gmd_ground_truth_hvo_sequences(self):  # for testing
         return copy.deepcopy(self._gmd_gt_hvo_sequences)
 
+    def save_as_pickle(self, save_evaluator_path):
+
+        save_evaluator_path = os.path.join(save_evaluator_path, 'InfillingEvaluator_' + self.__version___)
+
+        if not os.path.exists(save_evaluator_path):
+            os.makedirs(save_evaluator_path)
+
+        filename = os.path.join(save_evaluator_path, self.dataset.dataset_name + '_' + self.dataset.split +
+                                '_' + self.dataset.__version__ + '_evaluator.pickle')
+        save_to_pickle(self, filename)
+
 
 class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
     def __init__(
@@ -201,7 +207,8 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
             analyze_global_features=True,
             sf_dict={},
             hvo_comp_dict={},
-            is_gt=False
+            horizontal=True,
+            is_gt=None
     ):
         super(HVOSeq_SubSet_InfillingEvaluator, self).__init__(set_subsets,
                                                                set_tags,
@@ -213,9 +220,10 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
                                                                analyze_heatmap,
                                                                analyze_global_features)
 
+        self.horizontal = horizontal
+        self.is_gt = is_gt
         self.sf_dict = sf_dict
         self.hvo_comp_dict = hvo_comp_dict
-        self.is_gt = is_gt
 
     def get_audios(self, _, use_specific_samples_at=None):
         """ use_specific_samples_at: must be a list of tuples of (subset_ix, sample_ix) denoting to get
@@ -228,15 +236,191 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
         for key in tqdm(self._sampled_hvos.keys(),
                         desc='Synthesizing samples - {} '.format(self.set_identifier),
                         disable=self.disable_tqdm):
-            for idx, sample_hvo in enumerate(self._sampled_hvos[key]):
-                if not self.is_gt:
-                    hvo_comp = self.hvo_comp_dict[key][idx]
-                    sample_hvo.hvo = sample_hvo.hvo + hvo_comp.hvo
+            for idx, _sample_hvo in enumerate(self._sampled_hvos[key]):
+                sample_hvo = _sample_hvo.copy()  # make sure not to modify og hvo
+
+                # add 'context'
+                sample_hvo = self.add_removed_part_to_hvo(sample_hvo, key, idx)
+
                 sf_path = self.sf_dict[key][idx]  # force usage of sf_dict
                 audios.append(sample_hvo.synthesize(sf_path=sf_path))
-                captions.append("{}_{}_{}.wav".format(
+                captions.append("{}_{}_{}_{}.wav".format(
                     self.set_identifier, sample_hvo.metadata.style_primary,
-                    sample_hvo.metadata.master_id.replace("/", "_")
+                    sample_hvo.metadata.master_id.replace("/", "_"), str(idx)
                 ))
 
+        # sort so that they are alphabetically ordered in wandb
+        sort_index = np.argsort(captions)
+        captions = np.array(captions)[sort_index].tolist()
+        audios = np.array(audios)[sort_index].tolist()
+
         return list(zip(captions, audios))
+
+    def get_piano_rolls(self, use_specific_samples_at=None, add_inputs=False):
+        """ use_specific_samples_at: must be a dict of lists of (sample_ix) """
+
+        self._sampled_hvos = self.get_hvo_samples_located_at(use_specific_samples_at)
+        tab_titles, piano_roll_tabs = [], []
+        for subset_ix, tag in tqdm(enumerate(self._sampled_hvos.keys()),
+                                   desc='Creating Piano rolls for ' + self.set_identifier,
+                                   disable=self.disable_tqdm):
+            piano_rolls = []
+            for idx, _sample_hvo in enumerate(self._sampled_hvos[tag]):
+                sample_hvo = _sample_hvo.copy()  # make sure not to modify og hvo
+
+                if add_inputs:
+                    sample_hvo = self.add_removed_part_to_hvo(sample_hvo, tag, idx)
+
+                title = "{}_{}_{}_{}".format(
+                    self.set_identifier, sample_hvo.metadata.style_primary,
+                    sample_hvo.metadata.master_id.replace("/", "_"), str(idx))
+                piano_rolls.append(sample_hvo.to_html_plot(filename=title))
+            piano_roll_tabs.append(separate_figues_by_tabs(piano_rolls, [str(x) for x in range(len(piano_rolls))]))
+            tab_titles.append(tag)
+
+        # sort so that they are alphabetically ordered in wandb
+        sort_index = np.argsort(tab_titles)
+        tab_titles = np.array(tab_titles)[sort_index].tolist()
+        piano_roll_tabs = np.array(piano_roll_tabs)[sort_index].tolist()
+
+        return separate_figues_by_tabs(piano_roll_tabs, [tag for tag in tab_titles])
+
+    def add_removed_part_to_hvo(self, sample_hvo, key, idx):
+
+        hvo_comp = self.hvo_comp_dict[key][idx]
+        non_zero_idx = np.nonzero(hvo_comp.hvo[:, :len(hvo_comp.drum_mapping)])
+        sample_hvo.hvo[non_zero_idx] = 0  # make sure that predicted hits don't overwrite input hits
+        sample_hvo.hvo = sample_hvo.hvo + hvo_comp.hvo
+
+        return sample_hvo
+
+    def get_logging_dict(self, velocity_heatmap_html=True, global_features_html=True,
+                         piano_roll_html=True, audio_files=True, sf_paths=None, use_specific_samples_at=None):
+
+        logging_dict = super(HVOSeq_SubSet_InfillingEvaluator, self).get_logging_dict(
+            velocity_heatmap_html=velocity_heatmap_html,
+            global_features_html=global_features_html,
+            piano_roll_html=piano_roll_html,
+            audio_files=audio_files,
+            sf_paths=sf_paths,
+            use_specific_samples_at=use_specific_samples_at)
+
+        if piano_roll_html is True:
+            logging_dict.update({"piano_rolls_plus_inputs": self.get_piano_rolls(use_specific_samples_at,
+                                                                                 add_inputs=True)})
+
+        return logging_dict
+
+    def get_wandb_logging_media(self, velocity_heatmap_html=True, global_features_html=True,
+                                piano_roll_html=True, audio_files=True, sf_paths=None, use_specific_samples_at=None):
+
+        self._sampled_hvos = self.get_hvo_samples_located_at(use_specific_samples_at)
+
+        logging_dict = self.get_logging_dict(velocity_heatmap_html, global_features_html,
+                                             piano_roll_html, audio_files, sf_paths, use_specific_samples_at)
+
+        wandb_media_dict = {}
+        for key in logging_dict.keys():
+            if velocity_heatmap_html is True and key in "velocity_heatmaps":
+                wandb_media_dict.update(
+                    {
+                        "velocity_heatmaps":
+                            {
+                                self.set_identifier:
+                                    wandb.Html(file_html(
+                                        logging_dict["velocity_heatmaps"], CDN, "vel_heatmap_" + self.set_identifier))
+                            }
+                    }
+                )
+
+            if global_features_html is True and key in "global_feature_pdfs":
+                wandb_media_dict.update(
+                    {
+                        "global_feature_pdfs":
+                            {
+                                self.set_identifier:
+                                    wandb.Html(file_html(
+                                        logging_dict["global_feature_pdfs"], CDN,
+                                        "feature_pdfs_" + self.set_identifier))
+                            }
+                    }
+                )
+
+            if audio_files is True and key in "captions_audios":
+                captions_audios_tuples = logging_dict["captions_audios"]
+                wandb_media_dict.update(
+                    {
+                        "audios":
+                            {
+                                self.set_identifier + '_plus_inputs':
+                                    [
+                                        wandb.Audio(c_a[1], caption=c_a[0], sample_rate=44100)
+                                        for c_a in captions_audios_tuples
+                                    ]
+                            }
+                    }
+                )
+
+            if piano_roll_html is True and key in "piano_rolls":
+                wandb_media_dict.update(
+                    {
+                        "piano_roll_html":
+                            {
+                                self.set_identifier:
+                                    wandb.Html(file_html(
+                                        logging_dict["piano_rolls"], CDN, "piano_rolls_" + self.set_identifier)),
+
+                                self.set_identifier + '_plus_inputs':
+                                    wandb.Html(file_html(
+                                        logging_dict["piano_rolls_plus_inputs"], CDN, "piano_rolls_plus_inputs" +
+                                                                                      self.set_identifier))
+                            }
+                    }
+
+                )
+
+        return wandb_media_dict
+
+
+# training script evaluator-related code wrappers
+
+def init_evaluator(evaluator_path, device):
+    with open(evaluator_path, 'rb') as f:
+        evaluator = pickle.load(f)
+
+    # log eval_subset parameters to wandb
+    wandb.config.update({evaluator._identifier + "_hvo_index": evaluator.hvo_index,
+                         evaluator._identifier + "_soundfonts": evaluator.soundfonts})
+    if evaluator.horizontal:
+        wandb.config.update({evaluator._identifier + "_voices_reduced": evaluator.voices_reduced})
+
+    evaluator.device = device
+    evaluator.processed_inputs.to(device)
+    evaluator.processed_gt.to(device)
+
+    return evaluator
+
+
+def log_eval(evaluator, model, log_media, epoch, dump):
+    # evaluator._identifier = copy.deepcopy(evaluator._identifier)
+    evaluator.set_pred(model)
+
+    acc_h = evaluator.get_hits_accuracies(drum_mapping=ROLAND_REDUCED_MAPPING)
+    mse_v = evaluator.get_velocity_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
+    mse_o = evaluator.get_micro_timing_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
+    wandb.log({**acc_h, **mse_v, **mse_o}, commit=False)
+
+    if log_media:
+        wandb_media = evaluator.get_wandb_logging_media(global_features_html=False)
+        if len(wandb_media.keys()) > 0:
+            wandb.log({evaluator._identifier: wandb_media}, commit=False)
+
+    # move torch tensors to cpu before saving so that they can be loaded in cpu machines
+    if dump:
+        evaluator.processed_inputs.to(device='cpu')
+        evaluator.processed_gt.to(device='cpu')
+        evaluator.dump(path="evaluator/evaluator_{}_run_{}_Epoch_{}.Eval".format(evaluator._identifier, wandb.run.name,
+                                                                                 epoch))
+
+    # rhythmic_distances = evaluator.get_rhythmic_distances()
+    # wandb.log(rhythmic_distances, commit=False)
