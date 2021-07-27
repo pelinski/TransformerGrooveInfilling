@@ -270,13 +270,6 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
 
                 if add_inputs:
                     sample_hvo = self.add_removed_part_to_hvo(sample_hvo, tag, idx)
-                """
-                # add 'context'
-                if self.horizontal:
-                    sample_hvo = self.add_removed_part_to_hvo(sample_hvo, tag, idx)
-                if not self.horizontal and not self.is_gt:  # if it's random and prediction
-                    sample_hvo = self.add_removed_part_to_hvo(sample_hvo, tag, idx)
-                """
 
                 title = "{}_{}_{}_{}".format(
                     self.set_identifier, sample_hvo.metadata.style_primary,
@@ -304,12 +297,13 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
     def get_logging_dict(self, velocity_heatmap_html=True, global_features_html=True,
                          piano_roll_html=True, audio_files=True, sf_paths=None, use_specific_samples_at=None):
 
-        logging_dict = super(HVOSeq_SubSet_InfillingEvaluator, self).get_logging_dict(velocity_heatmap_html=velocity_heatmap_html,
-                                                                                      global_features_html=global_features_html,
-                                                                                      piano_roll_html=piano_roll_html,
-                                                                                      audio_files=audio_files,
-                                                                                      sf_paths=sf_paths,
-                                                                                      use_specific_samples_at=use_specific_samples_at)
+        logging_dict = super(HVOSeq_SubSet_InfillingEvaluator, self).get_logging_dict(
+            velocity_heatmap_html=velocity_heatmap_html,
+            global_features_html=global_features_html,
+            piano_roll_html=piano_roll_html,
+            audio_files=audio_files,
+            sf_paths=sf_paths,
+            use_specific_samples_at=use_specific_samples_at)
 
         if piano_roll_html is True:
             logging_dict.update({"piano_rolls_plus_inputs": self.get_piano_rolls(use_specific_samples_at,
@@ -385,28 +379,6 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
 
                 )
 
-                # change plot titles
-                """
-
-                wandb_media_dict = copy.deepcopy(_wandb_media_dict)
-
-                # audios
-                wandb_media_dict['audios'][self.set_identifier + '_plus_Input'] = _wandb_media_dict['audios'][
-                    self.set_identifier]
-                del wandb_media_dict['audios'][self.set_identifier]
-
-                # piano rolls
-                if self.horizontal:
-                    wandb_media_dict['piano_roll_html'][self.set_identifier + '_plus_Input'] = \
-                        _wandb_media_dict['piano_roll_html'][self.set_identifier]
-                    del wandb_media_dict['piano_roll_html'][self.set_identifier]
-        
-                _set = self.set_identifier.split('_')[-1]
-                if _set == 'Predictions' and not self.horizontal:  # if random and predictions
-                    wandb_media_dict['piano_roll_html'][self.set_identifier + '_plus_Input'] = \
-                        _wandb_media_dict['piano_roll_html'][self.set_identifier]
-                    del wandb_media_dict['piano_roll_html'][self.set_identifier]
-                """
         return wandb_media_dict
 
 
