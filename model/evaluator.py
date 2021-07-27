@@ -236,7 +236,7 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
                 sample_hvo = _sample_hvo.copy()  # make sure not to modify og hvo
 
                 # add 'context'
-                sample_hvo = self.add_removed_part_to_hvo(sample_hvo, key, idx)
+                #sample_hvo = self.add_removed_part_to_hvo(sample_hvo, key, idx)
 
                 sf_path = self.sf_dict[key][idx]  # force usage of sf_dict
                 audios.append(sample_hvo.synthesize(sf_path=sf_path))
