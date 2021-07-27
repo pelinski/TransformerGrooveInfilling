@@ -1,3 +1,5 @@
-preprocessed_infilling_datasets/InfillingRandom/0.0.0.zip filter=lfs diff=lfs merge=lfs -text
-preprocessed_infilling_datasets/InfillingClosedHH/0.1.2.zip filter=lfs diff=lfs merge=lfs -text
-preprocessed_infilling_datasets/InfillingKicksAndSnares/0.1.2.zip filter=lfs diff=lfs merge=lfs -text
+datasets/InfillingRandom/0.0.0.zip filter=lfs diff=lfs merge=lfs -text
+datasets/InfillingClosedHH/0.1.2.zip filter=lfs diff=lfs merge=lfs -text
+datasets/InfillingKicksAndSnares/0.1.2.zip filter=lfs diff=lfs merge=lfs -text
+evaluators/InfillingKicksAndSnares/0.1.2.zip filter=lfs diff=lfs merge=lfs -text
+evaluators/InfillingRandom/0.0.0.zip filter=lfs diff=lfs merge=lfs -text
