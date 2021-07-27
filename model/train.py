@@ -11,7 +11,7 @@ from utils import get_epoch_log_freq
 sys.path.insert(1, "../../BaseGrooveTransformers/")
 from models.train import initialize_model, calculate_loss, train_loop
 
-experiment = 'InfillingClosedHH_testing'
+experiment = 'InfillingClosedHH'
 
 settings = {'testing': True,
             'log_to_wandb': True,
@@ -32,7 +32,7 @@ hyperparameter_defaults = dict(
     batch_size=16,
     dim_feedforward=256,
     learning_rate=0.05,
-    epochs=5 if settings['testing'] else 150,
+    epochs=10 if settings['testing'] else 150,
     h_loss_multiplier=1,
     v_loss_multiplier=1,
     o_loss_multiplier=1
@@ -58,6 +58,16 @@ paths = {
             'train': '../evaluators/InfillingRandom/0.0.1/InfillingRandom_train_0.0.1_evaluator.pickle',
             'test': '../evaluators/InfillingRandom/0.0.1/InfillingRandom_test_0.0.1_evaluator.pickle'
         },
+    },
+    "InfillingClosedHH": {
+        'datasets': {
+            "train": '../datasets/InfillingClosedHH/0.1.2/train',
+            "test": '../datasets/InfillingClosedHH/0.1.2/test'},
+        'evaluators': {
+            'train': '../evaluators/InfillingEvaluator_0.3.2/InfillingClosedHH_train_0.1.2_evaluator.pickle',
+            'test': '../evaluators/InfillingEvaluator_0.3.2/InfillingClosedHH_test_0.1.2_evaluator'
+                    '.pickle'
+        }
     },
     "InfillingKicksAndSnares_testing": {
         'datasets': {
@@ -133,7 +143,7 @@ if __name__ == '__main__':
 
     # initialize model
     model, optimizer, ep = initialize_model(params)
-    wandb.watch(model)
+    wandb.watch(model, log_freq=1000)
 
     # load dataset
     dataset_train = load_preprocessed_dataset(paths[wandb.config.experiment]['datasets']['train'],
@@ -157,7 +167,7 @@ if __name__ == '__main__':
         ep += 1
 
         print(f"Epoch {ep}\n-------------------------------")
-        model , _ = train_loop(dataloader=dataloader_train,
+        train_loop(dataloader=dataloader_train,
                    groove_transformer=model,
                    encoder_only=wandb.config.encoder_only,
                    opt=optimizer,
