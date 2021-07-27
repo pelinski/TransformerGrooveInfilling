@@ -7,6 +7,9 @@ import pickle
 import wandb
 import torch
 
+from bokeh.embed import file_html
+from bokeh.resources import CDN
+
 sys.path.insert(1, "../../GrooveEvaluator")
 from GrooveEvaluator.evaluator import Evaluator, HVOSeq_SubSet_Evaluator
 from GrooveEvaluator.plotting_utils import separate_figues_by_tabs
@@ -126,7 +129,7 @@ class InfillingEvaluator(Evaluator):
         self.gt_SubSet_Evaluator = HVOSeq_SubSet_InfillingEvaluator(
             self._gt_subsets,  # Ground Truth typically
             self._gt_tags,
-            "{}_Ground_Truth".format(self._identifier),  # a name for the subset
+            "Ground_Truth",  # a name for the subset
             disable_tqdm=self.disable_tqdm,
             group_by_minor_keys=True,
             horizontal=self.horizontal,
@@ -151,12 +154,13 @@ class InfillingEvaluator(Evaluator):
         self.prediction_SubSet_Evaluator = HVOSeq_SubSet_InfillingEvaluator(
             self._prediction_subsets,
             self._prediction_tags,
-            "{}_Predictions".format(self._identifier),  # a name for the subset
+            "Predictions",  # a name for the subset
             disable_tqdm=self.disable_tqdm,
             group_by_minor_keys=True,
             horizontal=self.horizontal,
             is_gt=False
         )
+        self.gt_SubSet_Evaluator.set_identifier = 'Ground_Truth'
 
         sf_dict, hvo_comp_dict = {}, {}
         for key in self.audio_sample_locations.keys():
@@ -236,7 +240,7 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
                 sample_hvo = _sample_hvo.copy()  # make sure not to modify og hvo
 
                 # add 'context'
-                #sample_hvo = self.add_removed_part_to_hvo(sample_hvo, key, idx)
+                sample_hvo = self.add_removed_part_to_hvo(sample_hvo, key, idx)
 
                 sf_path = self.sf_dict[key][idx]  # force usage of sf_dict
                 audios.append(sample_hvo.synthesize(sf_path=sf_path))
@@ -252,7 +256,7 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
 
         return list(zip(captions, audios))
 
-    def get_piano_rolls(self, use_specific_samples_at=None):
+    def get_piano_rolls(self, use_specific_samples_at=None, add_inputs=False):
         """ use_specific_samples_at: must be a dict of lists of (sample_ix) """
 
         self._sampled_hvos = self.get_hvo_samples_located_at(use_specific_samples_at)
@@ -264,6 +268,8 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
             for idx, _sample_hvo in enumerate(self._sampled_hvos[tag]):
                 sample_hvo = _sample_hvo.copy()  # make sure not to modify og hvo
 
+                if add_inputs:
+                    sample_hvo = self.add_removed_part_to_hvo(sample_hvo, tag, idx)
                 """
                 # add 'context'
                 if self.horizontal:
@@ -295,43 +301,113 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
 
         return sample_hvo
 
+    def get_logging_dict(self, velocity_heatmap_html=True, global_features_html=True,
+                         piano_roll_html=True, audio_files=True, sf_paths=None, use_specific_samples_at=None):
+
+        logging_dict = super(HVOSeq_SubSet_InfillingEvaluator, self).get_logging_dict(velocity_heatmap_html=velocity_heatmap_html,
+                                                                                      global_features_html=global_features_html,
+                                                                                      piano_roll_html=piano_roll_html,
+                                                                                      audio_files=audio_files,
+                                                                                      sf_paths=sf_paths,
+                                                                                      use_specific_samples_at=use_specific_samples_at)
+
+        if piano_roll_html is True:
+            logging_dict.update({"piano_rolls_plus_inputs": self.get_piano_rolls(use_specific_samples_at,
+                                                                                 add_inputs=True)})
+
+        return logging_dict
+
     def get_wandb_logging_media(self, velocity_heatmap_html=True, global_features_html=True,
                                 piano_roll_html=True, audio_files=True, sf_paths=None, use_specific_samples_at=None):
 
         self._sampled_hvos = self.get_hvo_samples_located_at(use_specific_samples_at)
 
-        _wandb_media = super(HVOSeq_SubSet_InfillingEvaluator, self).get_wandb_logging_media(
-            velocity_heatmap_html=velocity_heatmap_html,
-            global_features_html=global_features_html,
-            piano_roll_html=piano_roll_html,
-            audio_files=audio_files,
-            sf_paths=sf_paths,
-            use_specific_samples_at=use_specific_samples_at)
+        logging_dict = self.get_logging_dict(velocity_heatmap_html, global_features_html,
+                                             piano_roll_html, audio_files, sf_paths, use_specific_samples_at)
 
-        # change plot titles
+        wandb_media_dict = {}
+        for key in logging_dict.keys():
+            if velocity_heatmap_html is True and key in "velocity_heatmaps":
+                wandb_media_dict.update(
+                    {
+                        "velocity_heatmaps":
+                            {
+                                self.set_identifier:
+                                    wandb.Html(file_html(
+                                        logging_dict["velocity_heatmaps"], CDN, "vel_heatmap_" + self.set_identifier))
+                            }
+                    }
+                )
 
-        #wandb_media = copy.deepcopy(_wandb_media)
-        """
+            if global_features_html is True and key in "global_feature_pdfs":
+                wandb_media_dict.update(
+                    {
+                        "global_feature_pdfs":
+                            {
+                                self.set_identifier:
+                                    wandb.Html(file_html(
+                                        logging_dict["global_feature_pdfs"], CDN,
+                                        "feature_pdfs_" + self.set_identifier))
+                            }
+                    }
+                )
 
-        # audios
-        wandb_media['audios'][self.set_identifier + '_plus_Input'] = _wandb_media['audios'][
-            self.set_identifier]
-        del wandb_media['audios'][self.set_identifier]
+            if audio_files is True and key in "captions_audios":
+                captions_audios_tuples = logging_dict["captions_audios"]
+                wandb_media_dict.update(
+                    {
+                        "audios":
+                            {
+                                self.set_identifier + '_plus_inputs':
+                                    [
+                                        wandb.Audio(c_a[1], caption=c_a[0], sample_rate=44100)
+                                        for c_a in captions_audios_tuples
+                                    ]
+                            }
+                    }
+                )
 
-        # piano rolls
-        if self.horizontal:
-            wandb_media['piano_roll_html'][self.set_identifier + '_plus_Input'] = \
-                _wandb_media['piano_roll_html'][self.set_identifier]
-            del wandb_media['piano_roll_html'][self.set_identifier]
+            if piano_roll_html is True and key in "piano_rolls":
+                wandb_media_dict.update(
+                    {
+                        "piano_roll_html":
+                            {
+                                self.set_identifier:
+                                    wandb.Html(file_html(
+                                        logging_dict["piano_rolls"], CDN, "piano_rolls_" + self.set_identifier)),
 
-        _set = self.set_identifier.split('_')[-1]
-        if _set == 'Predictions' and not self.horizontal:  # if random and predictions
-            wandb_media['piano_roll_html'][self.set_identifier + '_plus_Input'] = \
-                _wandb_media['piano_roll_html'][self.set_identifier]
-            del wandb_media['piano_roll_html'][self.set_identifier]
-        """
-        return _wandb_media
+                                self.set_identifier + '_plus_inputs':
+                                    wandb.Html(file_html(
+                                        logging_dict["piano_rolls_plus_inputs"], CDN, "piano_rolls_plus_inputs" +
+                                                                                      self.set_identifier))
+                            }
+                    }
 
+                )
+
+                # change plot titles
+                """
+
+                wandb_media_dict = copy.deepcopy(_wandb_media_dict)
+
+                # audios
+                wandb_media_dict['audios'][self.set_identifier + '_plus_Input'] = _wandb_media_dict['audios'][
+                    self.set_identifier]
+                del wandb_media_dict['audios'][self.set_identifier]
+
+                # piano rolls
+                if self.horizontal:
+                    wandb_media_dict['piano_roll_html'][self.set_identifier + '_plus_Input'] = \
+                        _wandb_media_dict['piano_roll_html'][self.set_identifier]
+                    del wandb_media_dict['piano_roll_html'][self.set_identifier]
+        
+                _set = self.set_identifier.split('_')[-1]
+                if _set == 'Predictions' and not self.horizontal:  # if random and predictions
+                    wandb_media_dict['piano_roll_html'][self.set_identifier + '_plus_Input'] = \
+                        _wandb_media_dict['piano_roll_html'][self.set_identifier]
+                    del wandb_media_dict['piano_roll_html'][self.set_identifier]
+                """
+        return wandb_media_dict
 
 
 # training script evaluator-related code wrappers
@@ -354,7 +430,7 @@ def init_evaluator(evaluator_path, device):
 
 
 def log_eval(evaluator, model, log_media, epoch, dump):
-    #evaluator._identifier = copy.deepcopy(evaluator._identifier)
+    # evaluator._identifier = copy.deepcopy(evaluator._identifier)
     evaluator.set_pred(model)
 
     acc_h = evaluator.get_hits_accuracies(drum_mapping=ROLAND_REDUCED_MAPPING)
@@ -365,7 +441,7 @@ def log_eval(evaluator, model, log_media, epoch, dump):
     if log_media:
         wandb_media = evaluator.get_wandb_logging_media(global_features_html=False)
         if len(wandb_media.keys()) > 0:
-            wandb.log({evaluator._identifier:wandb_media}, commit=False)
+            wandb.log({evaluator._identifier: wandb_media}, commit=False)
 
     # move torch tensors to cpu before saving so that they can be loaded in cpu machines
     if dump:
