@@ -12,6 +12,10 @@ params = {
             "train": '../datasets/InfillingRandom/0.0.0/train',
             'test': '../datasets/InfillingRandom/0.0.0/test'
         },
+        "InfillingClosedHH": {
+            "train": '../datasets/InfillingClosedHH/0.1.2/train',
+            'test': '../datasets/InfillingClosedHH/0.1.2/test'
+        },
         "InfillingKicksAndSnares_testing": {
             "train": '../datasets/InfillingKicksAndSnares_testing/0.1.3/train',
             'test': '../datasets/InfillingKicksAndSnares_testing/0.1.3/test'
@@ -33,7 +37,7 @@ params = {
 
 if __name__ == "__main__":
 
-    testing = True
+    testing = False
 
     exps = ['InfillingClosedHH']
     splits = ['train', 'test']
