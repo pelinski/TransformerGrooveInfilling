@@ -13,7 +13,7 @@ from models.train import initialize_model, calculate_loss, train_loop
 
 experiment = 'InfillingClosedHH'
 
-settings = {'testing': True,
+settings = {'testing': False,
             'log_to_wandb': True,
             'evaluator_train': True,
             'evaluator_test': True,
