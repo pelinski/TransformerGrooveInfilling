@@ -46,8 +46,8 @@ paths = {
             "train": '../datasets/InfillingKicksAndSnares/0.1.2/train',
             "test": '../datasets/InfillingKicksAndSnares/0.1.2/test'},
         'evaluators': {
-            'train': '../evaluators/InfillingKicksAndSnares/0.1.2/InfillingKicksAndSnares_train_0.1.2_evaluator.pickle',
-            'test': '../evaluators/InfillingKicksAndSnares/0.1.2/InfillingKicksAndSnares_test_0.1.2_evaluator.pickle'
+            'train': '../evaluators/InfillingEvaluator_0.3.2/InfillingKicksAndSnares_train_0.1.2_evaluator.pickle',
+            'test': '../evaluators/InfillingEvaluator_0.3.2/InfillingKicksAndSnares_test_0.1.2_evaluator.pickle'
         }
     },
     "InfillingRandom": {
@@ -55,8 +55,8 @@ paths = {
             "train": '../datasets/InfillingRandom/0.0.0/train',
             "test": '../datasets/InfillingRandom/0.0.0/test'},
         'evaluators': {
-            'train': '../evaluators/InfillingRandom/0.0.1/InfillingRandom_train_0.0.1_evaluator.pickle',
-            'test': '../evaluators/InfillingRandom/0.0.1/InfillingRandom_test_0.0.1_evaluator.pickle'
+            'train': '../evaluators/InfillingEvaluator_0.3.2/InfillingRandom_train_0.0.0_evaluator.pickle',
+            'test': '../evaluators/InfillingEvaluator_0.3.2/InfillingRandom_test_0.0.0_evaluator.pickle'
         },
     },
     "InfillingClosedHH": {
