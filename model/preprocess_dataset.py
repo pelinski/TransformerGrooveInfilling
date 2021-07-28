@@ -146,7 +146,7 @@ if __name__ == "__main__":
     testing = False
 
     # change experiment and split here
-    exps = ['InfillingClosedHH']
+    exps = ['InfillingRandom','InfillingKicksAndSnares']
     splits = ['train', 'test']
 
     for exp in exps:
