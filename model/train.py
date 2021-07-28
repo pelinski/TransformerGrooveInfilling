@@ -161,7 +161,7 @@ if __name__ == '__main__':
     BCE_fn, MSE_fn = torch.nn.BCEWithLogitsLoss(reduction='none'), torch.nn.MSELoss(reduction='none')
 
     # epoch_save_all, epoch_save_partial = get_epoch_log_freq(eps)
-    epoch_save_all, epoch_save_partial = [eps - 1], [0,2,4]  # FIXME
+    epoch_save_all, epoch_save_partial = [eps - 1], []  # FIXME
 
     for i in range(eps):
         ep += 1
