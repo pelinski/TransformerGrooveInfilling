@@ -29,6 +29,7 @@ hyperparameter_defaults = dict(
     n_heads=16,
     dropout=0.2,
     num_encoder_decoder_layers=7,
+    hit_loss_penalty=1,
     batch_size=16,
     dim_feedforward=256,
     learning_rate=0.05,
@@ -126,6 +127,7 @@ if __name__ == '__main__':
         "training": {
             'learning_rate': wandb.config.learning_rate,
             'batch_size': wandb.config.batch_size,
+            'hit_loss_penalty': wandb.config.hit_loss_penalty
             #        'lr_scheduler_step_size': 30,
             #        'lr_scheduler_gamma': 0.1
         },
@@ -142,7 +144,7 @@ if __name__ == '__main__':
     # load dataset
     dataset_train = load_preprocessed_dataset(paths[wandb.config.experiment]['datasets']['train'],
                                               exp=wandb.config.experiment)
-    dataloader_train = DataLoader(dataset_train, batch_size=wandb.config.batch_size, shuffle=True)
+    dataloader_train = DataLoader(dataset_train, batch_size=wandb.config.batch_size, shuffle=True, pin_memory=True)
 
     if settings['evaluator_train']:
         evaluator_train = init_evaluator(paths[wandb.config.experiment]['evaluators']['train'], device= params[
@@ -172,6 +174,7 @@ if __name__ == '__main__':
                    device=params["model"]['device'],
                    test_inputs=evaluator_test.processed_inputs if settings['evaluator_test'] else None,
                    test_gt=evaluator_test.processed_gt if settings['evaluator_test'] else None,
+                   hit_loss_penalty=wandb.config.hit_loss_penalty,
                    save=(i in epoch_save_partial or i in epoch_save_all))
         print("-------------------------------\n")
 
