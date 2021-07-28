@@ -33,9 +33,6 @@ hyperparameter_defaults = dict(
     dim_feedforward=256,
     learning_rate=0.05,
     epochs=1 if settings['testing'] else 150,
-    h_loss_multiplier=1,
-    v_loss_multiplier=1,
-    o_loss_multiplier=1
     #    lr_scheduler_step_size=30,
     #    lr_scheduler_gamma=0.1
 )
@@ -124,10 +121,7 @@ if __name__ == '__main__':
             'max_len': 32,
             'embedding_size_src': 16,  # mso
             'embedding_size_tgt': 27,  # hvo
-            'device': 'cuda' if torch.cuda.is_available() else 'cpu',
-            "h_loss_multiplier": wandb.config.h_loss_multiplier,
-            "v_loss_multiplier": wandb.config.v_loss_multiplier,
-            "o_loss_multiplier": wandb.config.o_loss_multiplier
+            'device': 'cuda' if torch.cuda.is_available() else 'cpu'
         },
         "training": {
             'learning_rate': wandb.config.learning_rate,
@@ -178,9 +172,6 @@ if __name__ == '__main__':
                    device=params["model"]['device'],
                    test_inputs=evaluator_test.processed_inputs if settings['evaluator_test'] else None,
                    test_gt=evaluator_test.processed_gt if settings['evaluator_test'] else None,
-                   h_loss_mult=wandb.config.h_loss_multiplier,
-                   v_loss_mult=wandb.config.v_loss_multiplier,
-                   o_loss_mult=wandb.config.o_loss_multiplier,
                    save=(i in epoch_save_partial or i in epoch_save_all))
         print("-------------------------------\n")
 
