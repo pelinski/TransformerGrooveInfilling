@@ -16,6 +16,7 @@ from models.train import initialize_model, calculate_loss, train_loop
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--config", help="yaml config file", default='configs/hyperparameter_defaults.yaml')
+parser.add_argument("--experiment", help="experiment id", default=None)
 parser.add_argument("--paths", help="paths file", default='configs/paths.yaml')
 parser.add_argument("--testing", help="testing mode", default=False)
 parser.add_argument("--wandb", help="log to wandb", default=True)
@@ -27,6 +28,10 @@ with open(args.config, 'r') as f:
     hyperparameters = yaml.safe_load(f)
 if args.testing:
     hyperparameters['epochs'] = 1
+
+assert args.experiment is not None, 'experiment not specified'
+hyperparameters['experiment'] = args.experiment
+
 pprint.pprint(hyperparameters)
 
 with open(args.paths, 'r') as f:
