@@ -388,11 +388,13 @@ def init_evaluator(evaluator_path, device):
     with open(evaluator_path, 'rb') as f:
         evaluator = pickle.load(f)
 
+    """
     # log eval_subset parameters to wandb
     wandb.config.update({evaluator._identifier + "_hvo_index": evaluator.hvo_index,
                          evaluator._identifier + "_soundfonts": evaluator.soundfonts})
     if evaluator.horizontal:
         wandb.config.update({evaluator._identifier + "_voices_reduced": evaluator.voices_reduced})
+    """
 
     evaluator.device = device
     evaluator.processed_inputs.to(device)
