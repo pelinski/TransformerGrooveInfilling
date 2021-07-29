@@ -83,7 +83,7 @@ if __name__ == '__main__':
         "model": {
             'experiment': wandb.config.experiment,
             "encoder_only": wandb.config.encoder_only,
-            'optimizer': wandb.config.optimizer_algorithm,
+            'optimizer_algorithm': wandb.config.optimizer_algorithm,
             'd_model': wandb.config.d_model,
             'n_heads': wandb.config.n_heads,
             'dim_feedforward': wandb.config.dim_feedforward,
