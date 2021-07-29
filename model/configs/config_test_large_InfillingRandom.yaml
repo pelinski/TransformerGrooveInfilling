@@ -20,5 +20,3 @@ encoder_only:
   value: 1
 experiment:
   value: 'InfillingRandom'
-project: 'InfillingRandom'
-description: 'large model, testing requesting gpu'
