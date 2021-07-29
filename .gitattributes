@@ -1,3 +1,0 @@
-datasets/InfillingRandom/0.0.0.zip filter=lfs diff=lfs merge=lfs -text
-datasets/InfillingClosedHH/0.1.2.zip filter=lfs diff=lfs merge=lfs -text
-datasets/InfillingKicksAndSnares/0.1.2.zip filter=lfs diff=lfs merge=lfs -text
