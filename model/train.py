@@ -15,34 +15,65 @@ sys.path.insert(1, "../../BaseGrooveTransformers/")
 from models.train import initialize_model, calculate_loss, train_loop
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--config", help="yaml config file", default='configs/hyperparameter_defaults.yaml')
+parser.add_argument("--config", help="yaml config file. if given, the rest of the arguments are not taken into "
+                                     "account", default=None)
 parser.add_argument("--experiment", help="experiment id", default=None)
 parser.add_argument("--paths", help="paths file", default='configs/paths.yaml')
 parser.add_argument("--testing", help="testing mode", default=False)
 parser.add_argument("--wandb", help="log to wandb", default=True)
 parser.add_argument("--eval_train", help="evaluator train set", default=True)
 parser.add_argument("--eval_test", help="evaluator test set", default=True)
+
+# hyperparameters
+parser.add_argument("--encoder_only", help="transformer encoder only", default=1, type=int)
+parser.add_argument("--optimizer_algorithm", help="optimizer_algorithm", default='sgd', type=str)
+parser.add_argument("--d_model", help="model dimension", default=64,  type=int)
+parser.add_argument("--n_heads", help="number of heads for multihead attention", default=16,  type=int)
+parser.add_argument("--dropout", help="dropout factor", default=0.2,  type=float)
+parser.add_argument("--num_encoder_decoder_layers", help="number of encoder/decoder layers", default=7,  type=int)
+parser.add_argument("--hit_loss_penalty", help="non_hit loss multiplier (between 0 and 1)", default=1, type=float)
+parser.add_argument("--batch_size", help="batch size", default=16, type=int)
+parser.add_argument("--dim_feedforward", help="feed forward layer dimension", default=256, type=int)
+parser.add_argument("--learning_rate", help="learning rate", default=0.05, type=float)
+parser.add_argument("--epochs", help="number of training epochs", default=100, type=int)
+
 args = parser.parse_args()
 
-with open(args.config, 'r') as f:
-    hyperparameters = yaml.safe_load(f)
+# args are loaded all from config file or all from cli
+if args.config is not None:
+    with open(args.config, 'r') as f:
+        hyperparameters = yaml.safe_load(f)
+else:
+    hyperparameters = dict(
+        encoder_only=args.encoder_only,
+        optimizer_algorithm=args.optimizer_algorithm,
+        d_model=args.d_model,
+        n_heads=args.n_heads,
+        dropout=args.dropout,
+        num_encoder_decoder_layers=args.num_encoder_decoder_layers,
+        hit_loss_penalty=args.hit_loss_penalty,
+        batch_size=args.batch_size,
+        dim_feedforward=args.dim_feedforward,
+        learning_rate=args.learning_rate,
+        epochs= args.epochs)
+
 if args.testing:
     hyperparameters['epochs'] = 1
 
+# config files without experiment specified
 if args.experiment is not None:
     hyperparameters['experiment'] = args.experiment
 
 assert 'experiment' in hyperparameters.keys(), 'experiment not specified'
-
 
 pprint.pprint(hyperparameters)
 
 with open(args.paths, 'r') as f:
     paths = yaml.safe_load(f)
 
-if __name__ == '__main__':
-    os.environ['WANDB_MODE'] = 'online' if args.wandb else 'offline'
+os.environ['WANDB_MODE'] = 'online' if args.wandb else 'offline'
 
+if __name__ == '__main__':
     wandb.init(config=hyperparameters,
                project=hyperparameters['experiment'],
                job_type='train',
