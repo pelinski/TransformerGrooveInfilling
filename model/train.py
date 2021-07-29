@@ -85,9 +85,9 @@ if __name__ == '__main__':
         evaluator_test = init_evaluator(paths[wandb.config.experiment]['evaluators']['test'], device=params[
             'model']['device'])
 
-    eps = wandb.config.epochs
     BCE_fn, MSE_fn = torch.nn.BCEWithLogitsLoss(reduction='none'), torch.nn.MSELoss(reduction='none')
 
+    eps = wandb.config.epochs
     # epoch_save_all, epoch_save_partial = get_epoch_log_freq(eps)
     epoch_save_all, epoch_save_partial = [eps - 1], []  # FIXME
 
