@@ -29,8 +29,11 @@ with open(args.config, 'r') as f:
 if args.testing:
     hyperparameters['epochs'] = 1
 
-assert args.experiment is not None, 'experiment not specified'
-hyperparameters['experiment'] = args.experiment
+if args.experiment is not None:
+    hyperparameters['experiment'] = args.experiment
+
+assert 'experiment' in hyperparameters.keys(), 'experiment not specified'
+
 
 pprint.pprint(hyperparameters)
 
