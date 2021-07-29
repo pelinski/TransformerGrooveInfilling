@@ -1,22 +1,11 @@
-batch_size:
-  value: 16
-d_model:
-  value: 256
-dim_feedforward:
-  value: 64
-dropout:
-  value: 0.15
-optimizer_algorithm:
-  value: 'sgd'
-learning_rate:
-  value: 0.04
-n_heads:
-  value: 16
-num_encoder_decoder_layers:
-  value: 11
-epochs:
-  value: 100
-encoder_only:
-  value: 1
-experiment:
-  value: 'InfillingRandom'
+experiment: 'InfillingRandom'
+batch_size: 16
+d_model: 256
+dim_feedforward: 64
+dropout: 0.15
+optimizer_algorithm: 'sgd'
+learning_rate: 0.04
+n_heads: 16
+num_encoder_decoder_layers: 11
+epochs: 100
+encoder_only: 1
