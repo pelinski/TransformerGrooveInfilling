@@ -105,6 +105,15 @@ params = {
         "max_aug_items": 4,
         "thres_range": (0.4, 0.7),
         "save_dataset_path": '../datasets/InfillingRandom/'
+    },
+
+    "InfillingRandomLow": {
+        "dataset_name": "InfillingRandom",
+        "subset_info": subset_info,
+        "sf_path": "../soundfonts/filtered_soundfonts/",
+        "max_aug_items": 4,
+        "thres_range": (0.1,0.3),
+        "save_dataset_path": '../datasets/InfillingRandom/'
     }
 
 }
@@ -146,7 +155,7 @@ if __name__ == "__main__":
     testing = False
 
     # change experiment and split here
-    exps = ['InfillingRandom','InfillingKicksAndSnares']
+    exps = ['InfillingRandomLow', 'InfillingSymbolic']
     splits = ['train', 'test']
 
     for exp in exps:
