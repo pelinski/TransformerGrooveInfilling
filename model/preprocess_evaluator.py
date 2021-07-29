@@ -51,7 +51,7 @@ if __name__ == "__main__":
                 params["evaluator"]["n_samples_to_use"] = 10
                 params["evaluator"]["n_samples_to_synthesize_visualize_per_subset"] = 5
 
-            pred_horizontal = False if exp == 'InfillingRandom' else True
+            pred_horizontal = False if exp == 'InfillingRandom' or exp =='InfillingRandomLow' else True
 
             dataset = load_preprocessed_dataset(params["dataset_paths"][_exp][split], exp=exp)
 

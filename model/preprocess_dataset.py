@@ -108,7 +108,7 @@ params = {
     },
 
     "InfillingRandomLow": {
-        "dataset_name": "InfillingRandom",
+        "dataset_name": "InfillingRandomLow",
         "subset_info": subset_info,
         "sf_path": "../soundfonts/filtered_soundfonts/",
         "max_aug_items": 4,
@@ -128,7 +128,7 @@ def preprocess_dataset(params, exp):
 
     if exp == 'InfillingSymbolic':
         _dataset = GrooveMidiDatasetInfillingSymbolic(data=subset_list[0], **params)
-    elif exp == 'InfillingRandom':
+    elif exp == 'InfillingRandom' or exp=='InfillingRandomLow':
         _dataset = GrooveMidiDatasetInfillingRandom(data=subset_list[0], **params)
     else:
         _dataset = GrooveMidiDatasetInfilling(data=subset_list[0], **params)
@@ -140,7 +140,7 @@ def load_preprocessed_dataset(load_dataset_path, exp):
     if exp == 'InfillingSymbolic':
         print('Loading GrooveMidiDatasetInfillingSymbolic...')
         _dataset = GrooveMidiDatasetInfillingSymbolic(load_dataset_path=load_dataset_path)
-    elif exp == 'InfillingRandom':
+    elif exp == 'InfillingRandom' or exp=='InfillingRandomLow':
         print('Loading GrooveMidiDatasetInfillingRandom...')
         _dataset = GrooveMidiDatasetInfillingRandom(load_dataset_path=load_dataset_path)
     else:
