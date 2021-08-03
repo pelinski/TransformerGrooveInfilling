@@ -9,7 +9,7 @@ import pprint
 
 from preprocess_dataset import load_preprocessed_dataset
 from evaluator import init_evaluator, log_eval
-from utils import get_epoch_log_freq
+from utils import eval_log_freq
 
 sys.path.insert(1, "../../BaseGrooveTransformers/")
 from models.train import initialize_model, calculate_loss, train_loop
@@ -23,14 +23,15 @@ parser.add_argument("--testing", help="testing mode", default=False)
 parser.add_argument("--wandb", help="log to wandb", default=True)
 parser.add_argument("--eval_train", help="evaluator train set", default=True)
 parser.add_argument("--eval_test", help="evaluator test set", default=True)
+parser.add_argument("--only_final_eval", help="only final total evaluation", default=False)  # sweeps
 
 # hyperparameters
 parser.add_argument("--encoder_only", help="transformer encoder only", default=1, type=int)
 parser.add_argument("--optimizer_algorithm", help="optimizer_algorithm", default='sgd', type=str)
-parser.add_argument("--d_model", help="model dimension", default=64,  type=int)
-parser.add_argument("--n_heads", help="number of heads for multihead attention", default=16,  type=int)
-parser.add_argument("--dropout", help="dropout factor", default=0.2,  type=float)
-parser.add_argument("--num_encoder_decoder_layers", help="number of encoder/decoder layers", default=7,  type=int)
+parser.add_argument("--d_model", help="model dimension", default=64, type=int)
+parser.add_argument("--n_heads", help="number of heads for multihead attention", default=16, type=int)
+parser.add_argument("--dropout", help="dropout factor", default=0.2, type=float)
+parser.add_argument("--num_encoder_decoder_layers", help="number of encoder/decoder layers", default=7, type=int)
 parser.add_argument("--hit_loss_penalty", help="non_hit loss multiplier (between 0 and 1)", default=1, type=float)
 parser.add_argument("--batch_size", help="batch size", default=16, type=int)
 parser.add_argument("--dim_feedforward", help="feed forward layer dimension", default=256, type=int)
@@ -55,7 +56,7 @@ else:
         batch_size=args.batch_size,
         dim_feedforward=args.dim_feedforward,
         learning_rate=args.learning_rate,
-        epochs= args.epochs)
+        epochs=args.epochs)
 
 if args.testing:
     hyperparameters['epochs'] = 1
@@ -127,8 +128,11 @@ if __name__ == '__main__':
     BCE_fn, MSE_fn = torch.nn.BCEWithLogitsLoss(reduction='none'), torch.nn.MSELoss(reduction='none')
 
     eps = wandb.config.epochs
-    # epoch_save_all, epoch_save_partial = get_epoch_log_freq(eps)
-    epoch_save_all, epoch_save_partial = [eps - 1], []  # FIXME
+    epoch_save_all, epoch_save_partial = eval_log_freq(total_epochs=eps, initial_epochs_lim=10,
+                                                            initial_step_partial=1,
+                                                            initial_step_all=1, secondary_step_partial=5,
+                                                            secondary_step_all=5,
+                                                            only_final=args.only_final_eval)
 
     for i in range(eps):
         ep += 1
@@ -146,19 +150,19 @@ if __name__ == '__main__':
                    test_inputs=evaluator_test.processed_inputs if args.eval_test else None,
                    test_gt=evaluator_test.processed_gt if args.eval_test else None,
                    hit_loss_penalty=wandb.config.hit_loss_penalty,
-                   save=(i in epoch_save_partial or i in epoch_save_all))
+                   save=(ep in epoch_save_partial or ep in epoch_save_all))
         print("-------------------------------\n")
 
-        if i in epoch_save_partial or i in epoch_save_all:
+        if ep in epoch_save_partial or ep in epoch_save_all:
             if args.eval_train:
-                # evaluator_train._identifier = 'Train_Set_Epoch_{}'.format(ep) # FIXME
+                #evaluator_train._identifier = 'Train_Set_Epoch_{}'.format(ep)
                 evaluator_train._identifier = 'Train_Set'
-                log_eval(evaluator_train, model, log_media=i in epoch_save_all, epoch=ep, dump=not args.testing)
+                log_eval(evaluator_train, model, log_media=ep in epoch_save_all, epoch=ep, dump=not args.testing)
 
             if args.eval_test:
+                #evaluator_test._identifier = 'Test_Set_Epoch_{}'.format(ep)
                 evaluator_test._identifier = 'Test_Set'
-                # evaluator_test._identifier = 'Test_Set_Epoch_{}'.format(ep) # FIXME
-                log_eval(evaluator_test, model, log_media=i in epoch_save_all, epoch=ep, dump=not args.testing)
+                log_eval(evaluator_test, model, log_media=ep in epoch_save_all, epoch=ep, dump=not args.testing)
 
         wandb.log({"epoch": ep}, commit=True)
 

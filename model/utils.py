@@ -214,7 +214,10 @@ def save_to_pickle(obj, filename):
 
 
 def eval_log_freq(total_epochs, initial_epochs_lim, initial_step_partial, initial_step_all, secondary_step_partial,
-                  secondary_step_all):
+                  secondary_step_all, only_final=False):
+
+    if only_final:
+        return [total_epochs-1],[]
 
     if initial_epochs_lim >= total_epochs:
         epoch_save_partial = np.arange(total_epochs, step=initial_step_partial)
@@ -231,5 +234,5 @@ def eval_log_freq(total_epochs, initial_epochs_lim, initial_step_partial, initia
         epoch_save_partial = np.append(epoch_save_partial, total_epochs-1)
     if total_epochs-1 not in epoch_save_all:
         epoch_save_all = np.append(epoch_save_all, total_epochs-1)
-    return epoch_save_partial, epoch_save_all
+    return epoch_save_partial + 1, epoch_save_all + 1 # return epoch index
 
