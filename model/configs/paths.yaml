@@ -12,6 +12,13 @@ InfillingRandom:
     evaluators:
         train: '../evaluators/InfillingEvaluator_0.3.2/InfillingRandom_train_0.0.0_evaluator.pickle'
         test: '../evaluators/InfillingEvaluator_0.3.2/InfillingRandom_test_0.0.0_evaluator.pickle'
+InfillingRandomLow:
+    datasets:
+        train: '../datasets/InfillingRandomLow/0.0.0/train'
+        test: '../datasets/InfillingRandomLow/0.0.0/test'
+    evaluators:
+        train: '../evaluators/InfillingEvaluator_0.3.2/InfillingRandomLow_train_0.0.0_evaluator.pickle'
+        test: '../evaluators/InfillingEvaluator_0.3.2/InfillingRandomLow_test_0.0.0_evaluator.pickle'
 InfillingClosedHH:
     datasets:
         train: '../datasets/InfillingClosedHH/0.1.2/train'
