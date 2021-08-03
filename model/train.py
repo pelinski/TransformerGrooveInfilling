@@ -129,10 +129,10 @@ if __name__ == '__main__':
 
     eps = wandb.config.epochs
     epoch_save_all, epoch_save_partial = eval_log_freq(total_epochs=eps, initial_epochs_lim=10,
-                                                            initial_step_partial=1,
-                                                            initial_step_all=1, secondary_step_partial=5,
-                                                            secondary_step_all=5,
-                                                            only_final=args.only_final_eval)
+                                                       initial_step_partial=1,
+                                                       initial_step_all=1, secondary_step_partial=10,
+                                                       secondary_step_all=10,
+                                                       only_final=args.only_final_eval)
 
     for i in range(eps):
         ep += 1
@@ -155,12 +155,12 @@ if __name__ == '__main__':
 
         if ep in epoch_save_partial or ep in epoch_save_all:
             if args.eval_train:
-                #evaluator_train._identifier = 'Train_Set_Epoch_{}'.format(ep)
+                # evaluator_train._identifier = 'Train_Set_Epoch_{}'.format(ep)
                 evaluator_train._identifier = 'Train_Set'
                 log_eval(evaluator_train, model, log_media=ep in epoch_save_all, epoch=ep, dump=not args.testing)
 
             if args.eval_test:
-                #evaluator_test._identifier = 'Test_Set_Epoch_{}'.format(ep)
+                # evaluator_test._identifier = 'Test_Set_Epoch_{}'.format(ep)
                 evaluator_test._identifier = 'Test_Set'
                 log_eval(evaluator_test, model, log_media=ep in epoch_save_all, epoch=ep, dump=not args.testing)
 
