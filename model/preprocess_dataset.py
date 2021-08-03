@@ -112,8 +112,23 @@ params = {
         "subset_info": subset_info,
         "sf_path": "../soundfonts/filtered_soundfonts/",
         "max_aug_items": 4,
-        "thres_range": (0.1,0.3),
-        "save_dataset_path": '../datasets/InfillingRandom/'
+        "thres_range": (0.1, 0.3),
+        "save_dataset_path": '../datasets/InfillingRandomLow/'
+    },
+
+    "InfillingClosedHH_Symbolic": {
+        "dataset_name": "InfillingClosedHH_Symbolic",
+        "subset_info": subset_info,
+        "voices_params": {
+            "voice_idx": [2],
+            "min_n_voices_to_remove": 1,
+            "max_n_voices_to_remove": 1,
+            "prob": [1],
+            "k": None
+        },
+        "max_aug_items": 1,
+        "save_dataset_path": '../datasets/InfillingClosedHH_Symbolic/'
+
     }
 
 }
@@ -126,9 +141,9 @@ def preprocess_dataset(params, exp):
                                          list_of_filter_dicts_for_subsets=[
                                              params["subset_info"]['filters']]).create_subsets()
 
-    if exp == 'InfillingSymbolic':
+    if exp == 'InfillingClosedHH_Symbolic':
         _dataset = GrooveMidiDatasetInfillingSymbolic(data=subset_list[0], **params)
-    elif exp == 'InfillingRandom' or exp=='InfillingRandomLow':
+    elif exp == 'InfillingRandom' or exp == 'InfillingRandomLow':
         _dataset = GrooveMidiDatasetInfillingRandom(data=subset_list[0], **params)
     else:
         _dataset = GrooveMidiDatasetInfilling(data=subset_list[0], **params)
@@ -137,10 +152,10 @@ def preprocess_dataset(params, exp):
 
 
 def load_preprocessed_dataset(load_dataset_path, exp):
-    if exp == 'InfillingSymbolic':
+    if exp == 'InfillingClosedHH_Symbolic':
         print('Loading GrooveMidiDatasetInfillingSymbolic...')
         _dataset = GrooveMidiDatasetInfillingSymbolic(load_dataset_path=load_dataset_path)
-    elif exp == 'InfillingRandom' or exp=='InfillingRandomLow':
+    elif exp == 'InfillingRandom' or exp == 'InfillingRandomLow':
         print('Loading GrooveMidiDatasetInfillingRandom...')
         _dataset = GrooveMidiDatasetInfillingRandom(load_dataset_path=load_dataset_path)
     else:
@@ -155,7 +170,7 @@ if __name__ == "__main__":
     testing = False
 
     # change experiment and split here
-    exps = ['InfillingRandomLow', 'InfillingSymbolic']
+    exps = ['InfillingClosedHH_Symbolic']
     splits = ['train', 'test']
 
     for exp in exps:

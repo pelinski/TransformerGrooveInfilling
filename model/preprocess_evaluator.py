@@ -12,6 +12,10 @@ params = {
             "train": '../datasets/InfillingRandom/0.0.0/train',
             'test': '../datasets/InfillingRandom/0.0.0/test'
         },
+        "InfillingRandomLow": {
+            "train": '../datasets/InfillingRandomLow/0.0.0/train',
+            'test': '../datasets/InfillingRandomLow/0.0.0/test'
+        },
         "InfillingClosedHH": {
             "train": '../datasets/InfillingClosedHH/0.1.2/train',
             'test': '../datasets/InfillingClosedHH/0.1.2/test'
@@ -39,7 +43,7 @@ if __name__ == "__main__":
 
     testing = False
 
-    exps = ['InfillingRandom', 'InfillingKicksAndSnares']
+    exps = ['InfillingRandomLow']
     splits = ['train', 'test']
     for exp in exps:
         print('------------------------\n' + exp + '\n------------------------\n')
