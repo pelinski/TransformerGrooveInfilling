@@ -35,6 +35,8 @@ parameters:
     distribution: 'uniform'
     min: 0
     max: 1
+  only_final_eval:
+    value: 1
 program: train.py
 project: 'InfillingKicksAndSnares'
 description: ''
