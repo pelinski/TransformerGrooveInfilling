@@ -37,6 +37,8 @@ parser.add_argument("--batch_size", help="batch size", default=16, type=int)
 parser.add_argument("--dim_feedforward", help="feed forward layer dimension", default=256, type=int)
 parser.add_argument("--learning_rate", help="learning rate", default=0.05, type=float)
 parser.add_argument("--epochs", help="number of training epochs", default=100, type=int)
+parser.add_argument("--load_model", help="load model parameters", default=None)
+
 
 args = parser.parse_args()
 
@@ -103,7 +105,7 @@ if __name__ == '__main__':
             #        'lr_scheduler_step_size': 30,
             #        'lr_scheduler_gamma': 0.1
         },
-        "load_model": None,
+        "load_model": args.load_model
     }
 
     # log params to wandb
@@ -133,8 +135,8 @@ if __name__ == '__main__':
                                                        initial_step_all=1, secondary_step_partial=10,
                                                        secondary_step_all=10,
                                                        only_final=args.only_final_eval)
-
-    for i in range(eps):
+    ep_0 = ep
+    for i in range(ep_0, eps):
         ep += 1
 
         print(f"Epoch {ep}\n-------------------------------")
