@@ -58,7 +58,8 @@ else:
         batch_size=args.batch_size,
         dim_feedforward=args.dim_feedforward,
         learning_rate=args.learning_rate,
-        epochs=args.epochs)
+        epochs=args.epochs,
+        load_model=args.load_model)
 
 if args.testing:
     hyperparameters['epochs'] = 1
@@ -105,7 +106,7 @@ if __name__ == '__main__':
             #        'lr_scheduler_step_size': 30,
             #        'lr_scheduler_gamma': 0.1
         },
-        "load_model": args.load_model
+        "load_model": wandb.config.load_model
     }
 
     # log params to wandb
