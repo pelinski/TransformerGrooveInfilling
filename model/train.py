@@ -21,7 +21,7 @@ parser.add_argument("--wandb", help="log to wandb", default=True)
 parser.add_argument("--eval_train", help="evaluator train set", default=True)
 parser.add_argument("--eval_test", help="evaluator test set", default=True)
 parser.add_argument("--only_final_eval", help="only final total evaluation", default=False)  # sweeps
-parser.add_argument("--dump_eval", help="dump evaluator file", default=False)
+parser.add_argument("--dump_eval", help="dump evaluator file", default=True)
 parser.add_argument("--load_model", help="load model parameters", default=None)
 
 
@@ -135,8 +135,8 @@ if __name__ == '__main__':
     total_epochs = wandb.config.epochs
     epoch_save_all, epoch_save_partial = eval_log_freq(total_epochs=total_epochs, initial_epochs_lim=10,
                                                        initial_step_partial=1,
-                                                       initial_step_all=1, secondary_step_partial=10,
-                                                       secondary_step_all=10,
+                                                       initial_step_all=1, secondary_step_partial=20,
+                                                       secondary_step_all=20,
                                                        only_final=args.only_final_eval)
     ep = initial_epoch
     for i in range(initial_epoch, total_epochs):
