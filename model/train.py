@@ -15,17 +15,20 @@ sys.path.insert(1, "../../BaseGrooveTransformers/")
 from models.train import initialize_model, calculate_loss, train_loop
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--config", help="yaml config file. if given, the rest of the arguments are not taken into "
-                                     "account", default=None)
-parser.add_argument("--experiment", help="experiment id", default=None)
 parser.add_argument("--paths", help="paths file", default='configs/paths.yaml')
 parser.add_argument("--testing", help="testing mode", default=False)
 parser.add_argument("--wandb", help="log to wandb", default=True)
 parser.add_argument("--eval_train", help="evaluator train set", default=True)
 parser.add_argument("--eval_test", help="evaluator test set", default=True)
 parser.add_argument("--only_final_eval", help="only final total evaluation", default=False)  # sweeps
+parser.add_argument("--dump_eval", help="dump evaluator file", default=False)
+parser.add_argument("--load_model", help="load model parameters", default=None)
+
 
 # hyperparameters
+parser.add_argument("--config", help="yaml config file. if given, the rest of the arguments are not taken into "
+                                     "account", default=None)
+parser.add_argument("--experiment", help="experiment id", default=None)
 parser.add_argument("--encoder_only", help="transformer encoder only", default=1, type=int)
 parser.add_argument("--optimizer_algorithm", help="optimizer_algorithm", default='sgd', type=str)
 parser.add_argument("--d_model", help="model dimension", default=64, type=int)
@@ -37,8 +40,6 @@ parser.add_argument("--batch_size", help="batch size", default=16, type=int)
 parser.add_argument("--dim_feedforward", help="feed forward layer dimension", default=256, type=int)
 parser.add_argument("--learning_rate", help="learning rate", default=0.05, type=float)
 parser.add_argument("--epochs", help="number of training epochs", default=100, type=int)
-parser.add_argument("--load_model", help="load model parameters", default=None)
-
 
 args = parser.parse_args()
 
@@ -58,8 +59,7 @@ else:
         batch_size=args.batch_size,
         dim_feedforward=args.dim_feedforward,
         learning_rate=args.learning_rate,
-        epochs=args.epochs,
-        load_model=args.load_model)
+        epochs=args.epochs)
 
 if args.testing:
     hyperparameters['epochs'] = 1
@@ -76,6 +76,8 @@ with open(args.paths, 'r') as f:
     paths = yaml.safe_load(f)
 
 os.environ['WANDB_MODE'] = 'online' if args.wandb else 'offline'
+os.environ['WANDB_RUN_ID']="j8glkt73"
+os.environ['WANDB_RESUME']="allow"
 
 if __name__ == '__main__':
     wandb.init(config=hyperparameters,
@@ -113,7 +115,7 @@ if __name__ == '__main__':
     wandb.config.update(params["model"])
 
     # initialize model
-    model, optimizer, ep = initialize_model(params)
+    model, optimizer, initial_epoch = initialize_model(params)
     wandb.watch(model, log_freq=1000)
 
     # load dataset
@@ -130,14 +132,14 @@ if __name__ == '__main__':
 
     BCE_fn, MSE_fn = torch.nn.BCEWithLogitsLoss(reduction='none'), torch.nn.MSELoss(reduction='none')
 
-    eps = wandb.config.epochs
-    epoch_save_all, epoch_save_partial = eval_log_freq(total_epochs=eps, initial_epochs_lim=10,
+    total_epochs = wandb.config.epochs
+    epoch_save_all, epoch_save_partial = eval_log_freq(total_epochs=total_epochs, initial_epochs_lim=10,
                                                        initial_step_partial=1,
                                                        initial_step_all=1, secondary_step_partial=10,
                                                        secondary_step_all=10,
                                                        only_final=args.only_final_eval)
-    ep_0 = ep
-    for i in range(ep_0, eps):
+    ep = initial_epoch
+    for i in range(initial_epoch, total_epochs):
         ep += 1
 
         print(f"Epoch {ep}\n-------------------------------")
@@ -160,12 +162,12 @@ if __name__ == '__main__':
             if args.eval_train:
                 # evaluator_train._identifier = 'Train_Set_Epoch_{}'.format(ep)
                 evaluator_train._identifier = 'Train_Set'
-                log_eval(evaluator_train, model, log_media=ep in epoch_save_all, epoch=ep, dump=not args.testing)
+                log_eval(evaluator_train, model, log_media=ep in epoch_save_all, epoch=ep, dump=args.dump_eval)
 
             if args.eval_test:
                 # evaluator_test._identifier = 'Test_Set_Epoch_{}'.format(ep)
                 evaluator_test._identifier = 'Test_Set'
-                log_eval(evaluator_test, model, log_media=ep in epoch_save_all, epoch=ep, dump=not args.testing)
+                log_eval(evaluator_test, model, log_media=ep in epoch_save_all, epoch=ep, dump=args.dump_eval)
 
         wandb.log({"epoch": ep}, commit=True)
 
