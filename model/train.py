@@ -76,8 +76,6 @@ with open(args.paths, 'r') as f:
     paths = yaml.safe_load(f)
 
 os.environ['WANDB_MODE'] = 'online' if args.wandb else 'offline'
-os.environ['WANDB_RUN_ID']="j8glkt73"
-os.environ['WANDB_RESUME']="allow"
 
 if __name__ == '__main__':
     wandb.init(config=hyperparameters,
@@ -135,7 +133,7 @@ if __name__ == '__main__':
     total_epochs = wandb.config.epochs
     epoch_save_all, epoch_save_partial = eval_log_freq(total_epochs=total_epochs, initial_epochs_lim=10,
                                                        initial_step_partial=1,
-                                                       initial_step_all=1, secondary_step_partial=20,
+                                                       initial_step_all=1, secondary_step_partial=10,
                                                        secondary_step_all=20,
                                                        only_final=args.only_final_eval)
     ep = initial_epoch
