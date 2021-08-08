@@ -1,0 +1,13 @@
+experiment: 'InfillingClosedHH_testing'
+batch_size: 32
+d_model: 32
+dim_feedforward: 16
+dropout: 0.18
+optimizer_algorithm: 'sgd'
+learning_rate: 0.094
+n_heads: 4
+num_encoder_decoder_layers: 6
+epochs: 30
+encoder_only: 1
+hit_loss_penalty: 0.47
+load_model: Null

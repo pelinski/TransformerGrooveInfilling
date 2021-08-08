@@ -4,11 +4,11 @@ metric:
   name: loss
 parameters:
   batch_size:
-    values: [16, 32, 64, 128, 256, 512]
+    values: [ 16, 32, 64, 128, 256, 512 ]
   d_model:
-    values: [16, 32, 64, 128, 256, 512]
+    values: [ 256, 512 ]
   dim_feedforward:
-    values: [16, 32, 64, 128, 256, 512]
+    values: [ 512, 1024, 2048 ]
   dropout:
     distribution: 'uniform'
     min: 0.1
@@ -20,7 +20,7 @@ parameters:
     min: 0
     max: 0.1
   n_heads:
-    values: [ 1, 2, 4, 8, 16]
+    values: [ 2, 4, 8 ]
   num_encoder_decoder_layers:
     distribution: 'int_uniform'
     min: 6
@@ -30,7 +30,13 @@ parameters:
   encoder_only:
     value: 1
   experiment:
-    value: 'InfillingRandom'
+    value: 'InfillingKicksAndSnares'
+  hit_loss_penalty:
+    distribution: 'uniform'
+    min: 0.4
+    max: 0.6
+  only_final_eval:
+    value: 1
 program: train.py
-project: 'InfillingRandom_sweeps'
+project: 'InfillingKicksAndSnares'
 description: ''

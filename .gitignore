@@ -6,7 +6,6 @@ dev/synthesized_audio/
 misc/
 .idea/
 
-dataset/
 
 # only keep the good soundfonts
 soundfonts/all_soundfonts/
@@ -24,11 +23,8 @@ plots/
 #wandb
 wandb/
 
-notes.txt
-
 #preprocessed_datasets
 datasets/*/*/*/*.pickle
-datasets/old/*
 
 # evaluator
 evaluators/*/*.pickle
@@ -36,3 +32,5 @@ model/evaluator/
 
 
 soundfonts/filtered_soundfonts/ARIAConverted/
+
+notes.txt

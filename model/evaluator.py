@@ -208,7 +208,8 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
             sf_dict={},
             hvo_comp_dict={},
             horizontal=True,
-            is_gt=None
+            is_gt=None,
+            epoch=None
     ):
         super(HVOSeq_SubSet_InfillingEvaluator, self).__init__(set_subsets,
                                                                set_tags,
@@ -224,6 +225,7 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
         self.is_gt = is_gt
         self.sf_dict = sf_dict
         self.hvo_comp_dict = hvo_comp_dict
+        self.epoch = epoch
 
     def get_audios(self, _, use_specific_samples_at=None):
         """ use_specific_samples_at: must be a list of tuples of (subset_ix, sample_ix) denoting to get
@@ -244,10 +246,14 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
 
                 sf_path = self.sf_dict[key][idx]  # force usage of sf_dict
                 audios.append(sample_hvo.synthesize(sf_path=sf_path))
-                captions.append("{}_{}_{}_{}.wav".format(
+
+                title = "{}_{}_{}_{}.wav".format(
                     self.set_identifier, sample_hvo.metadata.style_primary,
                     sample_hvo.metadata.master_id.replace("/", "_"), str(idx)
-                ))
+                )
+                if not self.is_gt:
+                    title = "epoch_{}_{}".format(self.epoch, title)
+                captions.append(title)
 
         # sort so that they are alphabetically ordered in wandb
         sort_index = np.argsort(captions)
@@ -274,6 +280,9 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
                 title = "{}_{}_{}_{}".format(
                     self.set_identifier, sample_hvo.metadata.style_primary,
                     sample_hvo.metadata.master_id.replace("/", "_"), str(idx))
+                if not self.is_gt:
+                    title = "epoch_{}_{}".format(self.epoch, title)
+
                 piano_rolls.append(sample_hvo.to_html_plot(filename=title))
             piano_roll_tabs.append(separate_figues_by_tabs(piano_rolls, [str(x) for x in range(len(piano_rolls))]))
             tab_titles.append(tag)
@@ -388,11 +397,13 @@ def init_evaluator(evaluator_path, device):
     with open(evaluator_path, 'rb') as f:
         evaluator = pickle.load(f)
 
+    """
     # log eval_subset parameters to wandb
     wandb.config.update({evaluator._identifier + "_hvo_index": evaluator.hvo_index,
                          evaluator._identifier + "_soundfonts": evaluator.soundfonts})
     if evaluator.horizontal:
         wandb.config.update({evaluator._identifier + "_voices_reduced": evaluator.voices_reduced})
+    """
 
     evaluator.device = device
     evaluator.processed_inputs.to(device)
@@ -402,8 +413,10 @@ def init_evaluator(evaluator_path, device):
 
 
 def log_eval(evaluator, model, log_media, epoch, dump):
-    # evaluator._identifier = copy.deepcopy(evaluator._identifier)
     evaluator.set_pred(model)
+
+    evaluator.gt_SubSet_Evaluator.epoch = epoch
+    evaluator.prediction_SubSet_Evaluator.epoch = epoch
 
     acc_h = evaluator.get_hits_accuracies(drum_mapping=ROLAND_REDUCED_MAPPING)
     mse_v = evaluator.get_velocity_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
@@ -411,7 +424,7 @@ def log_eval(evaluator, model, log_media, epoch, dump):
     wandb.log({**acc_h, **mse_v, **mse_o}, commit=False)
 
     if log_media:
-        wandb_media = evaluator.get_wandb_logging_media(global_features_html=False)
+        wandb_media = evaluator.get_wandb_logging_media(global_features_html=False, recalculate_ground_truth=False)
         if len(wandb_media.keys()) > 0:
             wandb.log({evaluator._identifier: wandb_media}, commit=False)
 

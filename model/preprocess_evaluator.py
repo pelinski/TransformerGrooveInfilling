@@ -12,6 +12,10 @@ params = {
             "train": '../datasets/InfillingRandom/0.0.0/train',
             'test': '../datasets/InfillingRandom/0.0.0/test'
         },
+        "InfillingRandomLow": {
+            "train": '../datasets/InfillingRandomLow/0.0.0/train',
+            'test': '../datasets/InfillingRandomLow/0.0.0/test'
+        },
         "InfillingClosedHH": {
             "train": '../datasets/InfillingClosedHH/0.1.2/train',
             'test': '../datasets/InfillingClosedHH/0.1.2/test'
@@ -39,7 +43,7 @@ if __name__ == "__main__":
 
     testing = False
 
-    exps = ['InfillingRandom', 'InfillingKicksAndSnares']
+    exps = ['InfillingRandomLow']
     splits = ['train', 'test']
     for exp in exps:
         print('------------------------\n' + exp + '\n------------------------\n')
@@ -51,7 +55,7 @@ if __name__ == "__main__":
                 params["evaluator"]["n_samples_to_use"] = 10
                 params["evaluator"]["n_samples_to_synthesize_visualize_per_subset"] = 5
 
-            pred_horizontal = False if exp == 'InfillingRandom' else True
+            pred_horizontal = False if exp == 'InfillingRandom' or exp =='InfillingRandomLow' else True
 
             dataset = load_preprocessed_dataset(params["dataset_paths"][_exp][split], exp=exp)
 

@@ -213,20 +213,26 @@ def save_to_pickle(obj, filename):
         pickle.dump(obj, f)
 
 
-def get_epoch_log_freq(n_epochs):
-    first_epochs_step = 1
-    first_epochs_lim = 10 if n_epochs >= 10 else n_epochs
-    epoch_save_partial = np.arange(first_epochs_lim, step=first_epochs_step)
-    epoch_save_all = np.arange(first_epochs_lim, step=first_epochs_step)
-    if first_epochs_lim != n_epochs:
-        remaining_epochs_step_partial, remaining_epochs_step_all = 5, 10
-        epoch_save_partial = np.append(epoch_save_partial,
-                                            np.arange(start=first_epochs_lim, step=remaining_epochs_step_partial,
-                                                      stop=n_epochs))
-        epoch_save_all = np.append(epoch_save_all,
-                                        np.arange(start=first_epochs_lim, step=remaining_epochs_step_all,
-                                                  stop=n_epochs))
+def eval_log_freq(total_epochs, initial_epochs_lim, initial_step_partial, initial_step_all, secondary_step_partial,
+                  secondary_step_all, only_final=False):
 
-    return epoch_save_all, epoch_save_partial
+    if only_final:
+        return [total_epochs-1],[]
 
+    if initial_epochs_lim >= total_epochs:
+        epoch_save_partial = np.arange(total_epochs, step=initial_step_partial)
+        epoch_save_all = np.arange(total_epochs, step=initial_step_all)
+        return epoch_save_partial, epoch_save_all
+
+    epoch_save_partial = np.arange(initial_epochs_lim, step=initial_step_partial)
+    epoch_save_all = np.arange(initial_epochs_lim, step=initial_step_all)
+    epoch_save_partial = np.append(epoch_save_partial, np.arange(start=initial_epochs_lim, step=secondary_step_partial,
+                                                                 stop=total_epochs))
+    epoch_save_all = np.append(epoch_save_all, np.arange(start=initial_epochs_lim, step=secondary_step_all,
+                                                         stop=total_epochs))
+    if total_epochs-1 not in epoch_save_partial:
+        epoch_save_partial = np.append(epoch_save_partial, total_epochs-1)
+    if total_epochs-1 not in epoch_save_all:
+        epoch_save_all = np.append(epoch_save_all, total_epochs-1)
+    return epoch_save_partial + 1, epoch_save_all + 1 # return epoch index
 
