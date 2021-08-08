@@ -9,3 +9,4 @@ batch_size: 16
 dim_feedforward: 256
 learning_rate: 0.05
 epochs: 100
+load_model: Null
