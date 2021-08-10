@@ -23,6 +23,9 @@ parser.add_argument("--eval_test", help="evaluator test set", default=True)
 parser.add_argument("--only_final_eval", help="only final total evaluation", default=False)  # sweeps
 parser.add_argument("--dump_eval", help="dump evaluator file", default=True)
 parser.add_argument("--load_model", help="load model parameters", default=None)
+parser.add_argument("--notes", help="wandb run notes", default=None)
+parser.add_argument("--tags", help="wandb run tags", default=None)
+
 
 
 # hyperparameters
@@ -81,6 +84,8 @@ if __name__ == '__main__':
     wandb.init(config=hyperparameters,
                project=hyperparameters['experiment'],
                job_type='train',
+               notes=args.notes,
+               tags=args.tags,
                settings=wandb.Settings(start_method="fork"))
 
     params = {
