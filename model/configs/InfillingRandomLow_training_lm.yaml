@@ -11,4 +11,4 @@ epochs: 3000
 encoder_only: 1
 hit_loss_penalty: 0.46
 load_model: Null
-notes: 'same parameters as InfillingKicksAndSnares'
+notes: 'larger model. same parameters as InfillingKicksAndSnares'
