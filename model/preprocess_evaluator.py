@@ -20,6 +20,10 @@ params = {
             "train": '../datasets/InfillingClosedHH/0.1.2/train',
             'test': '../datasets/InfillingClosedHH/0.1.2/test'
         },
+        "InfillingClosedHH_Symbolic": {
+            "train": '../datasets/InfillingClosedHH_Symbolic/0.1.1/train',
+            'test': '../datasets/InfillingClosedHH_Symbolic/0.1.1/test'
+        },
         "InfillingKicksAndSnares_testing": {
             "train": '../datasets/InfillingKicksAndSnares_testing/0.1.3/train',
             'test': '../datasets/InfillingKicksAndSnares_testing/0.1.3/test'
@@ -29,10 +33,10 @@ params = {
                 "train": '../datasets/InfillingRandom_testing/0.0.0/train',
                 'test': '../datasets/InfillingRandom_testing/0.0.0/test'
             },
-        "InfillingClosedHH_testing":{
+        "InfillingClosedHH_testing": {
             "train": '../datasets/InfillingClosedHH_testing/0.1.2/train',
             'test': '../datasets/InfillingClosedHH_testing/0.1.2/test'
-        }
+        },
     },
     "evaluator": {
         "n_samples_to_use": 2048,  # 2048
@@ -43,7 +47,7 @@ if __name__ == "__main__":
 
     testing = False
 
-    exps = ['InfillingRandomLow']
+    exps = ['InfillingClosedHH_Symbolic']
     splits = ['train', 'test']
     for exp in exps:
         print('------------------------\n' + exp + '\n------------------------\n')
@@ -55,7 +59,7 @@ if __name__ == "__main__":
                 params["evaluator"]["n_samples_to_use"] = 10
                 params["evaluator"]["n_samples_to_synthesize_visualize_per_subset"] = 5
 
-            pred_horizontal = False if exp == 'InfillingRandom' or exp =='InfillingRandomLow' else True
+            pred_horizontal = False if exp == 'InfillingRandom' or exp == 'InfillingRandomLow' else True
 
             dataset = load_preprocessed_dataset(params["dataset_paths"][_exp][split], exp=exp)
 
