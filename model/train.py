@@ -62,7 +62,8 @@ else:
         batch_size=args.batch_size,
         dim_feedforward=args.dim_feedforward,
         learning_rate=args.learning_rate,
-        epochs=args.epochs)
+        epochs=args.epochs,
+        load_model=args.load_model)
 
 if args.testing:
     hyperparameters['epochs'] = 1
