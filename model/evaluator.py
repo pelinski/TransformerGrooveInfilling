@@ -167,7 +167,10 @@ class InfillingEvaluator(Evaluator):
             sf_dict[key] = []
             hvo_comp_dict[key] = []
             for idx in self.audio_sample_locations[key]:
-                sf_dict[key].append(self.soundfonts[self._subset_hvo_array_index[key][idx]])
+                if hasattr(self, 'soundfonts'):
+                    sf_dict[key].append(self.soundfonts[self._subset_hvo_array_index[key][idx]])
+                else: # symbolic dataset
+                    sf_dict[key].append('../soundfonts/filtered_soundfonts/Standard_Drum_Kit.sf2')
                 hvo_comp_dict[key].append(self.hvo_sequences_inputs[self._subset_hvo_array_index[key][idx]])
         self.sf_dict = sf_dict
         self.hvo_comp_dict = hvo_comp_dict
