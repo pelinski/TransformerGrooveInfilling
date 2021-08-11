@@ -101,7 +101,7 @@ if __name__ == '__main__':
             'num_encoder_layers': wandb.config.num_encoder_decoder_layers,
             'num_decoder_layers': 0 if wandb.config.encoder_only else wandb.config.num_encoder_decoder_layers,
             'max_len': 32,
-            'embedding_size_src': 16,  # mso
+            'embedding_size_src': 16 if wandb.config.experiment != 'InfillingClosedHH_Symbolic' else 27,  # mso
             'embedding_size_tgt': 27,  # hvo
             'device': 'cuda' if torch.cuda.is_available() else 'cpu'
         },
