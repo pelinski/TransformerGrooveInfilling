@@ -11,3 +11,4 @@ epochs: 1500
 encoder_only: 1
 hit_loss_penalty: 0.38
 load_model: Null
+# params from zesty-sweep-13
