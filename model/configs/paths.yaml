@@ -66,7 +66,10 @@ InfillingClosedHH_testing:
     datasets:
         train: '../datasets/InfillingClosedHH_testing/0.1.2/train'
         test: '../datasets/InfillingClosedHH_testing/0.1.2/test'
+        validation: '../datasets/InfillingClosedHH_testing/0.1.2/validation'
     evaluators:
         train: '../evaluators/InfillingEvaluator_0.3.2/InfillingClosedHH_testing_train_0.1.2_evaluator.pickle'
         test: '../evaluators/InfillingEvaluator_0.3.2/InfillingClosedHH_testing_test_0.1.2_evaluator.pickle'
+        validation: '../evaluators/InfillingEvaluator_0.3.2/InfillingClosedHH_testing_validation_0.1.2_evaluator.pickle'
+
 

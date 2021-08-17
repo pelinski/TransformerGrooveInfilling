@@ -35,7 +35,8 @@ params = {
 },
         "InfillingKicksAndSnares_testing": {
             "train": '../datasets/InfillingKicksAndSnares_testing/0.1.3/train',
-            'test': '../datasets/InfillingKicksAndSnares_testing/0.1.3/test'
+            'test': '../datasets/InfillingKicksAndSnares_testing/0.1.3/test',
+
         },
         "InfillingRandom_testing":
             {
@@ -44,8 +45,10 @@ params = {
             },
         "InfillingClosedHH_testing": {
             "train": '../datasets/InfillingClosedHH_testing/0.1.2/train',
-            'test': '../datasets/InfillingClosedHH_testing/0.1.2/test'
-        },
+            'test': '../datasets/InfillingClosedHH_testing/0.1.2/test',
+            'validation': '../datasets/InfillingClosedHH_testing/0.1.2/validation'
+
+},
     },
     "evaluator": {
         "n_samples_to_use": 1681,  # 2048
@@ -54,10 +57,9 @@ params = {
 
 if __name__ == "__main__":
 
-    testing = False
+    testing = True
 
-    exps = ['InfillingClosedHH', 'InfillingKicksAndSnares', 'InfillingRandom', 'InfillingRandomLow',
-            'InfillingClosedHH_Symbolic']
+    exps = ['InfillingClosedHH']
     splits = ['validation']
     for exp in exps:
         print('------------------------\n' + exp + '\n------------------------\n')
