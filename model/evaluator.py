@@ -13,6 +13,7 @@ from bokeh.resources import CDN
 sys.path.insert(1, "../../GrooveEvaluator")
 from GrooveEvaluator.evaluator import Evaluator, HVOSeq_SubSet_Evaluator
 from GrooveEvaluator.plotting_utils import separate_figues_by_tabs
+from GrooveEvaluator.utils import get_stats_from_evaluator
 
 sys.path.insert(1, "../../hvo_sequence")
 from hvo_sequence.drum_mappings import ROLAND_REDUCED_MAPPING
@@ -66,7 +67,7 @@ class InfillingEvaluator(Evaluator):
                                                  disable_tqdm=disable_tqdm)
 
         self.dataset = dataset
-
+        self._identifier = _identifier
         self._gmd_gt_hvo_sequences = []
         self._gt_hvos_array_tags, self._gmd_gt_hvos_array = [], []
         for subset_ix, tag in enumerate(self._gt_tags):
@@ -129,7 +130,7 @@ class InfillingEvaluator(Evaluator):
         self.gt_SubSet_Evaluator = HVOSeq_SubSet_InfillingEvaluator(
             self._gt_subsets,  # Ground Truth typically
             self._gt_tags,
-            "Ground_Truth",  # a name for the subset
+            "Ground_Truth_" + self._identifier,  # a name for the subset
             disable_tqdm=self.disable_tqdm,
             group_by_minor_keys=True,
             horizontal=self.horizontal,
@@ -154,20 +155,23 @@ class InfillingEvaluator(Evaluator):
         self.prediction_SubSet_Evaluator = HVOSeq_SubSet_InfillingEvaluator(
             self._prediction_subsets,
             self._prediction_tags,
-            "Predictions",  # a name for the subset
+            "Predictions_" + self._identifier,  # a name for the subset
             disable_tqdm=self.disable_tqdm,
             group_by_minor_keys=True,
             horizontal=self.horizontal,
             is_gt=False
         )
-        self.gt_SubSet_Evaluator.set_identifier = 'Ground_Truth'
+        self.gt_SubSet_Evaluator.set_identifier = 'Ground_Truth_' + self._identifier
 
         sf_dict, hvo_comp_dict = {}, {}
         for key in self.audio_sample_locations.keys():
             sf_dict[key] = []
             hvo_comp_dict[key] = []
             for idx in self.audio_sample_locations[key]:
-                sf_dict[key].append(self.soundfonts[self._subset_hvo_array_index[key][idx]])
+                if hasattr(self, 'soundfonts'):
+                    sf_dict[key].append(self.soundfonts[self._subset_hvo_array_index[key][idx]])
+                else:  # symbolic dataset
+                    sf_dict[key].append('../soundfonts/filtered_soundfonts/Standard_Drum_Kit.sf2')
                 hvo_comp_dict[key].append(self.hvo_sequences_inputs[self._subset_hvo_array_index[key][idx]])
         self.sf_dict = sf_dict
         self.hvo_comp_dict = hvo_comp_dict
@@ -428,12 +432,62 @@ def log_eval(evaluator, model, log_media, epoch, dump):
         if len(wandb_media.keys()) > 0:
             wandb.log({evaluator._identifier: wandb_media}, commit=False)
 
+        # log stats
+        csv_filename = os.path.join(wandb.run.dir, "stats_{}_Epoch_{}.csv".format(wandb.run.id, epoch))
+        # csv_filename="stats/stats_{}_Epoch_{}.csv".format(wandb.run.id, epoch)
+        df = get_stats_from_evaluator(evaluator, csv_file=csv_filename)
+        df = df.drop(columns=['Statistical::Lowness__Ground_Truth', # drop columns that are not relevant for infilling
+                              'Statistical::Lowness__Prediction',
+                              'Statistical::Midness__Ground_Truth',
+                              'Statistical::Midness__Prediction',
+                              'Statistical::Hiness__Ground_Truth',
+                              'Statistical::Hiness__Prediction',
+                              'Statistical::Poly Velocity Mean__Ground_Truth',
+                              'Statistical::Poly Velocity Mean__Prediction',
+                              'Statistical::Poly Velocity std__Ground_Truth',
+                              'Statistical::Poly Velocity std__Prediction',
+                              'Statistical::Poly Offset Mean__Ground_Truth',
+                              'Statistical::Poly Offset Mean__Prediction',
+                              'Statistical::Poly Offset std__Ground_Truth',
+                              'Statistical::Poly Offset std__Prediction',
+                              'Syncopation::Combined__Ground_Truth',
+                              'Syncopation::Combined__Prediction',
+                              'Syncopation::Polyphonic__Ground_Truth',
+                              'Syncopation::Polyphonic__Prediction',
+                              'Syncopation::Lowsync__Ground_Truth',
+                              'Syncopation::Lowsync__Prediction',
+                              'Syncopation::Midsync__Ground_Truth',
+                              'Syncopation::Midsync__Prediction',
+                              'Syncopation::Hisync__Ground_Truth',
+                              'Syncopation::Hisync__Prediction',
+                              'Syncopation::Lowsyness__Ground_Truth',
+                              'Syncopation::Lowsyness__Prediction',
+                              'Syncopation::Midsyness__Ground_Truth',
+                              'Syncopation::Midsyness__Prediction',
+                              'Syncopation::Hisyness__Ground_Truth',
+                              'Syncopation::Hisyness__Prediction',
+                              'Syncopation::Complexity__Ground_Truth',
+                              'Syncopation::Complexity__Prediction',
+                              'Micro-Timing::Swingness__Ground_Truth',
+                              'Micro-Timing::Swingness__Prediction',
+                              'Micro-Timing::Laidbackness__Ground_Truth',
+                              'Micro-Timing::Laidbackness__Prediction',
+                              ])
+        df = df.dropna(axis=1)  # remove nans
+        html = df.to_html()
+        wandb.save(csv_filename, base_path=wandb.run.dir)
+        wandb.log({evaluator._identifier + '_stats': wandb.Html(html)}, commit=False)
+
     # move torch tensors to cpu before saving so that they can be loaded in cpu machines
     if dump:
         evaluator.processed_inputs.to(device='cpu')
         evaluator.processed_gt.to(device='cpu')
-        evaluator.dump(path="evaluator/evaluator_{}_run_{}_Epoch_{}.Eval".format(evaluator._identifier, wandb.run.name,
-                                                                                 epoch))
+
+        # save_filename = os.path.join(wandb.run.dir, "evaluator/evaluator_{}_run_{}_Epoch_{}.Eval".format(
+        #    evaluator._identifier, wandb.run.name,epoch))
+        evaluator.dump(
+            "evaluator/evaluator_{}_run_{}_Epoch_{}.Eval".format(evaluator._identifier, wandb.run.name, epoch))
+        # wandb.save(save_filename, base_path=os.path.join(wandb.run.dir,'evaluator'))
 
     # rhythmic_distances = evaluator.get_rhythmic_distances()
     # wandb.log(rhythmic_distances, commit=False)

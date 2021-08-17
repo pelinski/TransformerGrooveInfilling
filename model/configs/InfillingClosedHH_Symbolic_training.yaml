@@ -1,4 +1,4 @@
-experiment: 'InfillingClosedHH'
+experiment: 'InfillingClosedHH_Symbolic'
 batch_size: 16
 d_model: 32
 dim_feedforward: 512
