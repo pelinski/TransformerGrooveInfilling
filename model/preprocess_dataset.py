@@ -170,8 +170,9 @@ if __name__ == "__main__":
     testing = False
 
     # change experiment and split here
-    exps = ['InfillingClosedHH_Symbolic']
-    splits = ['train', 'test']
+    exps = ['InfillingClosedHH', 'InfillingKicksAndSnares', 'InfillingRandom', 'InfillingRandomLow',
+            'InfillingClosedHH_Symbolic']
+    splits = ['validation']
 
     for exp in exps:
         if testing:
