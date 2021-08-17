@@ -23,6 +23,9 @@ plots/
 #wandb
 wandb/
 
+#hpc
+hpc/
+
 #preprocessed_datasets
 datasets/*/*/*/*.pickle
 
