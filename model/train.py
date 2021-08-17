@@ -19,7 +19,8 @@ parser.add_argument("--paths", help="paths file", default='configs/paths.yaml')
 parser.add_argument("--testing", help="testing mode", default=False)
 parser.add_argument("--wandb", help="log to wandb", default=True)
 parser.add_argument("--eval_train", help="evaluator train set", default=True)
-parser.add_argument("--eval_test", help="evaluator test set", default=True)
+parser.add_argument("--eval_test", help="evaluator test set", default=False)
+parser.add_argument("--eval_validation", help="evaluator validation set", default=True)
 parser.add_argument("--only_final_eval", help="only final total evaluation", default=False)  # sweeps
 parser.add_argument("--dump_eval", help="dump evaluator file", default=True)
 parser.add_argument("--load_model", help="load model parameters", default=None)
@@ -133,6 +134,9 @@ if __name__ == '__main__':
     if args.eval_test:
         evaluator_test = init_evaluator(paths[wandb.config.experiment]['evaluators']['test'], device=params[
             'model']['device'])
+    if args.eval_validation:
+        evaluator_validation = init_evaluator(paths[wandb.config.experiment]['evaluators']['validation'], device=params[
+            'model']['device'])
 
     BCE_fn, MSE_fn = torch.nn.BCEWithLogitsLoss(reduction='none'), torch.nn.MSELoss(reduction='none')
 
@@ -158,6 +162,8 @@ if __name__ == '__main__':
                    device=params["model"]['device'],
                    test_inputs=evaluator_test.processed_inputs if args.eval_test else None,
                    test_gt=evaluator_test.processed_gt if args.eval_test else None,
+                   validation_inputs=evaluator_validation.processed_inputs if args.eval_validation else None,
+                   validation_gt=evaluator_validation.processed_gt if args.eval_validation else None,
                    hit_loss_penalty=wandb.config.hit_loss_penalty,
                    save=(ep in epoch_save_partial or ep in epoch_save_all))
         print("-------------------------------\n")
@@ -172,6 +178,11 @@ if __name__ == '__main__':
                 # evaluator_test._identifier = 'Test_Set_Epoch_{}'.format(ep)
                 evaluator_test._identifier = 'Test_Set'
                 log_eval(evaluator_test, model, log_media=ep in epoch_save_all, epoch=ep, dump=args.dump_eval)
+
+            if args.eval_validation:
+                # evaluator_test._identifier = 'Validation_Set_Epoch_{}'.format(ep)
+                evaluator_validation._identifier = 'Validation_Set'
+                log_eval(evaluator_validation, model, log_media=ep in epoch_save_all, epoch=ep, dump=args.dump_eval)
 
         wandb.log({"epoch": ep}, commit=True)
 
