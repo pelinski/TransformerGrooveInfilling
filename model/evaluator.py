@@ -393,7 +393,6 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
                     }
 
                 )
-        print(self.epoch)
         return wandb_media_dict
 
 
