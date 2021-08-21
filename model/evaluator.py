@@ -341,7 +341,8 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
                             {
                                 self.set_identifier:
                                     wandb.Html(file_html(
-                                        logging_dict["velocity_heatmaps"], CDN, "vel_heatmap_" + self.set_identifier))
+                                        logging_dict["velocity_heatmaps"], CDN, "vel_heatmap_{}_Epoch_{}".format(
+                                            self.set_identifier, self.epoch)))
                             }
                     }
                 )
@@ -381,17 +382,18 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
                             {
                                 self.set_identifier:
                                     wandb.Html(file_html(
-                                        logging_dict["piano_rolls"], CDN, "piano_rolls_" + self.set_identifier)),
+                                        logging_dict["piano_rolls"], CDN, "piano_rolls_{}_Epoch_{}".format(
+                                            self.set_identifier, self.epoch))),
 
                                 self.set_identifier + '_plus_inputs':
                                     wandb.Html(file_html(
-                                        logging_dict["piano_rolls_plus_inputs"], CDN, "piano_rolls_plus_inputs" +
-                                                                                      self.set_identifier))
+                                        logging_dict["piano_rolls_plus_inputs"], CDN,
+                                        "piano_rolls_plus_inputs_{}_{}".format(self.set_identifier, self.epoch)))
                             }
                     }
 
                 )
-
+        print(self.epoch)
         return wandb_media_dict
 
 
@@ -400,14 +402,6 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
 def init_evaluator(evaluator_path, device):
     with open(evaluator_path, 'rb') as f:
         evaluator = pickle.load(f)
-
-    """
-    # log eval_subset parameters to wandb
-    wandb.config.update({evaluator._identifier + "_hvo_index": evaluator.hvo_index,
-                         evaluator._identifier + "_soundfonts": evaluator.soundfonts})
-    if evaluator.horizontal:
-        wandb.config.update({evaluator._identifier + "_voices_reduced": evaluator.voices_reduced})
-    """
 
     evaluator.device = device
     evaluator.processed_inputs.to(device)
