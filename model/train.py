@@ -148,7 +148,6 @@ if __name__ == '__main__':
                                                        only_final=args.only_final_eval)
     ep = initial_epoch
     for i in range(initial_epoch, total_epochs):
-        ep += 1
 
         print(f"Epoch {ep}\n-------------------------------")
         train_loop(dataloader=dataloader_train,
@@ -185,5 +184,7 @@ if __name__ == '__main__':
                 log_eval(evaluator_validation, model, log_media=ep in epoch_save_all, epoch=ep, dump=args.dump_eval)
 
         wandb.log({"epoch": ep}, commit=True)
+
+        ep += 1
 
     wandb.finish()
