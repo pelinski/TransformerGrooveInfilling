@@ -1,7 +1,7 @@
 experiment: 'InfillingKicksAndSnares'
 batch_size: 32
 d_model: 256
-dim_feedforward: 2048
+dim_feedforward: 512
 dropout: 0.30
 optimizer_algorithm: 'sgd'
 learning_rate: 0.089
@@ -11,4 +11,4 @@ epochs: 400
 encoder_only: 1
 hit_loss_penalty: 0.73
 load_model: Null
-# params from efficient-sweep-9, but with dim_feedforward at 2048 instead of 512
+# params from efficient-sweep-9
