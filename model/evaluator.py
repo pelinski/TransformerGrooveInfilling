@@ -418,9 +418,9 @@ def log_eval(evaluator, model, log_media, epoch, dump):
     acc_h = evaluator.get_hits_accuracies(drum_mapping=ROLAND_REDUCED_MAPPING)
     mse_v = evaluator.get_velocity_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
     mse_o = evaluator.get_micro_timing_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
-    wandb.log({**acc_h, epoch:"epoch"})
-    wandb.log({**mse_v, epoch:"epoch"})
-    wandb.log({**mse_o,epoch:"epoch"})
+    wandb.log({**acc_h, "epoch":epoch})
+    wandb.log({**mse_v, "epoch":epoch})
+    wandb.log({**mse_o,"epoch":epoch})
     #wandb.log({**acc_h, **mse_v, **mse_o, "epoch": epoch}, commit=True)
 
     if log_media:
