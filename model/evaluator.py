@@ -418,12 +418,12 @@ def log_eval(evaluator, model, log_media, epoch, dump):
     acc_h = evaluator.get_hits_accuracies(drum_mapping=ROLAND_REDUCED_MAPPING)
     mse_v = evaluator.get_velocity_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
     mse_o = evaluator.get_micro_timing_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
-    wandb.log({**acc_h, **mse_v, **mse_o}, commit=False)
+    wandb.log({**acc_h, **mse_v, **mse_o, "epoch": epoch}, commit=True)
 
     if log_media:
         wandb_media = evaluator.get_wandb_logging_media(global_features_html=False, recalculate_ground_truth=False)
         if len(wandb_media.keys()) > 0:
-            wandb.log({evaluator._identifier: wandb_media}, commit=False)
+            wandb.log({evaluator._identifier: wandb_media, "epoch":epoch}, commit=False)
 
         # log stats
         csv_filename = os.path.join(wandb.run.dir, "stats_{}_Epoch_{}.csv".format(wandb.run.id, epoch))
@@ -469,7 +469,7 @@ def log_eval(evaluator, model, log_media, epoch, dump):
         df = df.dropna(axis=1)  # remove nans
         html = df.to_html()
         wandb.save(csv_filename, base_path=wandb.run.dir)
-        wandb.log({evaluator._identifier + '_stats': wandb.Html(html)}, commit=False)
+        wandb.log({evaluator._identifier + '_stats': wandb.Html(html), "epoch":epoch}, commit=False)
 
     # move torch tensors to cpu before saving so that they can be loaded in cpu machines
     if dump:
