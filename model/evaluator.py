@@ -472,15 +472,15 @@ def log_eval(evaluator, model, log_media, epoch, dump):
         wandb.log({evaluator._identifier + '_stats': wandb.Html(html), "epoch":epoch}, commit=False)
 
     # move torch tensors to cpu before saving so that they can be loaded in cpu machines
-    if dump:
-        evaluator.processed_inputs.to(device='cpu')
-        evaluator.processed_gt.to(device='cpu')
+        if dump:
+            evaluator.processed_inputs.to(device='cpu')
+            evaluator.processed_gt.to(device='cpu')
 
-        # save_filename = os.path.join(wandb.run.dir, "evaluator/evaluator_{}_run_{}_Epoch_{}.Eval".format(
-        #    evaluator._identifier, wandb.run.name,epoch))
-        evaluator.dump(
-            "evaluator/evaluator_{}_run_{}_Epoch_{}.Eval".format(evaluator._identifier, wandb.run.name, epoch))
-        # wandb.save(save_filename, base_path=os.path.join(wandb.run.dir,'evaluator'))
+            # save_filename = os.path.join(wandb.run.dir, "evaluator/evaluator_{}_run_{}_Epoch_{}.Eval".format(
+            #    evaluator._identifier, wandb.run.name,epoch))
+            evaluator.dump(
+                "evaluator/evaluator_{}_run_{}_Epoch_{}.Eval".format(evaluator._identifier, wandb.run.name, epoch))
+            # wandb.save(save_filename, base_path=os.path.join(wandb.run.dir,'evaluator'))
 
     # rhythmic_distances = evaluator.get_rhythmic_distances()
     # wandb.log(rhythmic_distances, commit=False)
