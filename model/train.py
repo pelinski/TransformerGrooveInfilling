@@ -148,7 +148,6 @@ if __name__ == '__main__':
                                                        only_final=args.only_final_eval)
     ep = initial_epoch
     for i in range(initial_epoch, total_epochs):
-        ep += 1
 
         print(f"Epoch {ep}\n-------------------------------")
         train_loop(dataloader=dataloader_train,
@@ -168,22 +167,24 @@ if __name__ == '__main__':
                    save=(ep in epoch_save_partial or ep in epoch_save_all))
         print("-------------------------------\n")
 
-        if ep in epoch_save_partial or ep in epoch_save_all:
-            if args.eval_train:
-                # evaluator_train._identifier = 'Train_Set_Epoch_{}'.format(ep)
-                evaluator_train._identifier = 'Train_Set'
-                log_eval(evaluator_train, model, log_media=ep in epoch_save_all, epoch=ep, dump=args.dump_eval)
+        #if ep in epoch_save_partial or ep in epoch_save_all:
+        if args.eval_train:
+            # evaluator_train._identifier = 'Train_Set_Epoch_{}'.format(ep)
+            evaluator_train._identifier = 'Train_Set'
+            log_eval(evaluator_train, model, log_media=ep in epoch_save_all, epoch=ep, dump=args.dump_eval)
 
-            if args.eval_test:
-                # evaluator_test._identifier = 'Test_Set_Epoch_{}'.format(ep)
-                evaluator_test._identifier = 'Test_Set'
-                log_eval(evaluator_test, model, log_media=ep in epoch_save_all, epoch=ep, dump=args.dump_eval)
+        if args.eval_test:
+            # evaluator_test._identifier = 'Test_Set_Epoch_{}'.format(ep)
+            evaluator_test._identifier = 'Test_Set'
+            log_eval(evaluator_test, model, log_media=ep in epoch_save_all, epoch=ep, dump=args.dump_eval)
 
-            if args.eval_validation:
-                # evaluator_test._identifier = 'Validation_Set_Epoch_{}'.format(ep)
-                evaluator_validation._identifier = 'Validation_Set'
-                log_eval(evaluator_validation, model, log_media=ep in epoch_save_all, epoch=ep, dump=args.dump_eval)
+        if args.eval_validation:
+            # evaluator_test._identifier = 'Validation_Set_Epoch_{}'.format(ep)
+            evaluator_validation._identifier = 'Validation_Set'
+            log_eval(evaluator_validation, model, log_media=ep in epoch_save_all, epoch=ep, dump=args.dump_eval)
 
         wandb.log({"epoch": ep}, commit=True)
+
+        ep += 1
 
     wandb.finish()

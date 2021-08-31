@@ -341,7 +341,8 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
                             {
                                 self.set_identifier:
                                     wandb.Html(file_html(
-                                        logging_dict["velocity_heatmaps"], CDN, "vel_heatmap_" + self.set_identifier))
+                                        logging_dict["velocity_heatmaps"], CDN, "vel_heatmap_{}_Epoch_{}".format(
+                                            self.set_identifier, self.epoch)))
                             }
                     }
                 )
@@ -381,17 +382,17 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
                             {
                                 self.set_identifier:
                                     wandb.Html(file_html(
-                                        logging_dict["piano_rolls"], CDN, "piano_rolls_" + self.set_identifier)),
+                                        logging_dict["piano_rolls"], CDN, "piano_rolls_{}_Epoch_{}".format(
+                                            self.set_identifier, self.epoch))),
 
                                 self.set_identifier + '_plus_inputs':
                                     wandb.Html(file_html(
-                                        logging_dict["piano_rolls_plus_inputs"], CDN, "piano_rolls_plus_inputs" +
-                                                                                      self.set_identifier))
+                                        logging_dict["piano_rolls_plus_inputs"], CDN,
+                                        "piano_rolls_plus_inputs_{}_{}".format(self.set_identifier, self.epoch)))
                             }
                     }
 
                 )
-
         return wandb_media_dict
 
 
@@ -400,14 +401,6 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
 def init_evaluator(evaluator_path, device):
     with open(evaluator_path, 'rb') as f:
         evaluator = pickle.load(f)
-
-    """
-    # log eval_subset parameters to wandb
-    wandb.config.update({evaluator._identifier + "_hvo_index": evaluator.hvo_index,
-                         evaluator._identifier + "_soundfonts": evaluator.soundfonts})
-    if evaluator.horizontal:
-        wandb.config.update({evaluator._identifier + "_voices_reduced": evaluator.voices_reduced})
-    """
 
     evaluator.device = device
     evaluator.processed_inputs.to(device)
@@ -425,12 +418,12 @@ def log_eval(evaluator, model, log_media, epoch, dump):
     acc_h = evaluator.get_hits_accuracies(drum_mapping=ROLAND_REDUCED_MAPPING)
     mse_v = evaluator.get_velocity_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
     mse_o = evaluator.get_micro_timing_errors(drum_mapping=ROLAND_REDUCED_MAPPING)
-    wandb.log({**acc_h, **mse_v, **mse_o}, commit=False)
+    wandb.log({**acc_h, **mse_v, **mse_o, "epoch": epoch}, commit=True)
 
     if log_media:
         wandb_media = evaluator.get_wandb_logging_media(global_features_html=False, recalculate_ground_truth=False)
         if len(wandb_media.keys()) > 0:
-            wandb.log({evaluator._identifier: wandb_media}, commit=False)
+            wandb.log({evaluator._identifier: wandb_media, "epoch":epoch}, commit=False)
 
         # log stats
         csv_filename = os.path.join(wandb.run.dir, "stats_{}_Epoch_{}.csv".format(wandb.run.id, epoch))
@@ -476,18 +469,18 @@ def log_eval(evaluator, model, log_media, epoch, dump):
         df = df.dropna(axis=1)  # remove nans
         html = df.to_html()
         wandb.save(csv_filename, base_path=wandb.run.dir)
-        wandb.log({evaluator._identifier + '_stats': wandb.Html(html)}, commit=False)
+        wandb.log({evaluator._identifier + '_stats': wandb.Html(html), "epoch":epoch}, commit=False)
 
     # move torch tensors to cpu before saving so that they can be loaded in cpu machines
-    if dump:
-        evaluator.processed_inputs.to(device='cpu')
-        evaluator.processed_gt.to(device='cpu')
+        if dump:
+            evaluator.processed_inputs.to(device='cpu')
+            evaluator.processed_gt.to(device='cpu')
 
-        # save_filename = os.path.join(wandb.run.dir, "evaluator/evaluator_{}_run_{}_Epoch_{}.Eval".format(
-        #    evaluator._identifier, wandb.run.name,epoch))
-        evaluator.dump(
-            "evaluator/evaluator_{}_run_{}_Epoch_{}.Eval".format(evaluator._identifier, wandb.run.name, epoch))
-        # wandb.save(save_filename, base_path=os.path.join(wandb.run.dir,'evaluator'))
+            # save_filename = os.path.join(wandb.run.dir, "evaluator/evaluator_{}_run_{}_Epoch_{}.Eval".format(
+            #    evaluator._identifier, wandb.run.name,epoch))
+            evaluator.dump(
+                "evaluator/evaluator_{}_run_{}_Epoch_{}.Eval".format(evaluator._identifier, wandb.run.name, epoch))
+            # wandb.save(save_filename, base_path=os.path.join(wandb.run.dir,'evaluator'))
 
     # rhythmic_distances = evaluator.get_rhythmic_distances()
     # wandb.log(rhythmic_distances, commit=False)

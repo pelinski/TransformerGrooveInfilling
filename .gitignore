@@ -26,14 +26,21 @@ wandb/
 #hpc
 hpc/
 
-#preprocessed_datasets
+#datasets and evaluator
 datasets/*/*/*/*.pickle
+datasets.zip 
+
+evaluators/*/*.pickle
+evaluators.zip
 
 # evaluator
-evaluators/*/*.pickle
 model/evaluator/
+
 
 
 soundfonts/filtered_soundfonts/ARIAConverted/
 
 notes.txt
+
+dev/
+results/
