@@ -435,5 +435,5 @@ dependencies:
     - typeguard==2.12.0
     - uritemplate==3.0.1
     - visual-midi==1.1.0
-    - wandb==0.11.0
+    - wandb==0.12.0
 prefix: /homedtic/tpelinski/project/anaconda3/envs/torch_thesis
