@@ -7,12 +7,14 @@ import yaml
 import argparse
 import pprint
 
+
+
 from preprocess_dataset import load_preprocessed_dataset
 from evaluator import init_evaluator, log_eval
 from utils import eval_log_freq
+from src.BaseGrooveTransformers import initialize_model, calculate_loss, train_loop
 
-sys.path.insert(1, "../../BaseGrooveTransformers/")
-from models.train import initialize_model, calculate_loss, train_loop
+#sys.path.insert(1, "./src/BaseGrooveTransformers/")
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--paths", help="paths file", default='configs/paths.yaml')
@@ -20,30 +22,40 @@ parser.add_argument("--testing", help="testing mode", default=False)
 parser.add_argument("--wandb", help="log to wandb", default=True)
 parser.add_argument("--eval_train", help="evaluator train set", default=True)
 parser.add_argument("--eval_test", help="evaluator test set", default=False)
-parser.add_argument("--eval_validation", help="evaluator validation set", default=True)
-parser.add_argument("--only_final_eval", help="only final total evaluation", default=False)  # sweeps
+parser.add_argument("--eval_validation",
+                    help="evaluator validation set", default=True)
+parser.add_argument("--only_final_eval",
+                    help="only final total evaluation", default=False)  # sweeps
 parser.add_argument("--dump_eval", help="dump evaluator file", default=True)
 parser.add_argument("--load_model", help="load model parameters", default=None)
 parser.add_argument("--notes", help="wandb run notes", default=None)
 parser.add_argument("--tags", help="wandb run tags", default=None)
 
 
-
 # hyperparameters
 parser.add_argument("--config", help="yaml config file. if given, the rest of the arguments are not taken into "
                                      "account", default=None)
 parser.add_argument("--experiment", help="experiment id", default=None)
-parser.add_argument("--encoder_only", help="transformer encoder only", default=1, type=int)
-parser.add_argument("--optimizer_algorithm", help="optimizer_algorithm", default='sgd', type=str)
+parser.add_argument(
+    "--encoder_only", help="transformer encoder only", default=1, type=int)
+parser.add_argument("--optimizer_algorithm",
+                    help="optimizer_algorithm", default='sgd', type=str)
 parser.add_argument("--d_model", help="model dimension", default=64, type=int)
-parser.add_argument("--n_heads", help="number of heads for multihead attention", default=16, type=int)
-parser.add_argument("--dropout", help="dropout factor", default=0.2, type=float)
-parser.add_argument("--num_encoder_decoder_layers", help="number of encoder/decoder layers", default=7, type=int)
-parser.add_argument("--hit_loss_penalty", help="non_hit loss multiplier (between 0 and 1)", default=1, type=float)
+parser.add_argument(
+    "--n_heads", help="number of heads for multihead attention", default=16, type=int)
+parser.add_argument("--dropout", help="dropout factor",
+                    default=0.2, type=float)
+parser.add_argument("--num_encoder_decoder_layers",
+                    help="number of encoder/decoder layers", default=7, type=int)
+parser.add_argument("--hit_loss_penalty",
+                    help="non_hit loss multiplier (between 0 and 1)", default=1, type=float)
 parser.add_argument("--batch_size", help="batch size", default=16, type=int)
-parser.add_argument("--dim_feedforward", help="feed forward layer dimension", default=256, type=int)
-parser.add_argument("--learning_rate", help="learning rate", default=0.05, type=float)
-parser.add_argument("--epochs", help="number of training epochs", default=100, type=int)
+parser.add_argument("--dim_feedforward",
+                    help="feed forward layer dimension", default=256, type=int)
+parser.add_argument("--learning_rate", help="learning rate",
+                    default=0.05, type=float)
+parser.add_argument(
+    "--epochs", help="number of training epochs", default=100, type=int)
 
 args = parser.parse_args()
 
@@ -126,7 +138,8 @@ if __name__ == '__main__':
     # load dataset
     dataset_train = load_preprocessed_dataset(paths[wandb.config.experiment]['datasets']['train'],
                                               exp=wandb.config.experiment)
-    dataloader_train = DataLoader(dataset_train, batch_size=wandb.config.batch_size, shuffle=True, pin_memory=True)
+    dataloader_train = DataLoader(
+        dataset_train, batch_size=wandb.config.batch_size, shuffle=True, pin_memory=True)
 
     if args.eval_train:
         evaluator_train = init_evaluator(paths[wandb.config.experiment]['evaluators']['train'], device=params[
@@ -138,7 +151,8 @@ if __name__ == '__main__':
         evaluator_validation = init_evaluator(paths[wandb.config.experiment]['evaluators']['validation'], device=params[
             'model']['device'])
 
-    BCE_fn, MSE_fn = torch.nn.BCEWithLogitsLoss(reduction='none'), torch.nn.MSELoss(reduction='none')
+    BCE_fn, MSE_fn = torch.nn.BCEWithLogitsLoss(
+        reduction='none'), torch.nn.MSELoss(reduction='none')
 
     total_epochs = wandb.config.epochs
     epoch_save_all, epoch_save_partial = eval_log_freq(total_epochs=total_epochs, initial_epochs_lim=10,
@@ -167,21 +181,24 @@ if __name__ == '__main__':
                    save=(ep in epoch_save_partial or ep in epoch_save_all))
         print("-------------------------------\n")
 
-        #if ep in epoch_save_partial or ep in epoch_save_all:
+        # if ep in epoch_save_partial or ep in epoch_save_all:
         if args.eval_train:
             # evaluator_train._identifier = 'Train_Set_Epoch_{}'.format(ep)
             evaluator_train._identifier = 'Train_Set'
-            log_eval(evaluator_train, model, log_media=ep in epoch_save_all, epoch=ep, dump=args.dump_eval)
+            log_eval(evaluator_train, model, log_media=ep in epoch_save_all,
+                     epoch=ep, dump=args.dump_eval)
 
         if args.eval_test:
             # evaluator_test._identifier = 'Test_Set_Epoch_{}'.format(ep)
             evaluator_test._identifier = 'Test_Set'
-            log_eval(evaluator_test, model, log_media=ep in epoch_save_all, epoch=ep, dump=args.dump_eval)
+            log_eval(evaluator_test, model, log_media=ep in epoch_save_all,
+                     epoch=ep, dump=args.dump_eval)
 
         if args.eval_validation:
             # evaluator_test._identifier = 'Validation_Set_Epoch_{}'.format(ep)
             evaluator_validation._identifier = 'Validation_Set'
-            log_eval(evaluator_validation, model, log_media=ep in epoch_save_all, epoch=ep, dump=args.dump_eval)
+            log_eval(evaluator_validation, model,
+                     log_media=ep in epoch_save_all, epoch=ep, dump=args.dump_eval)
 
         wandb.log({"epoch": ep}, commit=True)
 

@@ -2,8 +2,8 @@ import copy
 import sys
 from dataset import GrooveMidiDatasetInfilling, GrooveMidiDatasetInfillingSymbolic, GrooveMidiDatasetInfillingRandom
 
-sys.path.append('../../preprocessed_dataset/')
-from Subset_Creators.subsetters import GrooveMidiSubsetter
+# sys.path.append('../../preprocessed_dataset/')
+from src.preprocessed_dataset import GrooveMidiSubsetter
 
 subset_info = {
     "pickle_source_path": "../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.5.2"
@@ -142,9 +142,11 @@ def preprocess_dataset(params, exp):
                                              params["subset_info"]['filters']]).create_subsets()
 
     if exp == 'InfillingClosedHH_Symbolic':
-        _dataset = GrooveMidiDatasetInfillingSymbolic(data=subset_list[0], **params)
+        _dataset = GrooveMidiDatasetInfillingSymbolic(
+            data=subset_list[0], **params)
     elif exp == 'InfillingRandom' or exp == 'InfillingRandomLow':
-        _dataset = GrooveMidiDatasetInfillingRandom(data=subset_list[0], **params)
+        _dataset = GrooveMidiDatasetInfillingRandom(
+            data=subset_list[0], **params)
     else:
         _dataset = GrooveMidiDatasetInfilling(data=subset_list[0], **params)
 
@@ -154,13 +156,16 @@ def preprocess_dataset(params, exp):
 def load_preprocessed_dataset(load_dataset_path, exp):
     if exp == 'InfillingClosedHH_Symbolic':
         print('Loading GrooveMidiDatasetInfillingSymbolic...')
-        _dataset = GrooveMidiDatasetInfillingSymbolic(load_dataset_path=load_dataset_path)
+        _dataset = GrooveMidiDatasetInfillingSymbolic(
+            load_dataset_path=load_dataset_path)
     elif exp == 'InfillingRandom' or exp == 'InfillingRandomLow':
         print('Loading GrooveMidiDatasetInfillingRandom...')
-        _dataset = GrooveMidiDatasetInfillingRandom(load_dataset_path=load_dataset_path)
+        _dataset = GrooveMidiDatasetInfillingRandom(
+            load_dataset_path=load_dataset_path)
     else:
         print('Loading GrooveMidiDatasetInfilling...')
-        _dataset = GrooveMidiDatasetInfilling(load_dataset_path=load_dataset_path)
+        _dataset = GrooveMidiDatasetInfilling(
+            load_dataset_path=load_dataset_path)
 
     return _dataset
 
@@ -175,11 +180,14 @@ if __name__ == "__main__":
 
     for exp in exps:
         if testing:
-            params[exp]['subset_info']['filters']['master_id'] = ["drummer2/session2/8"]
+            params[exp]['subset_info']['filters']['master_id'] = [
+                "drummer2/session2/8"]
             params[exp]['dataset_name'] = params[exp]['dataset_name'] + '_testing'
-            params[exp]['save_dataset_path'] = '../datasets/' + params[exp]['dataset_name'] + '/'
+            params[exp]['save_dataset_path'] = '../datasets/' + \
+                params[exp]['dataset_name'] + '/'
 
-        print('------------------------\n' + params[exp]['dataset_name'] + '\n------------------------\n')
+        print('------------------------\n' +
+              params[exp]['dataset_name'] + '\n------------------------\n')
 
         for split in splits:
             params_exp = copy.deepcopy(params[exp])
