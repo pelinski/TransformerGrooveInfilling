@@ -1,15 +1,16 @@
-[submodule "model/src/BaseGrooveTransformers"]
-	path = model/src/BaseGrooveTransformers
+[submodule "src/BaseGrooveTransformers"]
+	path = src/BaseGrooveTransformers
 	url = git@github.com:behzadhaki/BaseGrooveTransformers.git
 	branch = submodules
-[submodule "model/src/hvo_sequence"]
-	path = model/src/hvo_sequence
+[submodule "src/hvo_sequence"]
+	path = src/hvo_sequence
 	url = git@github.com:behzadhaki/hvo_sequence.git
 	branch = submodules
-[submodule "model/src/preprocessed_dataset"]
-	path = model/src/preprocessed_dataset
+[submodule "src/preprocessed_dataset"]
+	path = src/preprocessed_dataset
 	url = git@github.com:behzadhaki/preprocessed_dataset.git
 	branch = submodules
-[submodule "model/src/GrooveEvaluator"]
-	path = model/src/GrooveEvaluator
+[submodule "src/GrooveEvaluator"]
+	path = src/GrooveEvaluator
 	url = git@github.com:behzadhaki/GrooveEvaluator.git
+	branch = submodules
