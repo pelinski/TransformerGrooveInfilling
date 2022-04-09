@@ -2,12 +2,11 @@ import copy
 import sys
 from dataset import GrooveMidiDatasetInfilling, GrooveMidiDatasetInfillingSymbolic, GrooveMidiDatasetInfillingRandom
 
-# sys.path.append('../../preprocessed_dataset/')
+# sys.path.append('preprocessed_dataset/')
 from src.preprocessed_dataset import GrooveMidiSubsetter
 
 subset_info = {
-    "pickle_source_path": "../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.5.2"
-                          "/Processed_On_21_07_2021_at_14_32_hrs",
+    "pickle_source_path": "src/preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.5.2/Processed_On_21_07_2021_at_14_32_hrs",
     "subset": "GrooveMIDI_processed_",
     "metadata_csv_filename": "metadata.csv",
     "hvo_pickle_filename": "hvo_sequence_data.obj",
@@ -38,10 +37,10 @@ params = {
             "prob": [1],
             "k": None
         },
-        "sf_path": ["../soundfonts/filtered_soundfonts/Standard_Drum_Kit.sf2"],
+        "sf_path": ["soundfonts/filtered_soundfonts/Standard_Drum_Kit.sf2"],
         "max_n_sf": 1,
         "max_aug_items": 1,
-        "save_dataset_path": '../datasets/InfillingClosedHH/'
+        "save_dataset_path": 'datasets/InfillingClosedHH/'
 
     },
 
@@ -65,10 +64,10 @@ params = {
             "prob": [1, 1],
             "k": 3
         },
-        "sf_path": "../soundfonts/filtered_soundfonts/",
+        "sf_path": "soundfonts/filtered_soundfonts/",
         "max_n_sf": 3,
         "max_aug_items": 4,
-        "save_dataset_path": '../datasets/InfillingKicksAndSnares/'
+        "save_dataset_path": 'datasets/InfillingKicksAndSnares/'
     },
 
     "InfillingMultipleVoices": {
@@ -92,28 +91,28 @@ params = {
             "prob": [1, 1],
             "k": 3
         },
-        "sf_path": "../soundfonts/filtered_soundfonts/",
+        "sf_path": "soundfonts/filtered_soundfonts/",
         "max_n_sf": 3,
         "max_aug_items": 6,
-        "save_dataset_path": '../datasets/InfillingMultipleVoices/'
+        "save_dataset_path": 'datasets/InfillingMultipleVoices/'
     },
 
     "InfillingRandom": {
         "dataset_name": "InfillingRandom",
         "subset_info": subset_info,
-        "sf_path": "../soundfonts/filtered_soundfonts/",
+        "sf_path": "soundfonts/filtered_soundfonts/",
         "max_aug_items": 4,
         "thres_range": (0.4, 0.7),
-        "save_dataset_path": '../datasets/InfillingRandom/'
+        "save_dataset_path": 'datasets/InfillingRandom/'
     },
 
     "InfillingRandomLow": {
         "dataset_name": "InfillingRandomLow",
         "subset_info": subset_info,
-        "sf_path": "../soundfonts/filtered_soundfonts/",
+        "sf_path": "soundfonts/filtered_soundfonts/",
         "max_aug_items": 4,
         "thres_range": (0.1, 0.3),
-        "save_dataset_path": '../datasets/InfillingRandomLow/'
+        "save_dataset_path": 'datasets/InfillingRandomLow/'
     },
 
     "InfillingClosedHH_Symbolic": {
@@ -127,7 +126,7 @@ params = {
             "k": None
         },
         "max_aug_items": 1,
-        "save_dataset_path": '../datasets/InfillingClosedHH_Symbolic/'
+        "save_dataset_path": 'datasets/InfillingClosedHH_Symbolic/'
 
     }
 
@@ -183,7 +182,7 @@ if __name__ == "__main__":
             params[exp]['subset_info']['filters']['master_id'] = [
                 "drummer2/session2/8"]
             params[exp]['dataset_name'] = params[exp]['dataset_name'] + '_testing'
-            params[exp]['save_dataset_path'] = '../datasets/' + \
+            params[exp]['save_dataset_path'] = 'datasets/' + \
                 params[exp]['dataset_name'] + '/'
 
         print('------------------------\n' +
