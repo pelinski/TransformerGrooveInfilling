@@ -7,6 +7,9 @@
 [submodule "src/GrooveEvaluator"]
 	path = src/GrooveEvaluator
 	url = git@github.com:behzadhaki/GrooveEvaluator.git
+[submodule "src/GMD2HVO_PreProcessing"]
+	path = src/GMD2HVO_PreProcessing
+	url = git@github.com:behzadhaki/GMD2HVO_PreProcessing.git
 [submodule "src/preprocessed_dataset"]
 	path = src/preprocessed_dataset
 	url = git@github.com:behzadhaki/preprocessed_dataset.git
