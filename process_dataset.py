@@ -68,10 +68,16 @@ def load_processed_dataset(load_dataset_path, exp):
 
 if __name__ == "__main__":
 
-    testing = True
+    testing = False
 
     # change experiment and split here
-    exps = ["InfillingClosedHH"]
+    exps = [
+        "InfillingClosedHH",
+        "InfillingClosedHH_Symbolic",
+        "InfillingRandom",
+        "InfillingRandomLow",
+        "InfillingKicksAndSnares",
+    ]
     splits = ["train", "test", "validation"]
 
     for exp in exps:

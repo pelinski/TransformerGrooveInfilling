@@ -1,27 +1,64 @@
 # Transformer Groove Infilling
-This repository contains the Transformer Groove Infilling implementation, part of my Master Thesis: *Completing Audio Drum Loops with Transformer Neural Networks*, under the supervision of Sergi Jordà and Behzad Haki at the Music Technology Group at the Universitat Pompeu Fabra (Barcelona).
+
+This repository contains the Transformer Groove Infilling implementation, part of my Master Thesis: _Completing Audio Drum Loops with Transformer Neural Networks_, under the supervision of Sergi Jordà and Behzad Haki at the Music Technology Group at the Universitat Pompeu Fabra (Barcelona).
 
 **Note:** This repo depends on libraries that are not yet public. A standalone zip version of this code containing all necessary libraries can be downloaded [here](https://zenodo.org/record/5347908).
 
 ## Abstract
-Infilling drums refers to complementing a drum pattern with additional drum events that are stylistically consistent with the loop.  This task can be applied to computer-assisted composition; for instance, the composer can sketch some instrument parts of a drum beat and obtain the system's suggestions for new parts. In this thesis, we present the Transformer Groove Infilling, a Transformer Neural Network approach to the infilling task. Until now, the infilling of drum beats has been implemented using Recurrent Neural Network (RNN) architectures, in particular, sequence-to-sequence models that employ LSTM cells. However, in such architectures, as a consequence of sequential computation, proximity is emphasized when dealing with dependencies in the input sequence. Furthermore, those models receive the audio loops as symbolic input sequences. In contrast, the Transformer Groove Infilling model is based on the Transformer architecture, which relies entirely on self-attention mechanisms to represent the input sequences, which allows for faster training since parallelization is possible. In addition, we present a novel direct audio representation that enables the Transformer Groove Infilling to receive the input drum loops in the audio domain, avoiding their transcription and tokenization. 
+
+Infilling drums refers to complementing a drum pattern with additional drum events that are stylistically consistent with the loop. This task can be applied to computer-assisted composition; for instance, the composer can sketch some instrument parts of a drum beat and obtain the system's suggestions for new parts. In this thesis, we present the Transformer Groove Infilling, a Transformer Neural Network approach to the infilling task. Until now, the infilling of drum beats has been implemented using Recurrent Neural Network (RNN) architectures, in particular, sequence-to-sequence models that employ LSTM cells. However, in such architectures, as a consequence of sequential computation, proximity is emphasized when dealing with dependencies in the input sequence. Furthermore, those models receive the audio loops as symbolic input sequences. In contrast, the Transformer Groove Infilling model is based on the Transformer architecture, which relies entirely on self-attention mechanisms to represent the input sequences, which allows for faster training since parallelization is possible. In addition, we present a novel direct audio representation that enables the Transformer Groove Infilling to receive the input drum loops in the audio domain, avoiding their transcription and tokenization.
 
 We train several instances of the Transformer Groove Infilling model to perform the following infilling subtasks: the infilling of closed hi-hats, the infilling of both kicks and snares, and the infilling of a drum loop without an instrument constraint. For comparison purposes, we also trained an equivalent model with a symbolic input representation in order to highlight the efficiency of the audio representation proposed in this thesis.
 
+## environment
+
+To run this project you need some external packages. We provide an `envrionment.yaml` you can use to build the environment with conda:
+
+```bash
+conda env create -f environment.yml
+```
+
+and activate it using
+
+```bash
+conda activate groove
+```
+
+However conda sometimes fails when building environments. You can create the environment from scratch:
+
+```bash
+conda create --name groove python=3.6
+conda activate groove
+```
+
+and install all packages:
+
+```bash
+conda install -c conda-forge fluidsynth
+# if you have a cuda gpu you can install a suitable pytorch distribution here https://pytorch.org/get-started/locally/
+conda install pytorch torchvision torchaudio -c pytorch
+pip install magenta==1.1.7
+pip install visual_midi
+pip install tables
+pip install note_seq
+pip install pyFluidSynth
+pip install wandb
+pip install bokeh
+pip install pandas
+pip install PySoundFile
+pip install colorcet
+pip install holoviews
+pip install tqdm
+pip install note_seq
+pip install matplotlib
+```
 
 ## Quickstart
-The pip libraries requirements are included in the `environment.yml`. If you have a working conda installation, activate the environment in the Terminal: 
 
-```
-$ conda env create -f environment.yml
-$ conda activate torch_thesis
-```
-
-This repository is still under development is still missing the generation scripts. Pretrained models can be downloaded in [W\&B](https://wandb.ai/mmil_infilling), under the left panel `Files` section.
-
-The model hyperparameters can be passed to the training script through a yaml file or through the CLI. Yaml configuration file examples can be found in the `model/configs/` directory ([here](model/configs/)). 
+The model hyperparameters can be passed to the training script through a yaml file or through the CLI. Yaml configuration file examples can be found in the `model/configs/` directory ([here](model/configs/)).
 
 You can try an example by running:
+
 ```
 $ cd model
 $ python3 train.py --config=configs/InfillingClosedHH_training.yaml --wandb=False

@@ -8,7 +8,7 @@ with open("datasets/evaluation_subsets/evaluation_subsets_parameters.json") as f
 
 if __name__ == "__main__":
 
-    testing = True
+    testing = False
 
     exps = ["InfillingClosedHH"]
     splits = ["test", "train", "validation"]
