@@ -5,6 +5,8 @@ from process_dataset import load_processed_dataset
 from evaluator import init_evaluator
 from BaseGrooveTransformers import initialize_model
 
+## this is a tutorial to load presaved datasets, evalators, and models
+
 experiment = "InfillingClosedHH_testing"
 
 # first you need to download the dataset and preprocessed evaluators and store them in the main directory of the project. the dataset folder can be downloaded here: https://www.dropbox.com/sh/04hae4qnrw2yzjd/AACdf-6kyIGMxDBQ61RHdpQfa?dl=0
