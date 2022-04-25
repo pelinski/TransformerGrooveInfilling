@@ -10,6 +10,14 @@ Infilling drums refers to complementing a drum pattern with additional drum even
 
 We train several instances of the Transformer Groove Infilling model to perform the following infilling subtasks: the infilling of closed hi-hats, the infilling of both kicks and snares, and the infilling of a drum loop without an instrument constraint. For comparison purposes, we also trained an equivalent model with a symbolic input representation in order to highlight the efficiency of the audio representation proposed in this thesis.
 
+## clone this repo
+
+This repo has submodules. You can clone it including them using:
+
+```bash
+git clone --recurse-submodules -j8 git@github.com:pelinski/TransformerGrooveInfilling.git
+```
+
 ## environment
 
 To run this project you need some external packages. We provide an `envrionment.yaml` you can use to build the environment with conda:
