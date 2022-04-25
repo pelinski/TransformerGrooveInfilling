@@ -1,0 +1,12 @@
+experiment: 'InfillingRandom'
+batch_size: 16
+d_model: 256
+dim_feedforward: 64
+dropout: 0.15
+optimizer_algorithm: 'sgd'
+learning_rate: 0.04
+n_heads: 16
+num_encoder_decoder_layers: 11
+epochs: 100
+encoder_only: 1
+hit_loss_penalty: 1
