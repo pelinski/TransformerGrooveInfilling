@@ -15,7 +15,7 @@ soundfonts/sounds/
 result/
 train_results/
 symbolic_train_results/
-model/tests/*.html
+tests/*.html
 
 # plots code 
 plots/
@@ -34,13 +34,16 @@ evaluators/*/*.pickle
 evaluators.zip
 
 # evaluator
-model/evaluator/
+evaluator/
 
 
 
-soundfonts/filtered_soundfonts/ARIAConverted/
+soundfonts/*
 
 notes.txt
 
 dev/
 results/
+wandb/
+tests/*
+datasets/
