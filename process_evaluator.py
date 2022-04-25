@@ -3,7 +3,7 @@ import json
 from evaluator import InfillingEvaluator
 from process_dataset import load_processed_dataset
 
-with open("datasets/evaluation_subsets/evaluation_subsets_parameters.json") as f:
+with open("datasets/preprocessed_evaluators/preprocessed_evaluators_parameters.json") as f:
     params = json.load(f)
 
 if __name__ == "__main__":

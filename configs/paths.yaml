@@ -4,9 +4,9 @@ InfillingKicksAndSnares:
     test: "datasets/InfillingKicksAndSnares/0.1.2/test"
     validation: "datasets/InfillingKicksAndSnares/0.1.2/validation"
   evaluators:
-    train: "datasets/evaluation_subsets/InfillingEvaluator_0.3.2/InfillingKicksAndSnares_train_0.1.2_evaluator.pickle"
-    test: "datasets/evaluation_subsets/InfillingEvaluator_0.3.2/InfillingKicksAndSnares_test_0.1.2_evaluator.pickle"
-    validation: "datasets/evaluation_subsets/InfillingEvaluator_0.3.2/InfillingKicksAndSnares_validation_0.1.2_evaluator.pickle"
+    train: "datasets/preprocessed_evaluators/InfillingEvaluator_0.3.2/InfillingKicksAndSnares_train_0.1.2_evaluator.pickle"
+    test: "datasets/preprocessed_evaluators/InfillingEvaluator_0.3.2/InfillingKicksAndSnares_test_0.1.2_evaluator.pickle"
+    validation: "datasets/preprocessed_evaluators/InfillingEvaluator_0.3.2/InfillingKicksAndSnares_validation_0.1.2_evaluator.pickle"
 
 InfillingRandom:
   datasets:
@@ -14,9 +14,9 @@ InfillingRandom:
     test: "datasets/InfillingRandom/0.0.0/test"
     validation: "datasets/InfillingRandom/0.0.0/validation"
   evaluators:
-    train: "datasets/evaluation_subsets/InfillingEvaluator_0.3.2/InfillingRandom_train_0.0.0_evaluator.pickle"
-    test: "datasets/evaluation_subsets/InfillingEvaluator_0.3.2/InfillingRandom_test_0.0.0_evaluator.pickle"
-    validation: "datasets/evaluation_subsets/InfillingEvaluator_0.3.2/InfillingRandom_validation_0.0.0_evaluator.pickle"
+    train: "datasets/preprocessed_evaluators/InfillingEvaluator_0.3.2/InfillingRandom_train_0.0.0_evaluator.pickle"
+    test: "datasets/preprocessed_evaluators/InfillingEvaluator_0.3.2/InfillingRandom_test_0.0.0_evaluator.pickle"
+    validation: "datasets/preprocessed_evaluators/InfillingEvaluator_0.3.2/InfillingRandom_validation_0.0.0_evaluator.pickle"
 
 InfillingRandomLow:
   datasets:
@@ -24,9 +24,9 @@ InfillingRandomLow:
     test: "datasets/InfillingRandomLow/0.0.0/test"
     validation: "datasets/InfillingRandomLow/0.0.0/validation"
   evaluators:
-    train: "datasets/evaluation_subsets/InfillingEvaluator_0.3.2/InfillingRandomLow_train_0.0.0_evaluator.pickle"
-    test: "datasets/evaluation_subsets/InfillingEvaluator_0.3.2/InfillingRandomLow_test_0.0.0_evaluator.pickle"
-    validation: "datasets/evaluation_subsets/InfillingEvaluator_0.3.2/InfillingRandomLow_validation_0.0.0_evaluator.pickle"
+    train: "datasets/preprocessed_evaluators/InfillingEvaluator_0.3.2/InfillingRandomLow_train_0.0.0_evaluator.pickle"
+    test: "datasets/preprocessed_evaluators/InfillingEvaluator_0.3.2/InfillingRandomLow_test_0.0.0_evaluator.pickle"
+    validation: "datasets/preprocessed_evaluators/InfillingEvaluator_0.3.2/InfillingRandomLow_validation_0.0.0_evaluator.pickle"
 
 InfillingClosedHH:
   datasets:
@@ -34,9 +34,9 @@ InfillingClosedHH:
     test: "datasets/InfillingClosedHH/0.1.2/test"
     validation: "datasets/InfillingClosedHH/0.1.2/validation"
   evaluators:
-    train: "datasets/evaluation_subsets/InfillingEvaluator_0.3.2/InfillingClosedHH_train_0.1.2_evaluator.pickle"
-    test: "datasets/evaluation_subsets/InfillingEvaluator_0.3.2/InfillingClosedHH_test_0.1.2_evaluator.pickle"
-    validation: "datasets/evaluation_subsets/InfillingEvaluator_0.3.2/InfillingClosedHH_validation_0.1.2_evaluator.pickle"
+    train: "datasets/preprocessed_evaluators/InfillingEvaluator_0.3.2/InfillingClosedHH_train_0.1.2_evaluator.pickle"
+    test: "datasets/preprocessed_evaluators/InfillingEvaluator_0.3.2/InfillingClosedHH_test_0.1.2_evaluator.pickle"
+    validation: "datasets/preprocessed_evaluators/InfillingEvaluator_0.3.2/InfillingClosedHH_validation_0.1.2_evaluator.pickle"
 
 InfillingClosedHH_Symbolic:
   datasets:
@@ -44,30 +44,30 @@ InfillingClosedHH_Symbolic:
     test: "datasets/InfillingClosedHH_Symbolic/0.1.1/test"
     validation: "datasets/InfillingClosedHH_Symbolic/0.1.1/validation"
   evaluators:
-    train: "datasets/evaluation_subsets/InfillingEvaluator_0.3.2/InfillingClosedHH_Symbolic_train_0.1.1_evaluator.pickle"
-    test: "datasets/evaluation_subsets/InfillingEvaluator_0.3.2/InfillingClosedHH_Symbolic_test_0.1.1_evaluator.pickle"
-    validation: "datasets/evaluation_subsets/InfillingEvaluator_0.3.2/InfillingClosedHH_Symbolic_validation_0.1.1_evaluator.pickle"
+    train: "datasets/preprocessed_evaluators/InfillingEvaluator_0.3.2/InfillingClosedHH_Symbolic_train_0.1.1_evaluator.pickle"
+    test: "datasets/preprocessed_evaluators/InfillingEvaluator_0.3.2/InfillingClosedHH_Symbolic_test_0.1.1_evaluator.pickle"
+    validation: "datasets/preprocessed_evaluators/InfillingEvaluator_0.3.2/InfillingClosedHH_Symbolic_validation_0.1.1_evaluator.pickle"
 
 InfillingKicksAndSnares_testing:
   datasets:
     train: "datasets/InfillingKicksAndSnares_testing/0.1.3/train"
     test: "datasets/InfillingKicksAndSnares_testing/0.1.3/test"
   evaluators:
-    train: "datasets/evaluation_subsets/InfillingEvaluator_0.3.2/InfillingKicksAndSnares_testing_train_0.1.3_evaluator.pickle"
-    test: "datasets/evaluation_subsets/InfillingEvaluator_0.3.2/InfillingKicksAndSnares_testing_test_0.1.3_evaluator.pickle"
+    train: "datasets/preprocessed_evaluators/InfillingEvaluator_0.3.2/InfillingKicksAndSnares_testing_train_0.1.3_evaluator.pickle"
+    test: "datasets/preprocessed_evaluators/InfillingEvaluator_0.3.2/InfillingKicksAndSnares_testing_test_0.1.3_evaluator.pickle"
 InfillingRandom_testing:
   datasets:
     train: "datasets/InfillingRandom_testing/0.0.0/train"
     test: "datasets/InfillingRandom_testing/0.0.0/test"
   evaluators:
-    train: "datasets/evaluation_subsets/InfillingEvaluator_0.3.2/InfillingRandom_testing_train_0.0.0_evaluator.pickle"
-    test: "datasets/evaluation_subsets/InfillingEvaluator_0.3.2/InfillingRandom_testing_test_0.0.0_evaluator.pickle"
+    train: "datasets/preprocessed_evaluators/InfillingEvaluator_0.3.2/InfillingRandom_testing_train_0.0.0_evaluator.pickle"
+    test: "datasets/preprocessed_evaluators/InfillingEvaluator_0.3.2/InfillingRandom_testing_test_0.0.0_evaluator.pickle"
 InfillingClosedHH_testing:
   datasets:
     train: "datasets/InfillingClosedHH_testing/0.1.2/train"
     test: "datasets/InfillingClosedHH_testing/0.1.2/test"
     validation: "datasets/InfillingClosedHH_testing/0.1.2/validation"
   evaluators:
-    train: "datasets/evaluation_subsets/InfillingEvaluator_0.3.2/InfillingClosedHH_testing_train_0.1.2_evaluator.pickle"
-    test: "datasets/evaluation_subsets/InfillingEvaluator_0.3.2/InfillingClosedHH_testing_test_0.1.2_evaluator.pickle"
-    validation: "datasets/evaluation_subsets/InfillingEvaluator_0.3.2/InfillingClosedHH_testing_validation_0.1.2_evaluator.pickle"
+    train: "datasets/preprocessed_evaluators/InfillingEvaluator_0.3.2/InfillingClosedHH_testing_train_0.1.2_evaluator.pickle"
+    test: "datasets/preprocessed_evaluators/InfillingEvaluator_0.3.2/InfillingClosedHH_testing_test_0.1.2_evaluator.pickle"
+    validation: "datasets/preprocessed_evaluators/InfillingEvaluator_0.3.2/InfillingClosedHH_testing_validation_0.1.2_evaluator.pickle"
