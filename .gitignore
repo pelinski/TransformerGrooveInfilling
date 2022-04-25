@@ -47,3 +47,5 @@ results/
 wandb/
 tests/*
 datasets/
+
+*.Model
