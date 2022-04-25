@@ -10,7 +10,7 @@ import pickle
 import random
 import copy
 
-from src.hvo_sequence.hvo_sequence.hvo_seq import HVO_Sequence
+from hvo_sequence.hvo_sequence.hvo_seq import HVO_Sequence
 
 from utils import (
     get_sf_list,
@@ -35,7 +35,7 @@ class GrooveMidiDatasetInfilling(Dataset):
         @param subset_info:         Dictionary with the routes and filters passed to the Subset_Creator to generate the
                                     subset. Example:
                                     subset_info = {
-                                    "pickle_source_path": '../../preprocessed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.4.2'
+                                    "pickle_source_path": '../../processed_dataset/datasets_extracted_locally/GrooveMidi/hvo_0.4.2'
                                                '/Processed_On_17_05_2021_at_22_32_hrs',
                                     "subset": 'GrooveMIDI_processed_train',
                                     "metadata_csv_filename": 'metadata.csv',
@@ -126,17 +126,17 @@ class GrooveMidiDatasetInfilling(Dataset):
             self.metadata = pd.read_csv(os.path.join(self.subset_info["pickle_source_path"], self.subset_info["subset"],
                                                      self.subset_info["metadata_csv_filename"]))
             """
-        # preprocess dataset
+        # process dataset
         print("GMD path: ", self.subset_info["pickle_source_path"])
-        preprocessed_dataset = (
+        processed_dataset = (
             self.load_dataset_from_pickle(load_dataset_path)
             if load_dataset_path
-            else self.preprocess_dataset(data)
+            else self.process_dataset(data)
         )
 
-        # store preprocessed dataset in dataset attrs
-        for key in preprocessed_dataset.keys():
-            self.__setattr__(key, preprocessed_dataset[key])
+        # store processed dataset in dataset attrs
+        for key in processed_dataset.keys():
+            self.__setattr__(key, processed_dataset[key])
 
         # dataset params dict
         params = self.get_params()
@@ -151,10 +151,10 @@ class GrooveMidiDatasetInfilling(Dataset):
                 os.makedirs(self.save_dataset_path)
             print(self.save_dataset_path)
             # move tensor to cpu (tensors saved while on gpu cannot be loaded from pickle file in cpu)
-            preprocessed_dataset["processed_inputs"] = preprocessed_dataset[
+            processed_dataset["processed_inputs"] = processed_dataset[
                 "processed_inputs"
             ].to(device="cpu")
-            preprocessed_dataset["processed_outputs"] = preprocessed_dataset[
+            processed_dataset["processed_outputs"] = processed_dataset[
                 "processed_outputs"
             ].to(device="cpu")
 
@@ -178,11 +178,11 @@ class GrooveMidiDatasetInfilling(Dataset):
                 + "_dataset.pickle",
             )
             save_to_pickle(params, params_pickle_filename)
-            save_to_pickle(preprocessed_dataset, dataset_pickle_filename)
+            save_to_pickle(processed_dataset, dataset_pickle_filename)
 
             print("Saved dataset to path: ", self.save_dataset_path)
 
-    def preprocess_dataset(self, data):
+    def process_dataset(self, data):
         self.save_dataset_path = os.path.join(
             os.path.join(self.save_dataset_path, self.__version__), self.split
         )
@@ -200,7 +200,7 @@ class GrooveMidiDatasetInfilling(Dataset):
 
         for hvo_idx, hvo_seq in enumerate(
             tqdm(
-                data, desc="Preprocessing dataset {}".format(self.subset_info["subset"])
+                data, desc="processing dataset {}".format(self.subset_info["subset"])
             )
         ):
 
@@ -263,7 +263,7 @@ class GrooveMidiDatasetInfilling(Dataset):
         processed_inputs = torch.Tensor(processed_inputs).to(device=device)
         processed_outputs = torch.Tensor(processed_outputs).to(device=device)
 
-        preprocessed_dict = {
+        processed_dict = {
             "processed_inputs": processed_inputs,
             "processed_outputs": processed_outputs,
             "hvo_sequences": hvo_sequences,
@@ -275,7 +275,7 @@ class GrooveMidiDatasetInfilling(Dataset):
             "unused_items": unused_items,
         }
 
-        return preprocessed_dict
+        return processed_dict
 
     # load from pickle
 
@@ -306,16 +306,16 @@ class GrooveMidiDatasetInfilling(Dataset):
         )
 
         with open(pickle_file, "rb") as f:
-            preprocessed_dataset = pickle.load(f)
+            processed_dataset = pickle.load(f)
 
-        for key in preprocessed_dataset.keys():
-            self.__setattr__(key, preprocessed_dataset[key])
+        for key in processed_dataset.keys():
+            self.__setattr__(key, processed_dataset[key])
 
         print("Loaded dataset from path: ", pickle_file)
 
         print(str(self.__len__()) + " items")
 
-        return preprocessed_dataset
+        return processed_dataset
 
     # getters
 
@@ -369,9 +369,9 @@ class GrooveMidiDatasetInfillingSymbolic(GrooveMidiDatasetInfilling):
         del self.sf_path
         del self.max_n_sf
 
-    # override preprocessing dataset method
+    # override processing dataset method
     # keep unused audio attrs (sfs) for simplicity
-    def preprocess_dataset(self, data):
+    def process_dataset(self, data):
         self.__version__ = "0.1.1"
         self.save_dataset_path = os.path.join(
             os.path.join(self.save_dataset_path, self.__version__), self.split
@@ -389,7 +389,7 @@ class GrooveMidiDatasetInfillingSymbolic(GrooveMidiDatasetInfilling):
 
         for hvo_idx, hvo_seq in enumerate(
             tqdm(
-                data, desc="Preprocessing dataset {}".format(self.subset_info["subset"])
+                data, desc="processing dataset {}".format(self.subset_info["subset"])
             )
         ):
 
@@ -447,7 +447,7 @@ class GrooveMidiDatasetInfillingSymbolic(GrooveMidiDatasetInfilling):
         processed_inputs = torch.Tensor(processed_inputs).to(device=device)
         processed_outputs = torch.Tensor(processed_outputs).to(device=device)
 
-        preprocessed_dict = {
+        processed_dict = {
             "processed_inputs": processed_inputs,
             "processed_outputs": processed_outputs,
             "hvo_sequences": hvo_sequences,
@@ -458,7 +458,7 @@ class GrooveMidiDatasetInfillingSymbolic(GrooveMidiDatasetInfilling):
             "unused_items": unused_items,
         }
 
-        return preprocessed_dict
+        return processed_dict
 
 
 class GrooveMidiDatasetInfillingRandom(GrooveMidiDatasetInfilling):
@@ -474,8 +474,8 @@ class GrooveMidiDatasetInfillingRandom(GrooveMidiDatasetInfilling):
         del self.voices_params
         del self.max_n_sf
 
-    # override preprocessing dataset method
-    def preprocess_dataset(self, data):
+    # override processing dataset method
+    def process_dataset(self, data):
         self.__version__ = "0.0.0"
         self.save_dataset_path = os.path.join(
             os.path.join(self.save_dataset_path, self.__version__), self.split
@@ -493,7 +493,7 @@ class GrooveMidiDatasetInfillingRandom(GrooveMidiDatasetInfilling):
 
         for hvo_idx, hvo_seq in enumerate(
             tqdm(
-                data, desc="Preprocessing dataset {}".format(self.subset_info["subset"])
+                data, desc="processing dataset {}".format(self.subset_info["subset"])
             )
         ):
             all_zeros = not np.any(hvo_seq.hvo.flatten())  # silent patterns
@@ -541,7 +541,7 @@ class GrooveMidiDatasetInfillingRandom(GrooveMidiDatasetInfilling):
         processed_inputs = torch.Tensor(processed_inputs).to(device=device)
         processed_outputs = torch.Tensor(processed_outputs).to(device=device)
 
-        preprocessed_dict = {
+        processed_dict = {
             "processed_inputs": processed_inputs,
             "processed_outputs": processed_outputs,
             "hvo_sequences": hvo_sequences,
@@ -552,4 +552,4 @@ class GrooveMidiDatasetInfillingRandom(GrooveMidiDatasetInfilling):
             "unused_items": unused_items,
         }
 
-        return preprocessed_dict
+        return processed_dict

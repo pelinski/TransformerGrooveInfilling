@@ -6,10 +6,10 @@ import yaml
 import argparse
 import pprint
 
-from preprocess_dataset import load_preprocessed_dataset
+from process_dataset import load_processed_dataset
 from evaluator import init_evaluator, log_eval
 from utils import eval_log_freq
-from src.BaseGrooveTransformers import initialize_model, calculate_loss, train_loop
+from BaseGrooveTransformers import initialize_model, calculate_loss, train_loop
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--paths", help="paths file", default="configs/paths.yaml")
@@ -150,7 +150,7 @@ if __name__ == "__main__":
     wandb.watch(model, log_freq=1000)
 
     # load dataset
-    dataset_train = load_preprocessed_dataset(
+    dataset_train = load_processed_dataset(
         paths[wandb.config.experiment]["datasets"]["train"], exp=wandb.config.experiment
     )
     dataloader_train = DataLoader(

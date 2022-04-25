@@ -9,10 +9,10 @@ import torch
 from bokeh.embed import file_html
 from bokeh.resources import CDN
 
-from src.GrooveEvaluator import Evaluator, HVOSeq_SubSet_Evaluator
-from src.GrooveEvaluator import separate_figues_by_tabs
-from src.GrooveEvaluator import get_stats_from_evaluator
-from src.hvo_sequence import ROLAND_REDUCED_MAPPING
+from GrooveEvaluator import Evaluator, HVOSeq_SubSet_Evaluator
+from GrooveEvaluator import separate_figues_by_tabs
+from GrooveEvaluator import get_stats_from_evaluator
+from hvo_sequence import ROLAND_REDUCED_MAPPING
 
 from utils import _convert_hvos_array_to_subsets, save_to_pickle
 
@@ -95,13 +95,13 @@ class InfillingEvaluator(Evaluator):
 
         self._gmd_gt_hvos_array = np.stack(self._gmd_gt_hvos_array)
 
-        # preprocess evaluator_subset
-        preprocessed_dict = self.dataset.preprocess_dataset(self._gmd_gt_hvo_sequences)
-        for key in preprocessed_dict.keys():
-            self.__setattr__(key, preprocessed_dict[key])
+        # process evaluator_subset
+        processed_dict = self.dataset.process_dataset(self._gmd_gt_hvo_sequences)
+        for key in processed_dict.keys():
+            self.__setattr__(key, processed_dict[key])
         del self.processed_outputs
-        self.processed_gt = preprocessed_dict["processed_outputs"]
-        self._gt_hvo_sequences = preprocessed_dict["hvo_sequences_outputs"]
+        self.processed_gt = processed_dict["processed_outputs"]
+        self._gt_hvo_sequences = processed_dict["hvo_sequences_outputs"]
         self._gt_hvos_array = np.stack(
             [hvo_seq.hvo for hvo_seq in self._gt_hvo_sequences]
         )
@@ -282,8 +282,8 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
         self.epoch = epoch
 
     def get_audios(self, _, use_specific_samples_at=None):
-        """ use_specific_samples_at: must be a list of tuples of (subset_ix, sample_ix) denoting to get
-        audio from the sample_ix in subset_ix """
+        """use_specific_samples_at: must be a list of tuples of (subset_ix, sample_ix) denoting to get
+        audio from the sample_ix in subset_ix"""
 
         self._sampled_hvos = self.get_hvo_samples_located_at(use_specific_samples_at)
 
@@ -321,7 +321,7 @@ class HVOSeq_SubSet_InfillingEvaluator(HVOSeq_SubSet_Evaluator):
         return list(zip(captions, audios))
 
     def get_piano_rolls(self, use_specific_samples_at=None, add_inputs=False):
-        """ use_specific_samples_at: must be a dict of lists of (sample_ix) """
+        """use_specific_samples_at: must be a dict of lists of (sample_ix)"""
 
         self._sampled_hvos = self.get_hvo_samples_located_at(use_specific_samples_at)
         tab_titles, piano_roll_tabs = [], []

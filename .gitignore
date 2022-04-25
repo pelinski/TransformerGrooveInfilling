@@ -38,9 +38,12 @@ evaluator/
 
 
 
-soundfonts/filtered_soundfonts/ARIAConverted/
+soundfonts/*
 
 notes.txt
 
 dev/
 results/
+wandb/
+tests/*
+datasets/

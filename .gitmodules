@@ -1,15 +1,15 @@
-[submodule "src/BaseGrooveTransformers"]
-	path = src/BaseGrooveTransformers
-	url = git@github.com:behzadhaki/BaseGrooveTransformers.git
-[submodule "src/hvo_sequence"]
-	path = src/hvo_sequence
+[submodule "hvo_sequence"]
+	path = hvo_sequence
 	url = git@github.com:behzadhaki/hvo_sequence.git
-[submodule "src/GrooveEvaluator"]
-	path = src/GrooveEvaluator
-	url = git@github.com:behzadhaki/GrooveEvaluator.git
-[submodule "src/GMD2HVO_PreProcessing"]
-	path = src/GMD2HVO_PreProcessing
-	url = git@github.com:behzadhaki/GMD2HVO_PreProcessing.git
-[submodule "src/preprocessed_dataset"]
-	path = src/preprocessed_dataset
+[submodule "BaseGrooveTransformers"]
+	path = BaseGrooveTransformers
+	url = git@github.com:behzadhaki/BaseGrooveTransformers.git
+[submodule "preprocessed_dataset"]
+	path = preprocessed_dataset
 	url = git@github.com:behzadhaki/preprocessed_dataset.git
+[submodule "GMD2HVO_PreProcessing"]
+	path = GMD2HVO_PreProcessing
+	url = git@github.com:behzadhaki/GMD2HVO_PreProcessing.git
+[submodule "GrooveEvaluator"]
+	path = GrooveEvaluator
+	url = git@github.com:behzadhaki/GrooveEvaluator.git
