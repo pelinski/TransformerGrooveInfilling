@@ -72,8 +72,6 @@ if __name__ == "__main__":
 
     # change experiment and split here
     exps = [
-        "InfillingClosedHH",
-        "InfillingClosedHH_Symbolic",
         "InfillingRandom",
         "InfillingRandomLow",
         "InfillingKicksAndSnares",
