@@ -2,15 +2,15 @@
 
 This repository contains the Transformer Groove Infilling implementation, part of my Master Thesis: _Completing Audio Drum Loops with Transformer Neural Networks_, under the supervision of Sergi Jordà and Behzad Haki at the Music Technology Group at the Universitat Pompeu Fabra (Barcelona).
 
-**Note:** This repo depends on libraries that are not yet public. A standalone zip version of this code containing all necessary libraries can be downloaded [here](https://zenodo.org/record/5347908).
-
 ## Abstract
 
 Infilling drums refers to complementing a drum pattern with additional drum events that are stylistically consistent with the loop. This task can be applied to computer-assisted composition; for instance, the composer can sketch some instrument parts of a drum beat and obtain the system's suggestions for new parts. In this thesis, we present the Transformer Groove Infilling, a Transformer Neural Network approach to the infilling task. Until now, the infilling of drum beats has been implemented using Recurrent Neural Network (RNN) architectures, in particular, sequence-to-sequence models that employ LSTM cells. However, in such architectures, as a consequence of sequential computation, proximity is emphasized when dealing with dependencies in the input sequence. Furthermore, those models receive the audio loops as symbolic input sequences. In contrast, the Transformer Groove Infilling model is based on the Transformer architecture, which relies entirely on self-attention mechanisms to represent the input sequences, which allows for faster training since parallelization is possible. In addition, we present a novel direct audio representation that enables the Transformer Groove Infilling to receive the input drum loops in the audio domain, avoiding their transcription and tokenization.
 
 We train several instances of the Transformer Groove Infilling model to perform the following infilling subtasks: the infilling of closed hi-hats, the infilling of both kicks and snares, and the infilling of a drum loop without an instrument constraint. For comparison purposes, we also trained an equivalent model with a symbolic input representation in order to highlight the efficiency of the audio representation proposed in this thesis.
 
-## clone this repo
+## Quickstart
+
+### Clone this repo
 
 This repo has submodules. You can clone it including them using:
 
@@ -18,7 +18,7 @@ This repo has submodules. You can clone it including them using:
 git clone --recurse-submodules -j8 git@github.com:pelinski/TransformerGrooveInfilling.git
 ```
 
-## environment
+### Environment
 
 To run this project you need some external packages. We provide an `envrionment.yaml` you can use to build the environment with conda:
 
@@ -61,7 +61,23 @@ pip install note_seq
 pip install matplotlib
 ```
 
-## Quickstart
+### Download datasets
+
+You can download the dataset and preprocessed evaluators [here](https://www.dropbox.com/sh/04hae4qnrw2yzjd/AACdf-6kyIGMxDBQ61RHdpQfa?dl=0). They should be stored in the main directory of the project:
+
+```bash
+TransformerGrooveInfilling/
++–– datasets/ # you can download them here https://www.dropbox.com/sh/04hae4qnrw2yzjd/AACdf-6kyIGMxDBQ61RHdpQfa?dl=0
+|  +–– InfillingClosedHH/
+|  +–– [other experiments]/
+|  +–– preprocessed_dataset/ # GrooveMidiDataset in hvo format
+|  +–– preprocessed_evaluators/ # Preprocessed evaluation subsets
+|  +–– dataset_parameters.json
+|  +–– subset_info.json
++–– [other dirs]/
+```
+
+### Training
 
 The model hyperparameters can be passed to the training script through a yaml file or through the CLI. Yaml configuration file examples can be found in the `model/configs/` directory ([here](model/configs/)).
 
