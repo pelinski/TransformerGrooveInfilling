@@ -1,0 +1,81 @@
+,,mean,std,min,max,median,q1,q3
+ClosedHH (Symbolic) (GT),Statistical::Total Step Density,0.366,0.221,0.031,1.0,0.281,0.219,0.469
+ClosedHH (Symbolic) (GT),Statistical::Avg Voice Density,0.041,0.025,0.003,0.111,0.031,0.024,0.052
+ClosedHH (Symbolic) (GT),Statistical::Vel Similarity Score,0.774,0.313,0.0,1.0,0.903,0.8,0.947
+ClosedHH (Symbolic) (GT),Statistical::Weak to Strong Ratio,2.772,8.298,0.0,112.235,0.672,0.0,1.847
+ClosedHH (Symbolic) (GT),Syncopation::Lowsync,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+ClosedHH (Symbolic) (GT),Syncopation::Midsync,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+ClosedHH (Symbolic) (GT),Syncopation::Hisync,0.187,0.171,0.0,0.933,0.167,0.033,0.333
+ClosedHH (Symbolic) (GT),Micro-Timing::Swingness,0.21,0.323,0.0,1.0,0.0,0.0,0.312
+ClosedHH (Symbolic),Statistical::Total Step Density,0.481,0.282,0.0,1.0,0.406,0.25,0.75
+ClosedHH (Symbolic),Statistical::Avg Voice Density,0.053,0.031,0.0,0.111,0.045,0.028,0.083
+ClosedHH (Symbolic),Statistical::Vel Similarity Score,0.941,0.11,0.0,0.999,0.96,0.942,0.972
+ClosedHH (Symbolic),Statistical::Weak to Strong Ratio,1.123,1.493,0.0,17.539,0.892,0.0,1.796
+ClosedHH (Symbolic),Syncopation::Lowsync,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+ClosedHH (Symbolic),Syncopation::Midsync,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+ClosedHH (Symbolic),Syncopation::Hisync,0.111,0.123,0.0,0.567,0.067,0.0,0.167
+ClosedHH (Symbolic),Micro-Timing::Swingness,0.003,0.008,0.0,0.096,0.0,0.0,0.0
+ClosedHH (GT),Statistical::Total Step Density,0.363,0.22,0.031,1.0,0.281,0.219,0.469
+ClosedHH (GT),Statistical::Avg Voice Density,0.04,0.024,0.003,0.111,0.031,0.024,0.052
+ClosedHH (GT),Statistical::Vel Similarity Score,0.777,0.311,0.0,1.0,0.905,0.805,0.948
+ClosedHH (GT),Statistical::Weak to Strong Ratio,2.566,6.749,0.0,97.409,0.658,0.0,1.844
+ClosedHH (GT),Syncopation::Lowsync,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+ClosedHH (GT),Syncopation::Midsync,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+ClosedHH (GT),Syncopation::Hisync,0.187,0.168,0.0,0.933,0.167,0.033,0.333
+ClosedHH (GT),Micro-Timing::Swingness,0.214,0.326,0.0,1.0,0.0,0.0,0.358
+ClosedHH,Statistical::Total Step Density,0.466,0.267,0.125,1.0,0.375,0.25,0.656
+ClosedHH,Statistical::Avg Voice Density,0.052,0.03,0.014,0.111,0.042,0.028,0.073
+ClosedHH,Statistical::Vel Similarity Score,0.954,0.033,0.0,0.998,0.957,0.943,0.969
+ClosedHH,Statistical::Weak to Strong Ratio,1.709,2.679,0.0,15.65,0.901,0.0,2.2
+ClosedHH,Syncopation::Lowsync,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+ClosedHH,Syncopation::Midsync,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+ClosedHH,Syncopation::Hisync,0.116,0.114,0.0,0.4,0.067,0.0,0.2
+ClosedHH,Micro-Timing::Swingness,0.0,0.001,0.0,0.019,0.0,0.0,0.0
+Kicks & Snares (GT),Statistical::Total Step Density,0.375,0.236,0.031,1.0,0.312,0.219,0.5
+Kicks & Snares (GT),Statistical::Avg Voice Density,0.044,0.031,0.003,0.167,0.035,0.024,0.056
+Kicks & Snares (GT),Statistical::Vel Similarity Score,0.829,0.278,0.0,1.0,0.933,0.843,0.976
+Kicks & Snares (GT),Statistical::Weak to Strong Ratio,2.157,6.33,0.0,234.6,1.132,0.307,2.295
+Kicks & Snares (GT),Syncopation::Lowsync,0.105,0.127,0.0,0.567,0.067,0.0,0.2
+Kicks & Snares (GT),Syncopation::Midsync,0.147,0.197,0.0,0.933,0.033,0.0,0.267
+Kicks & Snares (GT),Syncopation::Hisync,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+Kicks & Snares (GT),Micro-Timing::Swingness,0.226,0.289,0.0,1.583,0.083,0.0,0.403
+Kicks & Snares,Statistical::Total Step Density,0.389,0.264,0.0,1.0,0.281,0.188,0.531
+Kicks & Snares,Statistical::Avg Voice Density,0.046,0.033,0.0,0.17,0.035,0.021,0.059
+Kicks & Snares,Statistical::Vel Similarity Score,0.907,0.177,0.0,1.0,0.952,0.912,0.975
+Kicks & Snares,Statistical::Weak to Strong Ratio,1.069,2.117,0.0,44.346,0.438,0.0,1.228
+Kicks & Snares,Syncopation::Lowsync,0.025,0.06,0.0,0.433,0.0,0.0,0.0
+Kicks & Snares,Syncopation::Midsync,0.166,0.21,0.0,0.933,0.067,0.0,0.3
+Kicks & Snares,Syncopation::Hisync,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+Kicks & Snares,Micro-Timing::Swingness,0.028,0.036,0.0,0.181,0.0,0.0,0.055
+Random (Low) (GT),Statistical::Total Step Density,0.202,0.109,0.031,0.625,0.188,0.125,0.281
+Random (Low) (GT),Statistical::Avg Voice Density,0.024,0.014,0.003,0.087,0.021,0.014,0.031
+Random (Low) (GT),Statistical::Vel Similarity Score,0.332,0.442,0.0,1.0,0.0,0.0,0.898
+Random (Low) (GT),Statistical::Weak to Strong Ratio,1.838,3.048,0.0,79.462,1.028,0.301,2.253
+Random (Low) (GT),Syncopation::Lowsync,0.043,0.058,0.0,0.467,0.033,0.0,0.067
+Random (Low) (GT),Syncopation::Midsync,0.082,0.095,0.0,0.6,0.067,0.0,0.133
+Random (Low) (GT),Syncopation::Hisync,0.072,0.084,0.0,0.533,0.033,0.0,0.1
+Random (Low) (GT),Micro-Timing::Swingness,0.187,0.286,0.0,1.933,0.0,0.0,0.317
+Random (Low),Statistical::Total Step Density,0.124,0.091,0.0,0.531,0.094,0.062,0.188
+Random (Low),Statistical::Avg Voice Density,0.015,0.011,0.0,0.069,0.014,0.007,0.021
+Random (Low),Statistical::Vel Similarity Score,0.234,0.402,0.0,1.0,0.0,0.0,0.675
+Random (Low),Statistical::Weak to Strong Ratio,1.132,2.504,0.0,36.912,0.235,0.0,1.152
+Random (Low),Syncopation::Lowsync,0.017,0.035,0.0,0.267,0.0,0.0,0.0
+Random (Low),Syncopation::Midsync,0.059,0.098,0.0,0.667,0.0,0.0,0.1
+Random (Low),Syncopation::Hisync,0.036,0.056,0.0,0.467,0.0,0.0,0.067
+Random (Low),Micro-Timing::Swingness,0.004,0.008,0.0,0.068,0.0,0.0,0.0
+Random (High) (GT),Statistical::Total Step Density,0.479,0.18,0.031,0.969,0.469,0.344,0.625
+Random (High) (GT),Statistical::Avg Voice Density,0.065,0.028,0.003,0.16,0.062,0.045,0.083
+Random (High) (GT),Statistical::Vel Similarity Score,0.795,0.299,0.0,1.0,0.913,0.822,0.957
+Random (High) (GT),Statistical::Weak to Strong Ratio,1.834,2.176,0.0,91.4,1.422,0.675,2.363
+Random (High) (GT),Syncopation::Lowsync,0.099,0.093,0.0,0.533,0.067,0.0,0.167
+Random (High) (GT),Syncopation::Midsync,0.173,0.158,0.0,0.8,0.133,0.0,0.3
+Random (High) (GT),Syncopation::Hisync,0.145,0.137,0.0,0.767,0.133,0.033,0.233
+Random (High) (GT),Micro-Timing::Swingness,0.29,0.3,0.0,1.583,0.192,0.0,0.508
+Random (High),Statistical::Total Step Density,0.419,0.202,0.0,1.0,0.406,0.25,0.562
+Random (High),Statistical::Avg Voice Density,0.056,0.028,0.0,0.16,0.056,0.035,0.076
+Random (High),Statistical::Vel Similarity Score,0.828,0.299,0.0,1.0,0.94,0.889,0.967
+Random (High),Statistical::Weak to Strong Ratio,1.427,1.975,0.0,44.325,0.91,0.372,1.815
+Random (High),Syncopation::Lowsync,0.058,0.074,0.0,0.467,0.033,0.0,0.1
+Random (High),Syncopation::Midsync,0.145,0.176,0.0,0.833,0.067,0.0,0.267
+Random (High),Syncopation::Hisync,0.119,0.123,0.0,0.733,0.1,0.0,0.2
+Random (High),Micro-Timing::Swingness,0.011,0.02,0.0,0.153,0.0,0.0,0.014

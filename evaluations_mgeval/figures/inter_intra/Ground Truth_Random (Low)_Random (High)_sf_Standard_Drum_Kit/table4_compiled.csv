@@ -1,0 +1,11 @@
+,Ground Truth,Ground Truth,Random (Low),Random (Low),Random (Low),Random (Low),Random (High),Random (High),Random (High),Random (High)
+,Intra-set,Intra-set,Intra-set,Intra-set,Inter-set,Inter-set,Intra-set,Intra-set,Inter-set,Inter-set
+,mean,STD,mean,STD,KL,OA,mean,STD,KL,OA
+Total Step Density,0.254,0.185,0.259,0.188,0.005,0.945,0.29,0.205,0.013,0.921
+Avg Voice Density,0.045,0.033,0.044,0.032,0.004,0.957,0.047,0.034,0.002,0.953
+Vel Similarity Score,0.246,0.308,0.288,0.332,0.006,0.844,0.189,0.273,0.009,0.841
+Weak to Strong Ratio,1.222,1.378,1.149,1.061,0.008,0.922,1.415,3.152,0.561,0.873
+Lowsync,0.124,0.093,0.12,0.09,0.001,0.931,0.104,0.081,0.005,0.91
+Midsync,0.19,0.151,0.184,0.148,0.018,0.928,0.222,0.196,0.011,0.871
+Hisync,0.157,0.164,0.145,0.151,0.002,0.905,0.127,0.13,0.008,0.88
+Swingness,0.323,0.234,0.334,0.262,0.094,0.944,0.278,0.251,0.007,0.915

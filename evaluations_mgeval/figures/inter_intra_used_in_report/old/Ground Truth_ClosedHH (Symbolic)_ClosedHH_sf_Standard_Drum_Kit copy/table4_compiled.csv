@@ -1,0 +1,8 @@
+,Ground Truth,Ground Truth,ClosedHH (Symbolic),ClosedHH (Symbolic),ClosedHH (Symbolic),ClosedHH (Symbolic),ClosedHH,ClosedHH,ClosedHH,ClosedHH
+,Intra-set,Intra-set,Intra-set,Intra-set,Inter-set,Inter-set,Intra-set,Intra-set,Inter-set,Inter-set
+,mean,STD,mean,STD,KL,OA,mean,STD,KL,OA
+Total Step Density,0.254,0.185,0.318,0.242,0.118,0.821,0.298,0.227,0.118,0.844
+Vel Similarity Score,0.246,0.308,0.033,0.037,0.08,0.762,0.023,0.017,0.093,0.758
+Weak to Strong Ratio,1.222,1.378,1.248,1.675,0.02,0.918,1.387,1.688,0.035,0.895
+Hisync,0.157,0.164,0.103,0.107,0.017,0.855,0.106,0.09,0.017,0.862
+Swingness,0.323,0.234,0.005,0.008,0.078,0.784,0.0,0.001,0.082,0.779
