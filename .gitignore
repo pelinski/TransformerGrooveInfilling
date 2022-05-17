@@ -7,9 +7,6 @@ misc/
 .idea/
 
 
-# only keep the good soundfonts
-soundfonts/all_soundfonts/
-soundfonts/sounds/
 
 # test experiments
 result/
@@ -37,8 +34,6 @@ evaluators.zip
 evaluator/
 
 
-
-soundfonts/*
 
 notes.txt
 
