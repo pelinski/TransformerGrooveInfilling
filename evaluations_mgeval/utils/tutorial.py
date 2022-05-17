@@ -9,8 +9,7 @@ from BaseGrooveTransformers import initialize_model
 
 experiment = "InfillingClosedHH_testing"
 
-# first you need to download the dataset and preprocessed evaluators and store them in the main directory of the project.
-# the dataset folder can be downloaded here: https://www.dropbox.com/sh/04hae4qnrw2yzjd/AACdf-6kyIGMxDBQ61RHdpQfa?dl=0
+# first you need to download the dataset and preprocessed evaluators and store them in the main directory of the project. the dataset folder can be downloaded here: https://www.dropbox.com/sh/04hae4qnrw2yzjd/AACdf-6kyIGMxDBQ61RHdpQfa?dl=0
 
 
 # the dataset paths are stored in the file configs/paths.yaml
@@ -29,14 +28,14 @@ evaluator_train = init_evaluator(
     paths[experiment]["evaluators"]["train"],
     device='cpu')
 
-# we can also load an evaluator saved after a model has been trained.
-# evaluators are saved as zip files after training in the folder evaluator/.
-# you can unzip the file and obtain a .Eval file. you can load it using pickle
+# we can also load an evaluator saved after a model has been trained. evaluators are saved as zip files after training in the folder evaluator/. you can unzip the file and obtain a .Eval file. you can load it using pickle
 
 with open("demo/evaluator_Train_Set_run_stilted-gorge-16_Epoch_0.Eval", "rb") as f:
     presaved_evaluator = pickle.load(f)
     
-# you can also load models from wandb or stored locally. you can pass the directory where the model epochs are stored to the function initialize_model. this function will find the last stored epoch from the module and load it
+# you can also load models from wandb or stored locally. you can pass the directory where the model epochs
+#   are stored to the function initialize_model.
+# this function will find the last stored epoch from the module and load it
 # when you load the models you need to pass them the same parameters that the model was created with
 # for example, we can load a model created with the params in configs/InfillingClosedHH_training.yaml
 # models are locally stored under wandb/run_id/files/
@@ -89,7 +88,7 @@ params = {
         "max_len": 32,
         "embedding_size_src": 16,
         "embedding_size_tgt": 27,  # hvo
-        "device": "cuda",
+        "device": "cpu",
     },
     "training": {
         "learning_rate":hyperparameters["learning_rate"],
@@ -108,5 +107,8 @@ params["load_model"] = {
 model, optimizer, initial_epoch = initialize_model(params)
 # you won't be able to load models that have been stored from a cuda gpu if you don't have a cuda gpu.
 
+import wandb
+api = wandb.Api()
+run = api.run("mmil_infilling/InfillingClosedHH/y16izsyy")
 
 # there are many options to pass to the script train.py, you can check them with python train.py --help

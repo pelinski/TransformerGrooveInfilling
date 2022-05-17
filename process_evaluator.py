@@ -6,12 +6,13 @@ from process_dataset import load_processed_dataset
 with open("datasets/preprocessed_evaluators/preprocessed_evaluators_parameters.json") as f:
     params = json.load(f)
 
+
 if __name__ == "__main__":
 
     testing = False
 
-    exps = ["InfillingClosedHH"]
-    splits = ["test", "train", "validation"]
+    exps = ["InfillingClosedHH", "InfillingClosedHH_Symbolic", "InfillingKicksAndSnares", "InfillingRandom", "InfillingRandomLow"]
+    splits = ["validation"]
     for exp in exps:
         print("------------------------\n" + exp + "\n------------------------\n")
         for split in splits:
@@ -44,7 +45,7 @@ if __name__ == "__main__":
                 _identifier=split.capitalize() + "_Set",
                 disable_tqdm=False,
                 analyze_heatmap=True,
-                analyze_global_features=False,  # pdf
+                analyze_global_features=True,  # pdf
                 dataset=dataset,
                 horizontal=pred_horizontal,
                 device="cuda" if torch.cuda.is_available() else "cpu",

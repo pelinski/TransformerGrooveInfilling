@@ -1,15 +1,10 @@
 import wandb
 from BaseGrooveTransformers import initialize_model
 import json
+import os
+import torch
 
 
-models_wandb_paths_epochs = {
-    "ClosedHH_HVO": ("mmil_infilling/InfillingClosedHH/runs/3vfpovvv", 70),
-    "ClosedHH_MSO": ("mmil_infilling/InfillingClosedHH/runs/y16izsyy", 110),
-    "KicksSnares": ("mmil_infilling/InfillingKicksAndSnares/runs/330gw6v0", 60),
-    "RandomLow": ("mmil_infilling/InfillingRandom/runs/3fj68xpy", 160),
-    "RandomHigh": ("mmil_infilling/InfillingRandom/runs/2y6luo8o", 150)
-}
 
 def cpu_load_from_wandb(wandb_run_path, model_at_epoch):
     api = wandb.Api()
@@ -46,6 +41,7 @@ def cpu_load_from_wandb(wandb_run_path, model_at_epoch):
 
     return model, optimizer, initial_epoch, params
 
+
 def cpu_load_all_models(models_wandb_paths_epochs):
     all_models = dict()
     all_params = dict()
@@ -55,12 +51,28 @@ def cpu_load_all_models(models_wandb_paths_epochs):
         all_params[key] = params
     return all_models, all_params
 
+models_wandb_paths_epochs = {
+    "ClosedHH_HVO": ("mmil_infilling/InfillingClosedHH/runs/3vfpovvv", 70),
+    "ClosedHH_MSO": ("mmil_infilling/InfillingClosedHH/runs/y16izsyy", 110),
+    "KicksSnares": ("mmil_infilling/InfillingKicksAndSnares/runs/330gw6v0", 60),
+    "RandomLow": ("mmil_infilling/InfillingRandom/runs/3fj68xpy", 160),
+    "RandomHigh": ("mmil_infilling/InfillingRandom/runs/2y6luo8o", 150)
+}
+
+
 if __name__ == '__main__':
     # usage
     models_wandb_paths_epochs = models_wandb_paths_epochs
     all_models, all_params = cpu_load_all_models(models_wandb_paths_epochs)
 
+    PATH = "trained_models"
+    if os.path.exists(PATH) is False:
+        os.makedirs(PATH, exist_ok=True)
 
-
-
-
+    for model_name in all_params.keys():
+        model = all_models[model_name]
+        model_path = os.path.join(PATH, model_name+".pt")
+        print(model_path)
+        torch.save(model.state_dict(), model_path)
+        params_path = os.path.join(PATH, model_name + ".params")
+        torch.save(all_params[model_name], params_path)
