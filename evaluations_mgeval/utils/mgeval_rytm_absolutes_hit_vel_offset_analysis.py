@@ -109,7 +109,7 @@ if __name__ == '__main__':
     generate_these = False
     if generate_these is not False:
         boxplot_absolute_measures(stats_sets, fs=30, legend_fs=10, legend_ncols=4, fig_path=fig_path, show=True, ncols=3,
-                                  figsize=(30, 25), color_map="tab20c", filename="Hits_performance",
+                                  figsize=(30, 12), color_map="tab20c", filename="Hits_performance",
                                   sharey=False, share_legend=False, shift_colors_by=0,
                                   show_legend=False)
 
@@ -117,16 +117,16 @@ if __name__ == '__main__':
     # FPR -> How many of ground truth silences were predicted as hits
     # to
 
-    generate_these = False
+    generate_these = True
     if generate_these is not False:
         vel_stats_sets = get_positive_negative_vel_stats(absolute_sets_evals)
         boxplot_absolute_measures(vel_stats_sets, fs=30, legend_fs=30, legend_ncols=8, fig_path=fig_path, show=True, ncols=3,
-                                  figsize=(30, 10), color_map="tab20c", filename="Stats_vels", share_legend=True, show_legend=False,
+                                  figsize=(40, 10), color_map="tab20c", filename="Stats_vels", share_legend=True, show_legend=False,
                                   shift_colors_by=0)
-    generate_these = False
+    generate_these = True
     if generate_these is not False:
         ut_stats_sets = get_positive_negative_utiming_stats(absolute_sets_evals)
         boxplot_absolute_measures(ut_stats_sets, fs=30, legend_fs=10, legend_ncols=4, fig_path=fig_path, show=True, ncols=3,
-                                  figsize=(30, 10), color_map="tab20c", filename="Stats_ut",
+                                  figsize=(40, 10), color_map="tab20c", filename="Stats_ut",
                                   sharey=False, share_legend=True, shift_colors_by=0,
                                   show_legend=False)
