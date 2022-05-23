@@ -43,4 +43,9 @@ wandb/
 tests/*
 datasets/
 
-*.Model
+/hvo_sequence/soundfonts/
+/transformer_run_2y6luo8o_Epoch_150.Model
+/transformer_run_3fj68xpy_Epoch_160.Model
+/transformer_run_3vfpovvv_Epoch_70.Model
+/transformer_run_330gw6v0_Epoch_60.Model
+/transformer_run_y16izsyy_Epoch_110.Model

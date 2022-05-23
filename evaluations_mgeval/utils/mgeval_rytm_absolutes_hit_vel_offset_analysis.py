@@ -72,6 +72,7 @@ if __name__ == '__main__':
     # ================================================================
     absolute_sets_evals = dict()
     for set_key in sets_evals.keys():
+        print(set_key)
         gmd_eval = deepcopy(sets_evals[set_key])
         gmd_eval._prediction_hvos_array = gmd_eval._gt_hvos_array
         absolute_sets_evals.update({f"{set_key} (GT)": gmd_eval})
@@ -119,14 +120,21 @@ if __name__ == '__main__':
 
     generate_these = True
     if generate_these is not False:
-        vel_stats_sets = get_positive_negative_vel_stats(absolute_sets_evals)
-        boxplot_absolute_measures(vel_stats_sets, fs=30, legend_fs=30, legend_ncols=8, fig_path=fig_path, show=True, ncols=3,
-                                  figsize=(40, 10), color_map="tab20c", filename="Stats_vels", share_legend=True, show_legend=False,
+        vel_stats_sets_ = get_positive_negative_vel_stats(absolute_sets_evals)
+        vel_stats_sets = {key.replace("ClosedHH", "IH").replace(" (Symbolic)", "S").replace("Kicks & Snares", "IKS").replace("Random (Low)", "IRL").replace("Random (High)", "IRH"):
+                          value for key, value in vel_stats_sets_.items()}
+        boxplot_absolute_measures(vel_stats_sets, fs=36, legend_fs=36, legend_ncols=2, fig_path=fig_path, show=True, ncols=4,
+                                  figsize=(40, 10), color_map="tab20c", filename="Stats_vels", share_legend=True, show_legend=True,
                                   shift_colors_by=0)
     generate_these = True
     if generate_these is not False:
-        ut_stats_sets = get_positive_negative_utiming_stats(absolute_sets_evals)
-        boxplot_absolute_measures(ut_stats_sets, fs=30, legend_fs=10, legend_ncols=4, fig_path=fig_path, show=True, ncols=3,
+        ut_stats_sets_ = get_positive_negative_utiming_stats(absolute_sets_evals)
+        ut_stats_sets = {
+            key.replace("ClosedHH", "IH").replace(" (Symbolic)", "S").replace("Kicks & Snares", "IKS").replace(
+                "Random (Low)", "IRL").replace("Random (High)", "IRH"):
+                value for key, value in ut_stats_sets_.items()}
+
+        boxplot_absolute_measures(ut_stats_sets, fs=36, legend_fs=10, legend_ncols=4, fig_path=fig_path, show=True, ncols=4,
                                   figsize=(40, 10), color_map="tab20c", filename="Stats_ut",
                                   sharey=False, share_legend=True, shift_colors_by=0,
                                   show_legend=False)

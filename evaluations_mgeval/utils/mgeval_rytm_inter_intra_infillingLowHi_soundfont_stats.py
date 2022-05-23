@@ -201,8 +201,8 @@ if __name__ == '__main__':
         data_toplot_reorganized[feat]["RH KL"] = data_dict["RH KL"][feat]
         data_toplot_reorganized[feat]["RH OA"] = data_dict["RH OA"][feat]
 
-    boxplot_soundfonts(data_toplot_reorganized, fs=22, legend_fs=12, legend_ncols=2, fig_path=pickle_path, show=False, ncols=2,
-                              figsize=(20, 9), color_map="tab20c", filename=f"KL_{num_samples_per_master_id}_{group_tag}", share_legend=True,
+    boxplot_soundfonts(data_toplot_reorganized, fs=18, legend_fs=12, legend_ncols=1, fig_path=pickle_path, show=False, ncols=5,
+                              figsize=(20, 3), color_map="tab20c", filename=f"KL_{num_samples_per_master_id}_{group_tag}", share_legend=True,
                               sharey=False,
-                              show_legend=True)
+                              show_legend=True, bbox_to_anchor=(.9, 0.12))
 

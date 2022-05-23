@@ -16,10 +16,11 @@ from datetime import datetime
 def flatten(t):
     return [item for sublist in t for item in sublist]
 
+del boxplot_soundfonts
 def boxplot_soundfonts(sets, fs = 30, legend_fs = 10, legend_ncols = 3, fig_path=None,
                               show=False, ncols=4, figsize=(20, 10), color_map="pastel1", filename=None,
                               force_ylim=None, shift_colors_by=0, max_label_len=100,
-                              sharey=False, share_legend=False, show_legend=False):
+                              sharey=False, share_legend=False, show_legend=False, bbox_to_anchor=(1.2, 0.12)):
     # fontsize
     n_plots = len(sets[list(sets.keys())[0]].keys())
     nrows = int(np.ceil(n_plots / ncols))
@@ -55,7 +56,7 @@ def boxplot_soundfonts(sets, fs = 30, legend_fs = 10, legend_ncols = 3, fig_path
             #yrange = max(yrange, max(data) - min(data))
             handle = ax_.boxplot(data, positions=[set_ix], labels=[set_name], notch=True, widths=.5,
                                patch_artist=True,
-                               boxprops=dict(facecolor=cmap(set_ix+shift_colors_by), alpha = 0.3), whis=(0, 100))  # , boxprops=dict(facecolor=cmap(set_ix))
+                               boxprops=dict(facecolor=cmap(set_ix+shift_colors_by), alpha = 1), whis=(0, 100))  # , boxprops=dict(facecolor=cmap(set_ix))
             handles.append(handle['boxes'][0])
 
             y = data
@@ -85,7 +86,7 @@ def boxplot_soundfonts(sets, fs = 30, legend_fs = 10, legend_ncols = 3, fig_path
 
     if share_legend is True:
         if show_legend is True:
-            fig.legend(handles, labels, bbox_to_anchor=(.9, 0.12), loc='lower right', prop={'size':legend_fs}, ncol=legend_ncols)
+            fig.legend(handles, labels, bbox_to_anchor=bbox_to_anchor, loc='lower right', prop={'size':legend_fs}, ncol=legend_ncols)
         #fig.subplots_adjust(bottom=-1)
 
     if fig_path is not None:
@@ -158,7 +159,7 @@ def boxplot_absolute_measures(sets, fs = 30, legend_fs = 10, legend_ncols = 3, f
 
         if share_legend is not True:
             if show_legend is True:
-                ax_.legend(handles, labels, loc='lower center', prop={'size':legend_fs}, ncol=legend_ncols)
+                ax_.legend(handles, labels, loc='lower right', prop={'size':legend_fs}, ncol=legend_ncols)
 
         if force_ylim is not None:
             ax_.set_ylim(bottom=force_ylim[0], top=force_ylim[1])
@@ -175,7 +176,7 @@ def boxplot_absolute_measures(sets, fs = 30, legend_fs = 10, legend_ncols = 3, f
 
     if share_legend is True:
         if show_legend is True:
-            fig.legend(handles, labels, loc='lower center', prop={'size':legend_fs}, ncol=legend_ncols)
+            fig.legend(handles, labels, loc='lower right', prop={'size':legend_fs}, ncol=legend_ncols)
         #fig.subplots_adjust(bottom=-1)
 
     if fig_path is not None:
@@ -189,7 +190,6 @@ def boxplot_absolute_measures(sets, fs = 30, legend_fs = 10, legend_ncols = 3, f
 
     if show is True:
         fig.show()
-
 
 def get_positive_negative_vel_stats(sets_evals, ground_truth_key = ["GMD"]):
     stats_sets = dict()
@@ -233,7 +233,7 @@ def get_positive_negative_vel_stats(sets_evals, ground_truth_key = ["GMD"]):
             {
                 set_name:
                     {
-                        "All Hits (mean per Loop)": np.nan_to_num(vel_all_Hits_mean),
+                        "Average Velocity": np.nan_to_num(vel_all_Hits_mean),
                         "True Hits (mean per Loop)": np.nan_to_num(vel_TP_mean),
                         "False Hits (mean per Loop)": np.nan_to_num(vel_FP_mean),
                         "All Hits (std per Loop)": np.nan_to_num(vel_all_Hits_std),
@@ -241,7 +241,7 @@ def get_positive_negative_vel_stats(sets_evals, ground_truth_key = ["GMD"]):
                         "False Hits (std per Loop)": np.nan_to_num(vel_FP_std),
                     } if set_name not in ground_truth_key else
                     {
-                        "All Hits (mean per Loop)": np.nan_to_num(vel_all_Hits_mean),
+                        "Average Velocity": np.nan_to_num(vel_all_Hits_mean),
                         "True Hits (mean per Loop)": np.nan_to_num(vel_all_Hits_mean),
                         "False Hits (mean per Loop)": np.nan_to_num(vel_all_Hits_mean),
                         "All Hits (std per Loop)": np.nan_to_num(vel_all_Hits_std),
@@ -253,7 +253,6 @@ def get_positive_negative_vel_stats(sets_evals, ground_truth_key = ["GMD"]):
         )
 
     return stats_sets
-
 
 def get_positive_negative_utiming_stats(sets_evals, ground_truth_key = ["GMD"]):
     stats_sets = dict()
@@ -297,7 +296,7 @@ def get_positive_negative_utiming_stats(sets_evals, ground_truth_key = ["GMD"]):
             {
                 set_name:
                     {
-                        "All Hits (mean per Loop)": np.nan_to_num(uTiming_all_Hits_mean),
+                        "Average Offset": np.nan_to_num(uTiming_all_Hits_mean),
                         "True Hits (mean per Loop)": np.nan_to_num(uTiming_TP_mean),
                         "False Hits (mean per Loop)": np.nan_to_num(uTiming_FP_mean),
                         "All Hits (std per Loop)": np.nan_to_num(uTiming_all_Hits_std),
@@ -305,7 +304,7 @@ def get_positive_negative_utiming_stats(sets_evals, ground_truth_key = ["GMD"]):
                         "False Hits (std per Loop)": np.nan_to_num(uTiming_FP_std),
                     } if set_name not in ground_truth_key else
                     {
-                        "All Hits (mean per Loop)": np.nan_to_num(uTiming_all_Hits_mean),
+                        "Average Offset": np.nan_to_num(uTiming_all_Hits_mean),
                         "True Hits (mean per Loop)": np.nan_to_num(uTiming_all_Hits_mean),
                         "False Hits (mean per Loop)": np.nan_to_num(uTiming_all_Hits_mean),
                         "All Hits (std per Loop)": np.nan_to_num(uTiming_all_Hits_std),

@@ -1,8 +1,6 @@
 # Transformer Groove Infilling
 
-This repository contains the Transformer Groove Infilling implementation, part of my Master Thesis: _Completing Audio Drum Loops with Transformer Neural Networks_, under the supervision of Sergi Jordà and Behzad Haki at the Music Technology Group at the Universitat Pompeu Fabra (Barcelona).
-
-**Note:** This repo depends on libraries that are not yet public. A standalone zip version of this code containing all necessary libraries can be downloaded [here](https://zenodo.org/record/5347908).
+**Note:** This repo depends on libraries that are not yet public. A standalone zip version of this code containing all necessary libraries can be downloaded [here]
 
 ## Abstract
 
@@ -15,7 +13,7 @@ We train several instances of the Transformer Groove Infilling model to perform 
 This repo has submodules. You can clone it including them using:
 
 ```bash
-git clone --recurse-submodules -j8 git@github.com:pelinski/TransformerGrooveInfilling.git
+git clone --recurse-submodules -j8 git@github.com:---/---.git
 ```
 
 ## environment
